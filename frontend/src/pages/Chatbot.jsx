@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -20,6 +20,22 @@ function Chatbot() {
   const [answers, setAnswers] = useState({})
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [dots, setDots] = useState('.')
+  const bottomRef = useRef(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  useEffect(() => {
+    if (!loading) return
+    let count = 1
+    const interval = setInterval(() => {
+      count = count >= 3 ? 1 : count + 1
+      setDots('.'.repeat(count))
+    }, 600)
+    return () => clearInterval(interval)
+  }, [loading])
 
   const handleAnswer = async (answer) => {
     const currentQuestion = questions[step]
@@ -35,7 +51,6 @@ function Chatbot() {
       }, 500)
     } else {
       setLoading(true)
-      setMessages(prev => [...prev, { from: 'bot', text: 'Analyzing your answers...' }])
 
       const donorData = JSON.parse(localStorage.getItem('donorData'))
       try {
@@ -43,21 +58,30 @@ function Chatbot() {
           donor_id: donorData.id,
           answers: newAnswers
         })
-        setMessages(prev => [...prev,
-          { from: 'bot', text: res.data.eligible ? '✅ You are eligible to donate blood!' : '❌ You are not eligible to donate at this time.' },
-          { from: 'bot', text: res.data.reason }
-        ])
+
+        // Keep analyzing visible for at least 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        setLoading(false)
+
+        const eligible = res.data.eligible
+        const reason = res.data.reason
+        const resultText = eligible
+          ? `✅ You are eligible to donate blood! ${reason}`
+          : `❌ You are not eligible to donate at this time: ${reason}`
+
+        setMessages(prev => [...prev, { from: 'bot', text: resultText }])
       } catch (err) {
+        setLoading(false)
         setMessages(prev => [...prev, { from: 'bot', text: 'Something went wrong. Please try again.' }])
       }
-      setLoading(false)
       setDone(true)
     }
   }
 
   return (
     <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md flex flex-col" style={{height: '600px'}}>
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md flex flex-col" style={{height: '85vh'}}>
         <div className="bg-red-600 text-white p-4 rounded-t-2xl">
           <h2 className="text-xl font-bold">🩺 Health Screening</h2>
         </div>
@@ -70,6 +94,14 @@ function Chatbot() {
               </div>
             </div>
           ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 text-gray-500 rounded-2xl px-4 py-3 text-sm italic">
+                🤔 Analyzing your answers{dots}
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
         </div>
 
         <div className="p-4 border-t">
@@ -85,7 +117,6 @@ function Chatbot() {
               </button>
             </div>
           )}
-          {loading && <p className="text-center text-gray-400">Analyzing...</p>}
           {done && (
             <button onClick={() => navigate('/donor/dashboard')}
               className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700">
