@@ -67,7 +67,7 @@ function Chatbot() {
         const eligible = res.data.eligible
         const reason = res.data.reason
         const resultText = eligible
-          ? `✅ You are eligible to donate blood! ${reason}`
+          ? `✅ You are eligible to donate blood!`
           : `❌ You are not eligible to donate at this time: ${reason}`
 
         setMessages(prev => [...prev, { from: 'bot', text: resultText }])
