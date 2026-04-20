@@ -7,7 +7,7 @@ import Chatbot from './pages/Chatbot'
 import DonorMap from './pages/DonorMap'
 import Emergency from './pages/Emergency'
 import HospitalLogin from './pages/HospitalLogin'
-
+import HospitalDashboard from './pages/HospitalDashboard'
 function App() {
   return (
     <BrowserRouter>
@@ -20,6 +20,7 @@ function App() {
         <Route path="/donor/map" element={<DonorMap />} />
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/hospital/login" element={<HospitalLogin />} />     
+      <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
       </Routes>
     </BrowserRouter>
   )
