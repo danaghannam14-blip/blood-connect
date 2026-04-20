@@ -77,7 +77,7 @@ function Emergency() {
   }
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/hospitals/all')
+    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/all')
       .then(res => res.json())
       .then(data => setHospitals(data))
 

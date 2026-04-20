@@ -20,7 +20,7 @@ function DonorRegister() {
     setMessage('')
     setError('')
     try {
-      const res = await axios.post('http://localhost:5000/api/donors/register', form)
+      const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/donors/register', form)
       setMessage(res.data.message)
       setTimeout(() => navigate('/donor/login'), 2000)
     } catch (err) {

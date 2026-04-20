@@ -17,7 +17,7 @@ function Dashboard() {
   }, [])
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/requests/all')
+    axios.get('https://blood-bank-eqyr.onrender.com/api/requests/all')
       .then(res => setInventory(res.data))
       .catch(err => console.log(err))
   }, [])

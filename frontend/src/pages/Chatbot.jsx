@@ -39,7 +39,7 @@ function Chatbot() {
 
       const donorData = JSON.parse(localStorage.getItem('donorData'))
       try {
-        const res = await axios.post('http://localhost:5000/api/chatbot/screen', {
+        const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/chatbot/screen', {
           donor_id: donorData.id,
           answers: newAnswers
         })

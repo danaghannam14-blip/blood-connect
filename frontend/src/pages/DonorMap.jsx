@@ -84,11 +84,11 @@ function DonorMap() {
       () => setLocationDenied(true)
     )
 
-    axios.get('http://localhost:5000/api/hospitals/all')
+    axios.get('https://blood-bank-eqyr.onrender.com/api/hospitals/all')
       .then(res => setHospitals(res.data))
       .catch(err => console.log(err))
 
-    axios.get('http://localhost:5000/api/requests/all')
+    axios.get('https://blood-bank-eqyr.onrender.com/api/requests/all')
       .then(res => setRequests(res.data))
       .catch(err => console.log(err))
   }, [])

@@ -15,7 +15,7 @@ function DonorLogin() {
     e.preventDefault()
     setError('')
     try {
-      const res = await axios.post('http://localhost:5000/api/donors/login', form)
+      const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/donors/login', form)
       localStorage.setItem('donorToken', res.data.token)
       localStorage.setItem('donorData', JSON.stringify(res.data.donor))
       navigate('/donor/dashboard')

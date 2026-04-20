@@ -15,7 +15,7 @@ function HospitalLogin() {
     e.preventDefault()
     setError('')
     try {
-      const res = await axios.post('http://localhost:5000/api/hospitals/login', form)
+      const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/hospitals/login', form)
       localStorage.setItem('hospitalToken', res.data.token)
       localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
       navigate('/hospital/dashboard')
