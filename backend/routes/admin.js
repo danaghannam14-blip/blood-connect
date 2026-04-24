@@ -66,4 +66,35 @@ router.post('/add-admin', async (req, res) => {
     res.json({ message: 'Admin added successfully' });
   });
 });
+router.get('/admins', (req, res) => {
+  db.query('SELECT id, username, created_at FROM admins', (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json(results);
+  });
+});
+
+router.delete('/admins/:id', (req, res) => {
+  db.query('DELETE FROM admins WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json({ message: 'Admin deleted' });
+  });
+});
+router.put('/change-password', async (req, res) => {
+  const { username, old_password, new_password } = req.body;
+
+  db.query('SELECT * FROM admins WHERE username = ?', [username], async (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    if (results.length === 0) return res.status(404).json({ message: 'Admin not found' });
+
+    const admin = results[0];
+    const match = await bcrypt.compare(old_password, admin.password);
+    if (!match) return res.status(401).json({ message: 'Old password is incorrect' });
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    db.query('UPDATE admins SET password = ? WHERE username = ?', [hashed, username], (err) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Password changed successfully' });
+    });
+  });
+});
 module.exports = router;

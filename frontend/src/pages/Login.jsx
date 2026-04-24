@@ -15,45 +15,53 @@ function Login() {
     setError('')
     setLoading(true)
 
-    // Try admin login first
-    try {
-      const res = await axios.post(`${API}/api/admin/login`, {
-        username: form.identifier,
-        password: form.password
-      })
-      if (res.data.admin) {
-        localStorage.setItem('adminData', JSON.stringify(res.data.admin))
-        navigate('/admin')
+    const isEmail = form.identifier.includes('@')
+
+    if (!isEmail) {
+      // Try admin login (username, no @)
+      try {
+        const res = await axios.post(`${API}/api/admin/login`, {
+          username: form.identifier,
+          password: form.password
+        })
+        if (res.data.admin) {
+          localStorage.setItem('adminData', JSON.stringify(res.data.admin))
+          navigate('/admin')
+          return
+        }
+      } catch {
+        setError('Invalid credentials. Please try again.')
+        setLoading(false)
         return
       }
-    } catch {}
+    } else {
+      // Try donor login (email)
+      try {
+        const res = await axios.post(`${API}/api/donors/login`, {
+          email: form.identifier,
+          password: form.password
+        })
+        localStorage.setItem('donorToken', res.data.token)
+        localStorage.setItem('donorData', JSON.stringify(res.data.donor))
+        navigate('/donor/dashboard')
+        return
+      } catch {}
 
-    // Try donor login
-    try {
-      const res = await axios.post(`${API}/api/donors/login`, {
-        email: form.identifier,
-        password: form.password
-      })
-      localStorage.setItem('donorToken', res.data.token)
-      localStorage.setItem('donorData', JSON.stringify(res.data.donor))
-      navigate('/donor/dashboard')
-      return
-    } catch {}
+      // Try hospital login (email)
+      try {
+        const res = await axios.post(`${API}/api/hospitals/login`, {
+          email: form.identifier,
+          password: form.password
+        })
+        localStorage.setItem('hospitalToken', res.data.token)
+        localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
+        navigate('/hospital/dashboard')
+        return
+      } catch {}
 
-    // Try hospital login
-    try {
-      const res = await axios.post(`${API}/api/hospitals/login`, {
-        email: form.identifier,
-        password: form.password
-      })
-      localStorage.setItem('hospitalToken', res.data.token)
-      localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
-      navigate('/hospital/dashboard')
-      return
-    } catch {}
-
-    setError('Invalid credentials. Please try again.')
-    setLoading(false)
+      setError('Invalid credentials. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
