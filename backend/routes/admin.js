@@ -136,4 +136,10 @@ router.post('/add-hospital', async (req, res) => {
     }
   );
 });
+router.delete('/hospitals/:id', (req, res) => {
+  db.query('DELETE FROM hospitals WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json({ message: 'Hospital deleted' });
+  });
+});
 module.exports = router;

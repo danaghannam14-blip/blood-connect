@@ -103,7 +103,11 @@ function Admin() {
       setChangePassMessage(err.response?.data?.message || 'Failed to change password')
     }
   }
-
+const deleteHospital = async (id) => {
+  if (!window.confirm('Delete this hospital?')) return
+  await axios.delete(`${API}/api/admin/hospitals/${id}`)
+  setHospitals(hospitals.filter(h => h.id !== id))
+}
   const handleLogout = () => {
     localStorage.removeItem('adminData')
     navigate('/login')
@@ -210,22 +214,29 @@ function Admin() {
               <h2 className="text-xl font-semibold mb-4">🏥 Hospitals ({hospitals.length})</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-gray-500">
-                      <th className="pb-2 pr-4">Name</th>
-                      <th className="pb-2 pr-4">Email</th>
-                      <th className="pb-2">Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hospitals.map(h => (
-                      <tr key={h.id} className="border-b last:border-0">
-                        <td className="py-2 pr-4">{h.name}</td>
-                        <td className="py-2 pr-4">{h.email}</td>
-                        <td className="py-2">{h.address}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+                 <thead>
+  <tr className="border-b text-left text-gray-500">
+    <th className="pb-2 pr-4">Name</th>
+    <th className="pb-2 pr-4">Email</th>
+    <th className="pb-2 pr-4">Address</th>
+    <th className="pb-2">Action</th>
+  </tr>
+</thead>
+<tbody>
+  {hospitals.map(h => (
+    <tr key={h.id} className="border-b last:border-0">
+      <td className="py-2 pr-4">{h.name}</td>
+      <td className="py-2 pr-4">{h.email}</td>
+      <td className="py-2 pr-4">{h.address}</td>
+      <td className="py-2">
+        <button onClick={() => deleteHospital(h.id)}
+          className="text-red-500 hover:text-red-700 text-xs font-semibold">
+          Delete
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
                 </table>
               </div>
             </div>
