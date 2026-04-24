@@ -1,38 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const API = 'http://localhost:5000'
+const API = 'https://blood-bank-eqyr.onrender.com'
 
 function Admin() {
+  const navigate = useNavigate()
   const [authed, setAuthed] = useState(false)
-  const [form, setForm] = useState({ username: '', password: '' })
-  const [error, setError] = useState('')
   const [donors, setDonors] = useState([])
   const [hospitals, setHospitals] = useState([])
   const [requests, setRequests] = useState([])
   const [tab, setTab] = useState('donors')
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setError('')
-    try {
-      await axios.post(`${API}/api/admin/login`, form)
+  useEffect(() => {
+    const adminData = localStorage.getItem('adminData')
+    if (adminData) {
       setAuthed(true)
       loadData()
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed')
+    } else {
+      navigate('/login')
     }
-  }
+  }, [])
 
   const loadData = async () => {
-    const [d, h, r] = await Promise.all([
-      axios.get(`${API}/api/admin/donors`),
-      axios.get(`${API}/api/admin/hospitals`),
-      axios.get(`${API}/api/admin/requests`)
-    ])
-    setDonors(d.data)
-    setHospitals(h.data)
-    setRequests(r.data)
+    try {
+      const [d, h, r] = await Promise.all([
+        axios.get(`${API}/api/admin/donors`),
+        axios.get(`${API}/api/admin/hospitals`),
+        axios.get(`${API}/api/admin/requests`)
+      ])
+      setDonors(d.data)
+      setHospitals(h.data)
+      setRequests(r.data)
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   const deleteDonor = async (id) => {
@@ -47,33 +49,22 @@ function Admin() {
     setRequests(requests.filter(r => r.id !== id))
   }
 
-  if (!authed) return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">🔐 Admin Access</h2>
-        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input placeholder="Username" value={form.username}
-            onChange={e => setForm({...form, username: e.target.value})}
-            className="border rounded-lg p-3 focus:outline-none" required />
-          <input type="password" placeholder="Password" value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            className="border rounded-lg p-3 focus:outline-none" required />
-          <button type="submit"
-            className="bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900">
-            Login
-          </button>
-        </form>
-      </div>
-    </div>
-  )
+  const handleLogout = () => {
+    localStorage.removeItem('adminData')
+    navigate('/login')
+  }
+
+  if (!authed) return null
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">🛠️ Admin Panel</h1>
-          <button onClick={() => setAuthed(false)}
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🩸</span>
+            <h1 className="text-3xl font-bold text-gray-800">BloodConnect Admin</h1>
+          </div>
+          <button onClick={handleLogout}
             className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900">
             Logout
           </button>

@@ -58,5 +58,12 @@ router.delete('/requests/:id', (req, res) => {
     res.json({ message: 'Request deleted' });
   });
 });
-
+router.post('/add-admin', async (req, res) => {
+  const { username, password } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
+  db.query('INSERT INTO admins (username, password) VALUES (?, ?)', [username, hashed], (err) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json({ message: 'Admin added successfully' });
+  });
+});
 module.exports = router;
