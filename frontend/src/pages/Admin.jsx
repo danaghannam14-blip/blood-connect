@@ -189,7 +189,7 @@ const deleteHospital = async (id) => {
                   onChange={e => setNewHospital({...newHospital, name: e.target.value})}
                   className="border rounded-lg p-3 focus:outline-none text-sm" required />
                 <input placeholder="email@hospital.com" value={newHospital.email}
-                <p className="text-gray-400 text-xs -mt-2">Must end with @hospital.com</p>
+                
                   onChange={e => setNewHospital({...newHospital, email: e.target.value})}
                   className="border rounded-lg p-3 focus:outline-none text-sm" required />
                 <input type="password" placeholder="Password" value={newHospital.password}
