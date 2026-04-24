@@ -10,58 +10,56 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const isEmail = form.identifier.includes('@')
-
-    if (!isEmail) {
-      // Try admin login (username, no @)
+    // Check if it's a bloodconnect admin email
+    if (form.identifier.endsWith('@bloodconnect.com')) {
       try {
         const res = await axios.post(`${API}/api/admin/login`, {
-          username: form.identifier,
+          email: form.identifier,
           password: form.password
         })
-        if (res.data.admin) {
-          localStorage.setItem('adminData', JSON.stringify(res.data.admin))
-          navigate('/admin')
-          return
-        }
-      } catch {
-        setError('Invalid credentials. Please try again.')
+        localStorage.setItem('adminData', JSON.stringify(res.data.admin))
+        navigate('/admin')
+        return
+      } catch (err) {
+        setError(err.response?.data?.message || 'Invalid credentials. Please try again.')
         setLoading(false)
         return
       }
-    } else {
-      // Try donor login (email)
-      try {
-        const res = await axios.post(`${API}/api/donors/login`, {
-          email: form.identifier,
-          password: form.password
-        })
-        localStorage.setItem('donorToken', res.data.token)
-        localStorage.setItem('donorData', JSON.stringify(res.data.donor))
-        navigate('/donor/dashboard')
-        return
-      } catch {}
-
-      // Try hospital login (email)
-      try {
-        const res = await axios.post(`${API}/api/hospitals/login`, {
-          email: form.identifier,
-          password: form.password
-        })
-        localStorage.setItem('hospitalToken', res.data.token)
-        localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
-        navigate('/hospital/dashboard')
-        return
-      } catch {}
-
-      setError('Invalid credentials. Please try again.')
-      setLoading(false)
     }
+
+    // Try donor login
+    try {
+      const res = await axios.post(`${API}/api/donors/login`, {
+        email: form.identifier,
+        password: form.password
+      })
+      localStorage.setItem('donorToken', res.data.token)
+      localStorage.setItem('donorData', JSON.stringify(res.data.donor))
+      navigate('/donor/dashboard')
+      setLoading(false)
+      return
+    } catch {}
+
+    // Try hospital login
+    try {
+      const res = await axios.post(`${API}/api/hospitals/login`, {
+        email: form.identifier,
+        password: form.password
+      })
+      localStorage.setItem('hospitalToken', res.data.token)
+      localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
+      navigate('/hospital/dashboard')
+      setLoading(false)
+      return
+    } catch {}
+
+    setError('Invalid credentials. Please try again.')
+    setLoading(false)
   }
 
   return (

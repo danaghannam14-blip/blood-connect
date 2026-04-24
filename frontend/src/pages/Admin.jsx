@@ -12,9 +12,9 @@ function Admin() {
   const [requests, setRequests] = useState([])
   const [admins, setAdmins] = useState([])
   const [tab, setTab] = useState('donors')
-  const [newAdmin, setNewAdmin] = useState({ username: '', password: '' })
+  const [newAdmin, setNewAdmin] = useState({ email: '', password: '' })
   const [adminMessage, setAdminMessage] = useState('')
-  const [changePass, setChangePass] = useState({ username: '', old_password: '', new_password: '' })
+  const [changePass, setChangePass] = useState({ email: '', old_password: '', new_password: '' })
   const [changePassMessage, setChangePassMessage] = useState('')
 
   useEffect(() => {
@@ -68,7 +68,7 @@ function Admin() {
     try {
       await axios.post(`${API}/api/admin/add-admin`, newAdmin)
       setAdminMessage('Admin added successfully!')
-      setNewAdmin({ username: '', password: '' })
+      setNewAdmin({ email: '', password: '' })
       const res = await axios.get(`${API}/api/admin/admins`)
       setAdmins(res.data)
     } catch (err) {
@@ -82,7 +82,7 @@ function Admin() {
     try {
       const res = await axios.put(`${API}/api/admin/change-password`, changePass)
       setChangePassMessage(res.data.message)
-      setChangePass({ username: '', old_password: '', new_password: '' })
+      setChangePass({ email: '', old_password: '', new_password: '' })
     } catch (err) {
       setChangePassMessage(err.response?.data?.message || 'Failed to change password')
     }
@@ -218,11 +218,16 @@ function Admin() {
         {tab === 'admins' && (
           <div className="flex flex-col gap-6">
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">➕ Add New Admin</h2>
-              {adminMessage && <p className="text-green-600 mb-4 text-sm">{adminMessage}</p>}
+              <h2 className="text-xl font-semibold mb-2">➕ Add New Admin</h2>
+              <p className="text-gray-500 text-sm mb-4">Admin email must end with @bloodconnect.com</p>
+              {adminMessage && (
+                <p className={`mb-4 text-sm ${adminMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                  {adminMessage}
+                </p>
+              )}
               <form onSubmit={addAdmin} className="flex gap-4">
-                <input placeholder="Username" value={newAdmin.username}
-                  onChange={e => setNewAdmin({...newAdmin, username: e.target.value})}
+                <input placeholder="email@bloodconnect.com" value={newAdmin.email}
+                  onChange={e => setNewAdmin({...newAdmin, email: e.target.value})}
                   className="border rounded-lg p-3 flex-1 focus:outline-none text-sm" required />
                 <input type="password" placeholder="Password" value={newAdmin.password}
                   onChange={e => setNewAdmin({...newAdmin, password: e.target.value})}
@@ -241,6 +246,7 @@ function Admin() {
                   <thead>
                     <tr className="border-b text-left text-gray-500">
                       <th className="pb-2 pr-4">Username</th>
+                      <th className="pb-2 pr-4">Email</th>
                       <th className="pb-2 pr-4">Created At</th>
                       <th className="pb-2">Action</th>
                     </tr>
@@ -249,6 +255,7 @@ function Admin() {
                     {admins.map(a => (
                       <tr key={a.id} className="border-b last:border-0">
                         <td className="py-2 pr-4 font-medium">{a.username}</td>
+                        <td className="py-2 pr-4 text-gray-500">{a.email}</td>
                         <td className="py-2 pr-4 text-gray-500">{new Date(a.created_at).toLocaleDateString()}</td>
                         <td className="py-2">
                           <button onClick={() => deleteAdmin(a.id)}
@@ -274,8 +281,8 @@ function Admin() {
               </p>
             )}
             <form onSubmit={handleChangePassword} className="flex flex-col gap-4 max-w-md">
-              <input placeholder="Your username" value={changePass.username}
-                onChange={e => setChangePass({...changePass, username: e.target.value})}
+              <input placeholder="Your email (@bloodconnect.com)" value={changePass.email}
+                onChange={e => setChangePass({...changePass, email: e.target.value})}
                 className="border rounded-lg p-3 focus:outline-none text-sm" required />
               <input type="password" placeholder="Old password" value={changePass.old_password}
                 onChange={e => setChangePass({...changePass, old_password: e.target.value})}
