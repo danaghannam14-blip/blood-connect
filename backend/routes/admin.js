@@ -117,5 +117,23 @@ router.delete('/requests/:id', (req, res) => {
     res.json({ message: 'Request deleted' });
   });
 });
+router.post('/add-hospital', async (req, res) => {
+  const { name, email, password, address, latitude, longitude } = req.body;
+  const bcrypt = require('bcrypt');
+  const hashed = await bcrypt.hash(password, 10);
 
+  db.query(
+    'INSERT INTO hospitals (name, email, password, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)',
+    [name, email, hashed, address, latitude, longitude],
+    (err, result) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ message: 'A hospital with this email already exists.' });
+        }
+        return res.status(500).json({ message: err.message });
+      }
+      res.json({ message: 'Hospital added successfully', id: result.insertId });
+    }
+  );
+});
 module.exports = router;
