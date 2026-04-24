@@ -119,9 +119,12 @@ router.delete('/requests/:id', (req, res) => {
 });
 router.post('/add-hospital', async (req, res) => {
   const { name, email, password, address, latitude, longitude } = req.body;
-  const bcrypt = require('bcrypt');
-  const hashed = await bcrypt.hash(password, 10);
 
+  if (!email.endsWith('@hospital.com')) {
+    return res.status(400).json({ message: 'Hospital email must end with @hospital.com' });
+  }
+
+  const hashed = await bcrypt.hash(password, 10);
   db.query(
     'INSERT INTO hospitals (name, email, password, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)',
     [name, email, hashed, address, latitude, longitude],
@@ -142,4 +145,5 @@ router.delete('/hospitals/:id', (req, res) => {
     res.json({ message: 'Hospital deleted' });
   });
 });
+
 module.exports = router;

@@ -6,8 +6,12 @@ const jwt = require('jsonwebtoken');
 
 router.post('/register', (req, res) => {
   const { name, email, password, phone, address } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
 
+  if (!email.endsWith('@hospital.com')) {
+    return res.status(400).json({ message: 'Hospital email must end with @hospital.com' });
+  }
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const sql = `INSERT INTO hospitals (name, email, password, phone, address) VALUES (?, ?, ?, ?, ?)`;
 
   db.query(sql, [name, email, hashedPassword, phone, address], (err, result) => {
@@ -20,6 +24,10 @@ router.post('/register', (req, res) => {
 
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
+
+  if (!email.endsWith('@hospital.com')) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
 
   const sql = `SELECT * FROM hospitals WHERE email = ?`;
 
@@ -55,6 +63,7 @@ router.post('/login', (req, res) => {
     });
   });
 });
+
 router.get('/all', (req, res) => {
   const sql = `SELECT id, name, address, latitude, longitude FROM hospitals`;
   db.query(sql, (err, results) => {
@@ -64,4 +73,5 @@ router.get('/all', (req, res) => {
     res.json(results);
   });
 });
+
 module.exports = router;

@@ -10,12 +10,12 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    // Check if it's a bloodconnect admin email
+    // Admin login
     if (form.identifier.endsWith('@bloodconnect.com')) {
       try {
         const res = await axios.post(`${API}/api/admin/login`, {
@@ -32,7 +32,26 @@ const handleSubmit = async (e) => {
       }
     }
 
-    // Try donor login
+    // Hospital login
+    if (form.identifier.endsWith('@hospital.com')) {
+      try {
+        const res = await axios.post(`${API}/api/hospitals/login`, {
+          email: form.identifier,
+          password: form.password
+        })
+        localStorage.setItem('hospitalToken', res.data.token)
+        localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
+        navigate('/hospital/dashboard')
+        setLoading(false)
+        return
+      } catch {
+        setError('Invalid credentials. Please try again.')
+        setLoading(false)
+        return
+      }
+    }
+
+    // Donor login
     try {
       const res = await axios.post(`${API}/api/donors/login`, {
         email: form.identifier,
@@ -43,23 +62,10 @@ const handleSubmit = async (e) => {
       navigate('/donor/dashboard')
       setLoading(false)
       return
-    } catch {}
-
-    // Try hospital login
-    try {
-      const res = await axios.post(`${API}/api/hospitals/login`, {
-        email: form.identifier,
-        password: form.password
-      })
-      localStorage.setItem('hospitalToken', res.data.token)
-      localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
-      navigate('/hospital/dashboard')
+    } catch {
+      setError('Invalid credentials. Please try again.')
       setLoading(false)
-      return
-    } catch {}
-
-    setError('Invalid credentials. Please try again.')
-    setLoading(false)
+    }
   }
 
   return (
@@ -78,7 +84,7 @@ const handleSubmit = async (e) => {
           <div>
             <label className="text-sm text-gray-600 font-medium mb-1 block">Email</label>
             <input
-              placeholder="Enter your email or username"
+              placeholder="Enter your email"
               value={form.identifier}
               onChange={e => setForm({...form, identifier: e.target.value})}
               className="w-full border rounded-xl p-3 focus:outline-none focus:border-red-400 text-sm"
