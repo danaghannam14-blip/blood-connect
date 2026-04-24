@@ -99,7 +99,7 @@ function HospitalDashboard() {
           </form>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6">
+        <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Active Requests</h2>
           {requests.length === 0
             ? <p className="text-gray-400">No requests yet.</p>
@@ -121,20 +121,21 @@ function HospitalDashboard() {
           }
         </div>
 
+        <div className="bg-white rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">🔑 Change Password</h2>
+          <ChangePassword
+            onSubmit={async (oldPass, newPass) => {
+              const hospitalData = JSON.parse(localStorage.getItem('hospitalData'))
+              return await axios.put(`${API}/api/hospitals/change-password`, {
+                hospital_id: hospitalData.id,
+                old_password: oldPass,
+                new_password: newPass
+              })
+            }}
+          />
+        </div>
+
       </div>
-      <div className="bg-white rounded-2xl shadow p-6 mt-6">
-  <h2 className="text-xl font-semibold text-gray-700 mb-4">🔑 Change Password</h2>
-  <ChangePassword
-    onSubmit={async (oldPass, newPass) => {
-      const hospital = JSON.parse(localStorage.getItem('hospitalData'))
-      return await axios.put('https://blood-bank-eqyr.onrender.com/api/hospitals/change-password', {
-        hospital_id: hospital.id,
-        old_password: oldPass,
-        new_password: newPass
-      })
-    }}
-  />
-</div>
     </div>
   )
 }
