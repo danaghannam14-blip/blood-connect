@@ -76,7 +76,7 @@ const handleSubmit = async (e) => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="text-sm text-gray-600 font-medium mb-1 block">Email or Username</label>
+            <label className="text-sm text-gray-600 font-medium mb-1 block">Email</label>
             <input
               placeholder="Enter your email or username"
               value={form.identifier}
