@@ -8,6 +8,7 @@ import DonorMap from './pages/DonorMap'
 import Emergency from './pages/Emergency'
 import HospitalLogin from './pages/HospitalLogin'
 import HospitalDashboard from './pages/HospitalDashboard'
+import Admin from './pages/Admin'
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +22,7 @@ function App() {
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/hospital/login" element={<HospitalLogin />} />     
       <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
+      <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
   )

@@ -52,5 +52,10 @@ router.put('/update/:id', (req, res) => {
     res.json({ message: 'Request updated successfully' });
   });
 });
-
+router.delete('/:id', (req, res) => {
+  db.query('DELETE FROM blood_requests WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message })
+    res.json({ message: 'Request deleted' })
+  })
+})
 module.exports = router;

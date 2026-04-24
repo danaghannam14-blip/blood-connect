@@ -65,5 +65,17 @@ router.post('/login', (req, res) => {
     });
   });
 });
+router.get('/all', (req, res) => {
+  db.query('SELECT id, full_name, email, blood_type, is_eligible FROM donors', (err, results) => {
+    if (err) return res.status(500).json({ message: err.message })
+    res.json(results)
+  })
+})
 
+router.delete('/:id', (req, res) => {
+  db.query('DELETE FROM donors WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message })
+    res.json({ message: 'Donor deleted' })
+  })
+})
 module.exports = router;

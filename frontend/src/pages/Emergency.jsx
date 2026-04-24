@@ -97,17 +97,19 @@ function Emergency() {
   }, [])
 
   useEffect(() => {
-    if (userLocation && hospitals.length > 0) {
-      const withDistance = hospitals
-        .filter(h => h.latitude && h.longitude)
-        .map(h => ({
-          ...h,
-          distance: getDistance(userLocation[0], userLocation[1], h.latitude, h.longitude)
-        }))
-        .sort((a, b) => a.distance - b.distance)
-      setNearest(withDistance[0])
-    }
-  }, [userLocation, hospitals])
+    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/all')
+      .then(res => res.json())
+      .then(data => setHospitals(data))
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = [position.coords.latitude, position.coords.longitude]
+        setUserLocation(loc)
+        setMainLocation(loc)
+      },
+      () => setLocationDenied(true)
+    )
+  }, [])
 
   if (!userLocation && !locationDenied) return (
     <div className="min-h-screen bg-red-50 flex items-center justify-center">

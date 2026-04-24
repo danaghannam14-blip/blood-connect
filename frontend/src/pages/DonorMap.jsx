@@ -69,15 +69,10 @@ function DonorMap() {
     setLocationDenied(false)
   }
 
-  useEffect(() => {
-    const myLat = import.meta.env.VITE_MY_LAT
-    const myLng = import.meta.env.VITE_MY_LNG
-
+useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const loc = (myLat && myLng)
-          ? [parseFloat(myLat), parseFloat(myLng)]
-          : [position.coords.latitude, position.coords.longitude]
+        const loc = [position.coords.latitude, position.coords.longitude]
         setUserLocation(loc)
         setMainLocation(loc)
       },

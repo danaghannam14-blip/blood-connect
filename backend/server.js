@@ -16,7 +16,8 @@ const inventoryRoutes = require('./routes/inventory');
 const requestRoutes = require('./routes/requests');
 const chatbotRoutes = require('./routes/chatbot');
 const idcheckRoutes = require('./routes/idcheck');
-
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
 app.use('/api/idcheck', idcheckRoutes);
 app.use('/api/donors', donorRoutes);
 app.use('/api/hospitals', hospitalRoutes);
