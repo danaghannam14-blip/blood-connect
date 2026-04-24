@@ -13,8 +13,8 @@ function Home() {
           <span className="text-xl font-bold text-red-600">BloodConnect</span>
         </div>
         <div className="flex gap-4 items-center">
-          <a href="#how" className="text-gray-600 hover:text-red-600 text-sm font-medium">How It Works</a>
-          <a href="#stats" className="text-gray-600 hover:text-red-600 text-sm font-medium">Impact</a>
+          <a href="/how-it-works" className="text-gray-600 hover:text-red-600 text-sm font-medium">How It Works</a>
+<a href="/impact" className="text-gray-600 hover:text-red-600 text-sm font-medium">Impact</a>
           <button onClick={() => navigate('/emergency')}
             className="text-red-600 border border-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-50">
             🚨 Emergency

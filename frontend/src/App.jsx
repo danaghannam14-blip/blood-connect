@@ -10,6 +10,8 @@ import Emergency from './pages/Emergency'
 import HospitalLogin from './pages/HospitalLogin'
 import HospitalDashboard from './pages/HospitalDashboard'
 import Admin from './pages/Admin'
+import HowItWorks from './pages/HowItWorks'
+import Impact from './pages/Impact'
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/hospital/login" element={<HospitalLogin />} />
         <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/impact" element={<Impact />} />
       </Routes>
     </BrowserRouter>
   )
