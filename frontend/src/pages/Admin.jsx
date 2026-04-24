@@ -16,8 +16,9 @@ function Admin() {
   const [adminMessage, setAdminMessage] = useState('')
   const [changePass, setChangePass] = useState({ email: '', old_password: '', new_password: '' })
   const [changePassMessage, setChangePassMessage] = useState('')
-const [newHospital, setNewHospital] = useState({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
-const [hospitalMessage, setHospitalMessage] = useState('')
+  const [newHospital, setNewHospital] = useState({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
+  const [hospitalMessage, setHospitalMessage] = useState('')
+
   useEffect(() => {
     const adminData = localStorage.getItem('adminData')
     if (adminData) {
@@ -77,6 +78,20 @@ const [hospitalMessage, setHospitalMessage] = useState('')
     }
   }
 
+  const addHospital = async (e) => {
+    e.preventDefault()
+    setHospitalMessage('')
+    try {
+      await axios.post(`${API}/api/admin/add-hospital`, newHospital)
+      setHospitalMessage('Hospital added successfully!')
+      setNewHospital({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
+      const res = await axios.get(`${API}/api/admin/hospitals`)
+      setHospitals(res.data)
+    } catch (err) {
+      setHospitalMessage(err.response?.data?.message || 'Failed to add hospital')
+    }
+  }
+
   const handleChangePassword = async (e) => {
     e.preventDefault()
     setChangePassMessage('')
@@ -93,39 +108,7 @@ const [hospitalMessage, setHospitalMessage] = useState('')
     localStorage.removeItem('adminData')
     navigate('/login')
   }
-const addHospital = async (e) => {
-  e.preventDefault()
-  setHospitalMessage('')
-  
-  try {
-    // Auto-get coordinates from address
-    let lat = newHospital.latitude
-    let lng = newHospital.longitude
 
-    if (!lat || !lng) {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newHospital.address)}&format=json&limit=1`
-      )
-      const geoData = await geoRes.json()
-      if (geoData.length > 0) {
-        lat = geoData[0].lat
-        lng = geoData[0].lon
-      }
-    }
-
-    await axios.post(`${API}/api/admin/add-hospital`, {
-      ...newHospital,
-      latitude: lat,
-      longitude: lng
-    })
-    setHospitalMessage('Hospital added successfully!')
-    setNewHospital({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
-    const res = await axios.get(`${API}/api/admin/hospitals`)
-    setHospitals(res.data)
-  } catch (err) {
-    setHospitalMessage(err.response?.data?.message || 'Failed to add hospital')
-  }
-}
   if (!authed) return null
 
   return (
@@ -188,61 +171,66 @@ const addHospital = async (e) => {
         )}
 
         {tab === 'hospitals' && (
-  <div className="flex flex-col gap-6">
-    <div className="bg-white rounded-2xl shadow p-6">
-      <h2 className="text-xl font-semibold mb-2">➕ Add New Hospital</h2>
-      <p className="text-gray-500 text-sm mb-4">Add a hospital to the system so it can log in and post blood requests.</p>
-      {hospitalMessage && (
-        <p className={`mb-4 text-sm ${hospitalMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-          {hospitalMessage}
-        </p>
-      )}
-      <form onSubmit={addHospital} className="grid grid-cols-2 gap-4">
-        <input placeholder="Hospital Name" value={newHospital.name}
-          onChange={e => setNewHospital({...newHospital, name: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" required />
-        <input placeholder="Email" value={newHospital.email}
-          onChange={e => setNewHospital({...newHospital, email: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" required />
-        <input type="password" placeholder="Password" value={newHospital.password}
-          onChange={e => setNewHospital({...newHospital, password: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" required />
-        <input placeholder="Address" value={newHospital.address}
-          onChange={e => setNewHospital({...newHospital, address: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" />
-       
-        <button type="submit"
-          className="col-span-2 bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 text-sm">
-          Add Hospital
-        </button>
-      </form>
-    </div>
+          <div className="flex flex-col gap-6">
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h2 className="text-xl font-semibold mb-2">➕ Add New Hospital</h2>
+              <p className="text-gray-500 text-sm mb-4">Add a hospital so it can log in and post blood requests.</p>
+              {hospitalMessage && (
+                <p className={`mb-4 text-sm ${hospitalMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                  {hospitalMessage}
+                </p>
+              )}
+              <form onSubmit={addHospital} className="grid grid-cols-2 gap-4">
+                <input placeholder="Hospital Name" value={newHospital.name}
+                  onChange={e => setNewHospital({...newHospital, name: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" required />
+                <input placeholder="Email" value={newHospital.email}
+                  onChange={e => setNewHospital({...newHospital, email: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" required />
+                <input type="password" placeholder="Password" value={newHospital.password}
+                  onChange={e => setNewHospital({...newHospital, password: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" required />
+                <input placeholder="Address" value={newHospital.address}
+                  onChange={e => setNewHospital({...newHospital, address: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" />
+                <input placeholder="Latitude (e.g. 33.8938)" value={newHospital.latitude}
+                  onChange={e => setNewHospital({...newHospital, latitude: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" />
+                <input placeholder="Longitude (e.g. 35.5018)" value={newHospital.longitude}
+                  onChange={e => setNewHospital({...newHospital, longitude: e.target.value})}
+                  className="border rounded-lg p-3 focus:outline-none text-sm" />
+                <button type="submit"
+                  className="col-span-2 bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 text-sm">
+                  Add Hospital
+                </button>
+              </form>
+            </div>
 
-    <div className="bg-white rounded-2xl shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">🏥 Hospitals ({hospitals.length})</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="pb-2 pr-4">Name</th>
-              <th className="pb-2 pr-4">Email</th>
-              <th className="pb-2">Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {hospitals.map(h => (
-              <tr key={h.id} className="border-b last:border-0">
-                <td className="py-2 pr-4">{h.name}</td>
-                <td className="py-2 pr-4">{h.email}</td>
-                <td className="py-2">{h.address}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">🏥 Hospitals ({hospitals.length})</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-gray-500">
+                      <th className="pb-2 pr-4">Name</th>
+                      <th className="pb-2 pr-4">Email</th>
+                      <th className="pb-2">Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hospitals.map(h => (
+                      <tr key={h.id} className="border-b last:border-0">
+                        <td className="py-2 pr-4">{h.name}</td>
+                        <td className="py-2 pr-4">{h.email}</td>
+                        <td className="py-2">{h.address}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         {tab === 'requests' && (
           <div className="bg-white rounded-2xl shadow p-6">
