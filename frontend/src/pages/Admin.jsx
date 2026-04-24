@@ -94,18 +94,38 @@ const [hospitalMessage, setHospitalMessage] = useState('')
     navigate('/login')
   }
 const addHospital = async (e) => {
-    e.preventDefault()
-    setHospitalMessage('')
-    try {
-      await axios.post(`${API}/api/admin/add-hospital`, newHospital)
-      setHospitalMessage('Hospital added successfully!')
-      setNewHospital({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
-      const res = await axios.get(`${API}/api/admin/hospitals`)
-      setHospitals(res.data)
-    } catch (err) {
-      setHospitalMessage(err.response?.data?.message || 'Failed to add hospital')
+  e.preventDefault()
+  setHospitalMessage('')
+  
+  try {
+    // Auto-get coordinates from address
+    let lat = newHospital.latitude
+    let lng = newHospital.longitude
+
+    if (!lat || !lng) {
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newHospital.address)}&format=json&limit=1`
+      )
+      const geoData = await geoRes.json()
+      if (geoData.length > 0) {
+        lat = geoData[0].lat
+        lng = geoData[0].lon
+      }
     }
+
+    await axios.post(`${API}/api/admin/add-hospital`, {
+      ...newHospital,
+      latitude: lat,
+      longitude: lng
+    })
+    setHospitalMessage('Hospital added successfully!')
+    setNewHospital({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
+    const res = await axios.get(`${API}/api/admin/hospitals`)
+    setHospitals(res.data)
+  } catch (err) {
+    setHospitalMessage(err.response?.data?.message || 'Failed to add hospital')
   }
+}
   if (!authed) return null
 
   return (
@@ -190,12 +210,7 @@ const addHospital = async (e) => {
         <input placeholder="Address" value={newHospital.address}
           onChange={e => setNewHospital({...newHospital, address: e.target.value})}
           className="border rounded-lg p-3 focus:outline-none text-sm" />
-        <input placeholder="Latitude (e.g. 33.8938)" value={newHospital.latitude}
-          onChange={e => setNewHospital({...newHospital, latitude: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" />
-        <input placeholder="Longitude (e.g. 35.5018)" value={newHospital.longitude}
-          onChange={e => setNewHospital({...newHospital, longitude: e.target.value})}
-          className="border rounded-lg p-3 focus:outline-none text-sm" />
+       
         <button type="submit"
           className="col-span-2 bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 text-sm">
           Add Hospital
