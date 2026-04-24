@@ -73,5 +73,22 @@ router.get('/all', (req, res) => {
     res.json(results);
   });
 });
+router.put('/change-password', async (req, res) => {
+  const { hospital_id, old_password, new_password } = req.body;
+  const bcrypt = require('bcryptjs');
 
+  db.query('SELECT * FROM hospitals WHERE id = ?', [hospital_id], async (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    if (results.length === 0) return res.status(404).json({ message: 'Hospital not found' });
+
+    const match = bcrypt.compareSync(old_password, results[0].password);
+    if (!match) return res.status(401).json({ message: 'Old password is incorrect' });
+
+    const hashed = bcrypt.hashSync(new_password, 10);
+    db.query('UPDATE hospitals SET password = ? WHERE id = ?', [hashed, hospital_id], (err) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Password changed successfully' });
+    });
+  });
+});
 module.exports = router;

@@ -78,4 +78,22 @@ router.delete('/:id', (req, res) => {
     res.json({ message: 'Donor deleted' })
   })
 })
+router.put('/change-password', async (req, res) => {
+  const { donor_id, old_password, new_password } = req.body;
+  const bcrypt = require('bcryptjs');
+
+  db.query('SELECT * FROM donors WHERE id = ?', [donor_id], async (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    if (results.length === 0) return res.status(404).json({ message: 'Donor not found' });
+
+    const match = bcrypt.compareSync(old_password, results[0].password);
+    if (!match) return res.status(401).json({ message: 'Old password is incorrect' });
+
+    const hashed = bcrypt.hashSync(new_password, 10);
+    db.query('UPDATE donors SET password = ? WHERE id = ?', [hashed, donor_id], (err) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Password changed successfully' });
+    });
+  });
+});
 module.exports = router;

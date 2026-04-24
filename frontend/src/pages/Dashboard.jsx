@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ChangePassword from '../components/ChangePassword'
 import axios from 'axios'
 
 function Dashboard() {
@@ -73,13 +74,27 @@ function Dashboard() {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-6">
+        <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">🗺️ Find Nearby Hospitals</h2>
           <p className="text-gray-500 mb-4">See hospitals near you and what blood they need.</p>
           <button onClick={() => navigate('/donor/map')}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
             View Map
           </button>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">🔑 Change Password</h2>
+          <ChangePassword
+            onSubmit={async (oldPass, newPass) => {
+              const donorData = JSON.parse(localStorage.getItem('donorData'))
+              return await axios.put('https://blood-bank-eqyr.onrender.com/api/donors/change-password', {
+                donor_id: donorData.id,
+                old_password: oldPass,
+                new_password: newPass
+              })
+            }}
+          />
         </div>
 
       </div>
