@@ -36,10 +36,16 @@ function Home() {
         <p className="text-gray-500 text-lg max-w-xl mx-auto mb-10">
           BloodConnect connects blood donors with hospitals in real-time, ensuring the right blood reaches the right patient at the right time.
         </p>
-        <button onClick={() => navigate('/emergency')}
-          className="bg-white border-2 border-red-600 text-red-600 px-8 py-3 rounded-xl text-lg font-semibold hover:bg-red-50">
-          🚨 Emergency Help
-        </button>
+        <div className="flex flex-col items-center gap-4">
+  <button onClick={() => navigate('/emergency')}
+    className="bg-white border-2 border-red-600 text-red-600 px-8 py-3 rounded-xl text-lg font-semibold hover:bg-red-50">
+    🚨 Emergency Help
+  </button>
+  <button onClick={() => navigate('/login')}
+    className="bg-red-600 text-white px-12 py-4 rounded-xl text-xl font-bold hover:bg-red-700 shadow-lg">
+    Sign In
+  </button>
+</div>
       </section>
 
       {/* Stats */}
