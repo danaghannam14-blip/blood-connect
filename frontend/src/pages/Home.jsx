@@ -1,9 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
 
 function Home() {
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-white">
@@ -14,42 +12,21 @@ function Home() {
           <span className="text-2xl">🩸</span>
           <span className="text-xl font-bold text-red-600">BloodConnect</span>
         </div>
-
-        {/* Desktop nav */}
-        <div className="hidden md:flex gap-4 items-center">
+        <div className="flex gap-2 items-center flex-wrap justify-end">
           <button onClick={() => navigate('/how-it-works')}
-            className="text-gray-600 hover:text-red-600 text-sm font-medium">How It Works</button>
+            className="text-gray-600 hover:text-red-600 text-xs font-medium">How It Works</button>
           <button onClick={() => navigate('/impact')}
-            className="text-gray-600 hover:text-red-600 text-sm font-medium">Impact</button>
+            className="text-gray-600 hover:text-red-600 text-xs font-medium">Impact</button>
           <button onClick={() => navigate('/emergency')}
-            className="text-red-600 border border-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-50">
+            className="text-red-600 border border-red-600 px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-50">
             🚨 Emergency
           </button>
           <button onClick={() => navigate('/login')}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
+            className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700">
             Sign In
           </button>
         </div>
-
-        {/* Mobile menu button */}
-        <button className="md:hidden text-gray-600 text-2xl" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? '✕' : '☰'}
-        </button>
       </nav>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden bg-white shadow-lg px-6 py-4 flex flex-col gap-3 z-40">
-          <button onClick={() => { navigate('/how-it-works'); setMenuOpen(false) }}
-            className="text-gray-600 text-left py-2 border-b">How It Works</button>
-          <button onClick={() => { navigate('/impact'); setMenuOpen(false) }}
-            className="text-gray-600 text-left py-2 border-b">Impact</button>
-          <button onClick={() => { navigate('/emergency'); setMenuOpen(false) }}
-            className="text-red-600 text-left py-2 border-b font-semibold">🚨 Emergency</button>
-          <button onClick={() => { navigate('/login'); setMenuOpen(false) }}
-            className="bg-red-600 text-white py-2 rounded-lg font-semibold">Sign In</button>
-        </div>
-      )}
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-red-50 to-white py-16 px-6 text-center">
