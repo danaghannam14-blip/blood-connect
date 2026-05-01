@@ -2,6 +2,8 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
+const API = 'https://blood-bank-eqyr.onrender.com'
+
 function DonorRegister() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -10,19 +12,50 @@ function DonorRegister() {
   })
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [idFile, setIdFile] = useState(null)
+  const [idStatus, setIdStatus] = useState(null) // null | 'scanning' | 'verified' | 'failed'
+  const [idMessage, setIdMessage] = useState('')
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  const handleScanId = async () => {
+    if (!idFile) { setIdMessage('Please select your ID photo first.'); return }
+    setIdStatus('scanning')
+    setIdMessage('')
+    try {
+      const formData = new FormData()
+      formData.append('id_photo', idFile)
+      const res = await axios.post(`http://localhost:5000/api/idcheck/scan`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      if (res.data.eligible) {
+        setIdStatus('verified')
+        setIdMessage(`✅ Age verified! You are ${res.data.age} years old.`)
+        setForm(prev => ({ ...prev, date_of_birth: res.data.date_of_birth }))
+      } else {
+        setIdStatus('failed')
+        setIdMessage(`❌ ${res.data.message}`)
+      }
+    } catch (err) {
+      setIdStatus('failed')
+      setIdMessage(err.response?.data?.message || 'Could not scan ID. Please try a clearer photo.')
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (idStatus !== 'verified') {
+      setError('Please upload and verify your ID before registering.')
+      return
+    }
     setMessage('')
     setError('')
     try {
-      const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/donors/register', form)
+      const res = await axios.post(`${API}/api/donors/register`, form)
       setMessage(res.data.message)
-      setTimeout(() => navigate('/donor/login'), 2000)
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed')
     }
@@ -52,8 +85,6 @@ function DonorRegister() {
               <option key={bt} value={bt}>{bt}</option>
             ))}
           </select>
-          <input name="date_of_birth" type="date" onChange={handleChange}
-            className="border rounded-lg p-3 focus:outline-none focus:border-red-400" required />
           <select name="gender" onChange={handleChange}
             className="border rounded-lg p-3 focus:outline-none focus:border-red-400" required>
             <option value="">Select Gender</option>
@@ -62,12 +93,39 @@ function DonorRegister() {
           </select>
           <input name="address" placeholder="Address" onChange={handleChange}
             className="border rounded-lg p-3 focus:outline-none focus:border-red-400" />
+
+          {/* ID Upload Section */}
+          <div className="border-2 border-dashed border-red-200 rounded-xl p-4 bg-red-50">
+            <p className="text-sm font-semibold text-gray-700 mb-2">🪪 Upload Lebanese ID for Age Verification</p>
+            <p className="text-xs text-gray-400 mb-3">We scan your ID to verify you are 18+. Your date of birth will be filled automatically.</p>
+            <input type="file" accept="image/*"
+              onChange={e => { setIdFile(e.target.files[0]); setIdStatus(null); setIdMessage('') }}
+              className="w-full text-sm text-gray-500 mb-3" />
+            <button type="button" onClick={handleScanId}
+              disabled={idStatus === 'scanning'}
+              className="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+              {idStatus === 'scanning' ? '🔍 Scanning ID...' : 'Scan ID'}
+            </button>
+            {idMessage && (
+              <p className={`mt-2 text-sm ${idStatus === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+                {idMessage}
+              </p>
+            )}
+          </div>
+
+          {/* Date of birth shown after scan */}
+          {form.date_of_birth && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+              📅 Date of Birth: {form.date_of_birth}
+            </div>
+          )}
+
           <button type="submit"
             className="bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700">
             Register
           </button>
           <p className="text-center text-gray-500">Already have an account?
-            <span onClick={() => navigate('/donor/login')}
+            <span onClick={() => navigate('/login')}
               className="text-red-600 cursor-pointer ml-1">Login</span>
           </p>
         </form>

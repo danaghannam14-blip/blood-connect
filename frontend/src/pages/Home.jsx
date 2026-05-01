@@ -95,7 +95,7 @@ function Home() {
 
       {/* Footer */}
       <footer className="bg-gray-900 py-6 px-6 text-center text-gray-500 text-sm">
-        © 2024 BloodConnect. Smart Donor Matching System. All rights reserved.
+        © 2026 BloodConnect. Smart Donor Matching System. All rights reserved.
       </footer>
 
     </div>
