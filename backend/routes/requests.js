@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const SibApiV3Sdk = require('@getbrevo/brevo');
 
-const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
-brevoClient.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-
-const sendDonorNotifications = (blood_type, hospital_name) => {
+const sendDonorNotifications = async (blood_type, hospital_name) => {
   db.query(
     'SELECT full_name, email FROM donors WHERE blood_type = ? AND is_eligible = 1',
     [blood_type],
@@ -15,38 +11,46 @@ const sendDonorNotifications = (blood_type, hospital_name) => {
 
       for (const donor of donors) {
         try {
-          const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-          sendSmtpEmail.subject = `🩸 Urgent: ${blood_type} Blood Needed at ${hospital_name}`;
-          sendSmtpEmail.to = [{ email: donor.email, name: donor.full_name }];
-          sendSmtpEmail.sender = { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' };
-          sendSmtpEmail.htmlContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background-color: #dc2626; padding: 20px; text-align: center;">
-                <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
-              </div>
-              <div style="padding: 30px; background: #fff;">
-                <h2 style="color: #dc2626;">Urgent Blood Request</h2>
-                <p>Dear ${donor.full_name},</p>
-                <p><strong>${hospital_name}</strong> urgently needs <strong>${blood_type}</strong> blood donors.</p>
-                <p>Your blood type matches this request. Please consider visiting the hospital to donate.</p>
-                <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
-                  <p style="margin: 0;"><strong>Hospital:</strong> ${hospital_name}</p>
-                  <p style="margin: 8px 0 0;"><strong>Blood Type Needed:</strong> ${blood_type}</p>
+          await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': process.env.BREVO_API_KEY,
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
+              to: [{ email: donor.email, name: donor.full_name }],
+              subject: `🩸 Urgent: ${blood_type} Blood Needed at ${hospital_name}`,
+              htmlContent: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="background-color: #dc2626; padding: 20px; text-align: center;">
+                    <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
+                  </div>
+                  <div style="padding: 30px; background: #fff;">
+                    <h2 style="color: #dc2626;">Urgent Blood Request</h2>
+                    <p>Dear ${donor.full_name},</p>
+                    <p><strong>${hospital_name}</strong> urgently needs <strong>${blood_type}</strong> blood donors.</p>
+                    <p>Your blood type matches this request. Please consider visiting the hospital to donate.</p>
+                    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
+                      <p style="margin: 0;"><strong>Hospital:</strong> ${hospital_name}</p>
+                      <p style="margin: 8px 0 0;"><strong>Blood Type Needed:</strong> ${blood_type}</p>
+                    </div>
+                    <a href="https://bloodconnect-lb.vercel.app/login" 
+                       style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                      View Dashboard
+                    </a>
+                    <p style="color: #666; margin-top: 20px; font-size: 14px;">
+                      Every drop counts. Thank you for being a BloodConnect donor.
+                    </p>
+                  </div>
+                  <div style="background: #111; padding: 15px; text-align: center;">
+                    <p style="color: #666; margin: 0; font-size: 12px;">© 2024 BloodConnect. Smart Donor Matching System.</p>
+                  </div>
                 </div>
-                <a href="https://bloodconnect-lb.vercel.app/login" 
-                   style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
-                  View Dashboard
-                </a>
-                <p style="color: #666; margin-top: 20px; font-size: 14px;">
-                  Every drop counts. Thank you for being a BloodConnect donor.
-                </p>
-              </div>
-              <div style="background: #111; padding: 15px; text-align: center;">
-                <p style="color: #666; margin: 0; font-size: 12px;">© 2024 BloodConnect. Smart Donor Matching System.</p>
-              </div>
-            </div>
-          `;
-          await brevoClient.sendTransacEmail(sendSmtpEmail);
+              `
+            })
+          });
         } catch (e) {
           console.error('Email error:', e.message);
         }
