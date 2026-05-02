@@ -117,24 +117,38 @@ const compressImage = (file) => {
           <input name="address" placeholder="Address" onChange={handleChange}
             className="border rounded-lg p-3 focus:outline-none focus:border-red-400" />
 
-          {/* ID Upload Section */}
-          <div className="border-2 border-dashed border-red-200 rounded-xl p-4 bg-red-50">
-            <p className="text-sm font-semibold text-gray-700 mb-2">🪪 Upload Lebanese ID for Age Verification</p>
-            <p className="text-xs text-gray-400 mb-3">We scan your ID to verify you are 18+. Your date of birth will be filled automatically.</p>
-            <input type="file" accept="image/*"
-              onChange={e => { setIdFile(e.target.files[0]); setIdStatus(null); setIdMessage('') }}
-              className="w-full text-sm text-gray-500 mb-3" />
-            <button type="button" onClick={handleScanId}
-              disabled={idStatus === 'scanning'}
-              className="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
-              {idStatus === 'scanning' ? '🔍 Scanning ID...' : 'Scan ID'}
-            </button>
-            {idMessage && (
-              <p className={`mt-2 text-sm ${idStatus === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
-                {idMessage}
-              </p>
-            )}
-          </div>
+    {/* ID Upload Section */}
+<div className="border-2 border-dashed border-red-200 rounded-xl p-4 bg-red-50">
+  <p className="text-sm font-semibold text-gray-700 mb-2">🪪 Upload Lebanese ID for Age Verification</p>
+  <p className="text-xs text-gray-400 mb-3">We scan your ID to verify you are 18+. Your date of birth will be filled automatically.</p>
+  
+  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-red-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-red-50 transition mb-3">
+    <div className="flex flex-col items-center justify-center">
+      <span className="text-3xl mb-1">📷</span>
+      {idFile ? (
+        <p className="text-sm text-red-600 font-semibold">{idFile.name}</p>
+      ) : (
+        <>
+          <p className="text-sm font-semibold text-gray-600">Click to upload ID photo</p>
+          <p className="text-xs text-gray-400">JPG, PNG supported</p>
+        </>
+      )}
+    </div>
+    <input type="file" accept="image/*" className="hidden"
+      onChange={e => { setIdFile(e.target.files[0]); setIdStatus(null); setIdMessage('') }} />
+  </label>
+
+  <button type="button" onClick={handleScanId}
+    disabled={idStatus === 'scanning'}
+    className="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+    {idStatus === 'scanning' ? '🔍 Scanning ID...' : 'Scan ID'}
+  </button>
+  {idMessage && (
+    <p className={`mt-2 text-sm ${idStatus === 'verified' ? 'text-green-600' : 'text-red-600'}`}>
+      {idMessage}
+    </p>
+  )}
+</div>
 
           {/* Date of birth shown after scan */}
           {form.date_of_birth && (
