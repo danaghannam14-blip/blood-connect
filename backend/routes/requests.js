@@ -84,6 +84,7 @@ router.get('/all', (req, res) => {
     SELECT br.*, h.name as hospital_name, h.address as hospital_address 
     FROM blood_requests br
     JOIN hospitals h ON br.hospital_id = h.id
+    WHERE br.status = 'pending'
     ORDER BY br.created_at DESC
   `;
   db.query(sql, (err, results) => {
