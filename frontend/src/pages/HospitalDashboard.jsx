@@ -50,7 +50,14 @@ function HospitalDashboard() {
       setRequests(res.data)
     } catch (err) { console.log(err) }
   }
-
+const handleDelete = async (id) => {
+  if (!window.confirm('Delete this request?')) return
+  try {
+    await axios.delete(`${API}/api/requests/${id}`)
+    const res = await axios.get(`${API}/api/requests/hospital/${hospital.id}`)
+    setRequests(res.data)
+  } catch (err) { console.log(err) }
+}
   const handleLogout = () => {
     localStorage.removeItem('hospitalToken')
     localStorage.removeItem('hospitalData')
@@ -110,12 +117,18 @@ function HospitalDashboard() {
                   <p className="text-gray-500 text-sm">{r.quantity_needed} units needed</p>
                   <p className="text-xs text-gray-400">Status: {r.status}</p>
                 </div>
-                {r.status === 'pending' && (
-                  <button onClick={() => handleFulfill(r.id)}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600">
-                    Mark Fulfilled
-                  </button>
-                )}
+              <div className="flex gap-2">
+  {r.status === 'pending' && (
+    <button onClick={() => handleFulfill(r.id)}
+      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600">
+      Mark Fulfilled
+    </button>
+  )}
+  <button onClick={() => handleDelete(r.id)}
+    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600">
+    Delete
+  </button>
+</div>
               </div>
             ))
           }
