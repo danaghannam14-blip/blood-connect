@@ -20,29 +20,52 @@ function DonorRegister() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleScanId = async () => {
-    if (!idFile) { setIdMessage('Please select your ID photo first.'); return }
-    setIdStatus('scanning')
-    setIdMessage('')
-    try {
-      const formData = new FormData()
-      formData.append('id_photo', idFile)
-      const res = await axios.post(`http://localhost:5000/api/idcheck/scan`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      if (res.data.eligible) {
-        setIdStatus('verified')
-        setIdMessage(`✅ Age verified! You are ${res.data.age} years old.`)
-        setForm(prev => ({ ...prev, date_of_birth: res.data.date_of_birth }))
-      } else {
-        setIdStatus('failed')
-        setIdMessage(`❌ ${res.data.message}`)
-      }
-    } catch (err) {
+ const handleScanId = async () => {
+  if (!idFile) { setIdMessage('Please select your ID photo first.'); return }
+  setIdStatus('scanning')
+  setIdMessage('')
+  try {
+    // Compress image before sending
+    const compressed = await compressImage(idFile)
+    const formData = new FormData()
+    formData.append('id_photo', compressed, 'id.jpg')
+    const res = await axios.post(`${API}/api/idcheck/scan`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    if (res.data.eligible) {
+      setIdStatus('verified')
+      setIdMessage(`✅ Age verified! You are ${res.data.age} years old.`)
+      setForm(prev => ({ ...prev, date_of_birth: res.data.date_of_birth }))
+    } else {
       setIdStatus('failed')
-      setIdMessage(err.response?.data?.message || 'Could not scan ID. Please try a clearer photo.')
+      setIdMessage(`❌ ${res.data.message}`)
     }
+  } catch (err) {
+    setIdStatus('failed')
+    setIdMessage(err.response?.data?.message || 'Could not scan ID. Please try a clearer photo.')
   }
+}
+
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxWidth = 1200
+        const scale = Math.min(1, maxWidth / img.width)
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
