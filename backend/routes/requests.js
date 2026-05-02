@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
