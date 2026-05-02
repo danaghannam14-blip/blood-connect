@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
 
 const sendDonorNotifications = (blood_type, hospital_name) => {
   db.query(
@@ -14,8 +20,8 @@ const sendDonorNotifications = (blood_type, hospital_name) => {
 
       for (const donor of donors) {
         try {
-          await resend.emails.send({
-            from: 'BloodConnect <onboarding@resend.dev>',
+          await transporter.sendMail({
+            from: `"BloodConnect" <${process.env.GMAIL_USER}>`,
             to: donor.email,
             subject: `🩸 Urgent: ${blood_type} Blood Needed at ${hospital_name}`,
             html: `
@@ -60,7 +66,6 @@ router.post('/create', (req, res) => {
   db.query(sql, [hospital_id, blood_type, quantity_needed], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to create request', error: err.message });
     
-    // Get hospital name and send notifications
     db.query('SELECT name FROM hospitals WHERE id = ?', [hospital_id], (err, results) => {
       if (!err && results.length > 0) {
         sendDonorNotifications(blood_type, results[0].name);
