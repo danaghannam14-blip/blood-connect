@@ -7,11 +7,13 @@ const sendDonorNotifications = async (blood_type, hospital_name) => {
     'SELECT full_name, email FROM donors WHERE blood_type = ? AND is_eligible = 1',
     [blood_type],
     async (err, donors) => {
-      if (err || donors.length === 0) return;
+      console.log('Donors found:', donors ? donors.length : 0, 'for blood type:', blood_type);
+      if (err) { console.log('DB error:', err.message); return; }
+      if (donors.length === 0) { console.log('No eligible donors found'); return; }
 
       for (const donor of donors) {
         try {
-          await fetch('https://api.brevo.com/v3/smtp/email', {
+          const result = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
               'accept': 'application/json',
@@ -51,6 +53,8 @@ const sendDonorNotifications = async (blood_type, hospital_name) => {
               `
             })
           });
+          const responseData = await result.json();
+          console.log('Brevo response:', JSON.stringify(responseData));
         } catch (e) {
           console.error('Email error:', e.message);
         }
