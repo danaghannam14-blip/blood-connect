@@ -123,10 +123,16 @@ if (res.data.eligible) {
               </button>
             </div>
           )}
-          {done && eligible && (
+        {done && eligible && (
   <button onClick={() => navigate('/donor/dashboard')}
     className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700">
     Go Donate Now 🩸
+  </button>
+)}
+{done && !eligible && (
+  <button onClick={() => navigate('/')}
+    className="w-full bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700">
+    Back to Home
   </button>
 )}
         </div>
