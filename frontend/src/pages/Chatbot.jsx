@@ -67,6 +67,11 @@ const [eligible, setEligible] = useState(false)
 
    setEligible(res.data.eligible)
 const eligible = res.data.eligible
+if (res.data.eligible) {
+  const donorData = JSON.parse(localStorage.getItem('donorData'))
+  donorData.is_eligible = true
+  localStorage.setItem('donorData', JSON.stringify(donorData))
+}
         const reason = res.data.reason
        const resultText = eligible
   ? `✅ You are eligible to donate blood! Your heart is ready, your blood is needed — go be someone's hero today! 🦸`
