@@ -100,6 +100,12 @@ function Login() {
               className="w-full border rounded-xl p-3 focus:outline-none focus:border-red-400 text-sm"
               required />
           </div>
+          <div className="text-right">
+  <span onClick={() => navigate('/forgot-password')}
+    className="text-red-600 text-sm cursor-pointer hover:underline">
+    Forgot Password?
+  </span>
+</div>
           <button type="submit" disabled={loading}
             className="bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 mt-2">
             {loading ? 'Signing in...' : 'Sign In'}
