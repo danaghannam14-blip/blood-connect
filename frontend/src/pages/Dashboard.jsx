@@ -111,10 +111,17 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-700">📋 Donation History</h2>
-            <button onClick={() => setShowDonate(!showDonate)}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
-              + Record Donation
-            </button>
+            {donor.is_eligible ? (
+  <button onClick={() => setShowDonate(!showDonate)}
+    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
+    + Record Donation
+  </button>
+) : (
+  <button onClick={() => navigate('/donor/chatbot')}
+    className="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-500">
+    ⚠️ Complete Health Screening First
+  </button>
+)}
           </div>
 
           {donateMessage && <p className="text-green-600 text-sm mb-4">{donateMessage}</p>}
