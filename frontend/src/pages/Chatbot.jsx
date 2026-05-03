@@ -66,10 +66,9 @@ function Chatbot() {
 
         const eligible = res.data.eligible
         const reason = res.data.reason
-        const resultText = eligible
-          ? `✅ You are eligible to donate blood!`
-          : `❌ You are not eligible to donate at this time: ${reason}`
-
+       const resultText = eligible
+  ? `✅ You are eligible to donate blood! Your heart is ready, your blood is needed — go be someone's hero today! 🦸`
+  : `❌ You are not eligible to donate at this time. Your body needs a little more time — take care of yourself and try again soon! 💙`
         setMessages(prev => [...prev, { from: 'bot', text: resultText }])
       } catch (err) {
         setLoading(false)
@@ -117,12 +116,12 @@ function Chatbot() {
               </button>
             </div>
           )}
-          {done && (
-            <button onClick={() => navigate('/donor/dashboard')}
-              className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700">
-              Back to Dashboard
-            </button>
-          )}
+          {done && eligible && (
+  <button onClick={() => navigate('/donor/dashboard')}
+    className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700">
+    Go Donate Now 🩸
+  </button>
+)}
         </div>
       </div>
     </div>
