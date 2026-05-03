@@ -19,8 +19,9 @@ function Chatbot() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
   const [done, setDone] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [dots, setDots] = useState('.')
+const [loading, setLoading] = useState(false)
+const [dots, setDots] = useState('.')
+const [eligible, setEligible] = useState(false)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -64,7 +65,8 @@ function Chatbot() {
 
         setLoading(false)
 
-        const eligible = res.data.eligible
+   setEligible(res.data.eligible)
+const eligible = res.data.eligible
         const reason = res.data.reason
        const resultText = eligible
   ? `✅ You are eligible to donate blood! Your heart is ready, your blood is needed — go be someone's hero today! 🦸`
