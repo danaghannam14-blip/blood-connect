@@ -10,20 +10,27 @@ function Dashboard() {
   const [donor, setDonor] = useState(null)
   const [inventory, setInventory] = useState([])
   const [history, setHistory] = useState([])
-  const [donateForm, setDonateForm] = useState({ hospital_id: '', blood_type: '' })
+  const [donateForm, setDonateForm] = useState({ hospital_id: '' })
   const [hospitals, setHospitals] = useState([])
   const [donateMessage, setDonateMessage] = useState('')
   const [showDonate, setShowDonate] = useState(false)
 
   useEffect(() => {
     const data = localStorage.getItem('donorData')
-    if (!data) { navigate('/donor/login'); return }
-    const donor = JSON.parse(data)
-    setDonor(donor)
-    axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
+    if (!data) { navigate('/login'); return }
+    const donorData = JSON.parse(data)
+
+    if (!donorData.is_eligible) {
+      navigate('/donor/chatbot')
+      return
+    }
+
+    setDonor(donorData)
+
+    axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`)
       .then(res => setInventory(res.data))
       .catch(err => console.log(err))
-    axios.get(`${API}/api/donors/history/${donor.id}`)
+    axios.get(`${API}/api/donors/history/${donorData.id}`)
       .then(res => setHistory(res.data))
       .catch(err => console.log(err))
     axios.get(`${API}/api/hospitals/all`)
@@ -91,8 +98,8 @@ function Dashboard() {
         </div>
 
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Health Screening</h2>
-          <p className="text-gray-500 mb-4">Complete your health screening to confirm your eligibility to donate.</p>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">🩺 Health Screening</h2>
+          <p className="text-gray-500 mb-4">Redo your health screening to update your eligibility status.</p>
           <button onClick={() => navigate('/donor/chatbot')}
             className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700">
             Start Health Screening
@@ -111,17 +118,10 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-700">📋 Donation History</h2>
-            {donor.is_eligible ? (
-  <button onClick={() => setShowDonate(!showDonate)}
-    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
-    + Record Donation
-  </button>
-) : (
-  <button onClick={() => navigate('/donor/chatbot')}
-    className="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-500">
-    ⚠️ Complete Health Screening First
-  </button>
-)}
+            <button onClick={() => setShowDonate(!showDonate)}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
+              + Record Donation
+            </button>
           </div>
 
           {donateMessage && <p className="text-green-600 text-sm mb-4">{donateMessage}</p>}
