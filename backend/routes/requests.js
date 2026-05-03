@@ -2,12 +2,28 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+const compatibleDonors = {
+  'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
+  'O+': ['O+', 'A+', 'B+', 'AB+'],
+  'A-': ['A-', 'A+', 'AB-', 'AB+'],
+  'A+': ['A+', 'AB+'],
+  'B-': ['B-', 'B+', 'AB-', 'AB+'],
+  'B+': ['B+', 'AB+'],
+  'AB-': ['AB-', 'AB+'],
+  'AB+': ['AB+']
+};
+
 const sendDonorNotifications = async (blood_type, hospital_name) => {
+  const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
+    compatibleDonors[donor].includes(blood_type)
+  );
+
+  const placeholders = canDonateFrom.map(() => '?').join(',');
   db.query(
-    'SELECT full_name, email FROM donors WHERE blood_type = ? AND is_eligible = 1',
-    [blood_type],
+    `SELECT full_name, email FROM donors WHERE blood_type IN (${placeholders}) AND is_eligible = 1`,
+    canDonateFrom,
     async (err, donors) => {
-      console.log('Donors found:', donors ? donors.length : 0, 'for blood type:', blood_type);
+      console.log('Compatible donors found:', donors ? donors.length : 0, 'for blood type:', blood_type);
       if (err) { console.log('DB error:', err.message); return; }
       if (donors.length === 0) { console.log('No eligible donors found'); return; }
 
@@ -32,8 +48,8 @@ const sendDonorNotifications = async (blood_type, hospital_name) => {
                   <div style="padding: 30px; background: #fff;">
                     <h2 style="color: #dc2626;">Urgent Blood Request</h2>
                     <p>Dear ${donor.full_name},</p>
-                    <p><strong>${hospital_name}</strong> urgently needs <strong>${blood_type}</strong> blood donors.</p>
-                    <p>Your blood type matches this request. Please consider visiting the hospital to donate.</p>
+                    <p><strong>${hospital_name}</strong> urgently needs <strong>${blood_type}</strong> blood.</p>
+                    <p>Your blood type is compatible and you can help save lives!</p>
                     <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
                       <p style="margin: 0;"><strong>Hospital:</strong> ${hospital_name}</p>
                       <p style="margin: 8px 0 0;"><strong>Blood Type Needed:</strong> ${blood_type}</p>
@@ -76,6 +92,24 @@ router.post('/create', (req, res) => {
     });
 
     res.status(201).json({ message: 'Blood request created successfully', id: result.insertId });
+  });
+});
+
+router.get('/compatible/:blood_type', (req, res) => {
+  const blood_type = req.params.blood_type;
+  const compatible = compatibleDonors[blood_type] || [blood_type];
+  const placeholders = compatible.map(() => '?').join(',');
+
+  const sql = `
+    SELECT br.*, h.name as hospital_name, h.address as hospital_address 
+    FROM blood_requests br
+    JOIN hospitals h ON br.hospital_id = h.id
+    WHERE br.blood_type IN (${placeholders}) AND br.status = 'pending'
+    ORDER BY br.created_at DESC
+  `;
+  db.query(sql, compatible, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Failed to get requests', error: err.message });
+    res.json(results);
   });
 });
 

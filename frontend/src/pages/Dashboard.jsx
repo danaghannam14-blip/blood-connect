@@ -18,7 +18,8 @@ function Dashboard() {
   }, [])
 
   useEffect(() => {
-    axios.get('https://blood-bank-eqyr.onrender.com/api/requests/all')
+   const donorData = JSON.parse(localStorage.getItem('donorData'))
+axios.get(`https://blood-bank-eqyr.onrender.com/api/requests/compatible/${donorData.blood_type}`)
       .then(res => setInventory(res.data))
       .catch(err => console.log(err))
   }, [])
