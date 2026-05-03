@@ -96,4 +96,29 @@ router.put('/change-password', async (req, res) => {
     });
   });
 });
+router.post('/donate', (req, res) => {
+  const { donor_id, hospital_id, blood_type } = req.body;
+  db.query(
+    'INSERT INTO donation_history (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
+    [donor_id, hospital_id, blood_type],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Donation recorded successfully' });
+    }
+  );
+});
+
+router.get('/history/:donor_id', (req, res) => {
+  const sql = `
+    SELECT dh.*, h.name as hospital_name, h.address as hospital_address
+    FROM donation_history dh
+    JOIN hospitals h ON dh.hospital_id = h.id
+    WHERE dh.donor_id = ?
+    ORDER BY dh.donated_at DESC
+  `;
+  db.query(sql, [req.params.donor_id], (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json(results);
+  });
+});
 module.exports = router;
