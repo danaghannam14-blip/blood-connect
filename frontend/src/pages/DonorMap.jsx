@@ -37,6 +37,17 @@ function DonorMap() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [sortedHospitals, setSortedHospitals] = useState([])
+
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  }
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -69,7 +80,7 @@ function DonorMap() {
     setLocationDenied(false)
   }
 
-useEffect(() => {
+  useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const loc = [position.coords.latitude, position.coords.longitude]
@@ -87,6 +98,19 @@ useEffect(() => {
       .then(res => setRequests(res.data))
       .catch(err => console.log(err))
   }, [])
+
+  useEffect(() => {
+    if (userLocation && hospitals.length > 0) {
+      const withDistance = hospitals
+        .filter(h => h.latitude && h.longitude)
+        .map(h => ({
+          ...h,
+          distance: getDistance(userLocation[0], userLocation[1], h.latitude, h.longitude)
+        }))
+        .sort((a, b) => a.distance - b.distance)
+      setSortedHospitals(withDistance)
+    }
+  }, [userLocation, hospitals])
 
   const getHospitalRequests = (hospitalId) => {
     return requests.filter(r => r.hospital_id === hospitalId && r.status === 'pending')
@@ -116,8 +140,7 @@ useEffect(() => {
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 className="border border-gray-300 rounded-lg p-2 text-sm flex-1 focus:outline-none focus:border-red-400 text-gray-800 placeholder-gray-400"
               />
-              <button
-                onClick={handleSearch}
+              <button onClick={handleSearch}
                 className="bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">
                 {searching ? '...' : '🔍'}
               </button>
@@ -125,9 +148,7 @@ useEffect(() => {
             {searchResults.length > 0 && (
               <div className="mt-2 border rounded-lg overflow-hidden text-left">
                 {searchResults.map((r, i) => (
-                  <button
-                    key={i}
-                    onClick={() => selectLocation(r)}
+                  <button key={i} onClick={() => selectLocation(r)}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 border-b last:border-0">
                     {r.display_name}
                   </button>
@@ -156,8 +177,7 @@ useEffect(() => {
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               className="flex-1 rounded-lg p-2 text-gray-800 text-sm focus:outline-none bg-white border border-gray-300 placeholder-gray-400"
             />
-            <button
-              onClick={handleSearch}
+            <button onClick={handleSearch}
               className="bg-white text-red-600 px-4 py-2 rounded-lg text-sm font-bold border border-gray-300">
               {searching ? '...' : 'Go'}
             </button>
@@ -165,9 +185,7 @@ useEffect(() => {
           {searchResults.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-[9999] overflow-hidden">
               {searchResults.map((r, i) => (
-                <button
-                  key={i}
-                  onClick={() => selectLocation(r)}
+                <button key={i} onClick={() => selectLocation(r)}
                   className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-red-50 border-b last:border-0">
                   {r.display_name}
                 </button>
@@ -177,8 +195,43 @@ useEffect(() => {
         </div>
       </div>
 
+      {sortedHospitals.length > 0 && (
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow p-4">
+          <h2 className="text-lg font-bold text-gray-800 mb-3">🏥 Hospitals Nearest to You</h2>
+          <div className="flex flex-col gap-2">
+            {sortedHospitals.map((h, index) => (
+              <div key={h.id} className="flex justify-between items-center border-b py-2 last:border-0">
+                <div className="flex items-start gap-3">
+                  <span className={`text-lg font-bold ${index === 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    #{index + 1}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{h.name}</p>
+                    <p className="text-gray-500 text-xs">{h.address}</p>
+                    <p className={`text-xs font-semibold mt-1 ${index === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      📍 {h.distance.toFixed(1)} km away
+                    </p>
+                    {getHospitalRequests(h.id).length > 0 && (
+                      <p className="text-xs text-red-500 mt-1">
+                        🩸 Needs: {getHospitalRequests(h.id).map(r => r.blood_type).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shrink-0">
+                  Get Directions
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {userLocation && (
-        <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 120px)', width: '100%' }}>
+        <MapContainer center={userLocation} zoom={13} style={{ height: '50vh', width: '100%', marginTop: '16px' }}>
           <TileLayer
             attribution='Tiles &copy; Esri'
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -188,10 +241,7 @@ useEffect(() => {
             <Popup>📍 Your Location</Popup>
           </Marker>
           {hospitals.filter(h => h.latitude && h.longitude).map(hospital => (
-            <Marker
-              key={hospital.id}
-              position={[hospital.latitude, hospital.longitude]}
-              icon={hospitalIcon}>
+            <Marker key={hospital.id} position={[hospital.latitude, hospital.longitude]} icon={hospitalIcon}>
               <Popup>
                 <div>
                   <h3 className="font-bold text-red-600">{hospital.name}</h3>
@@ -207,6 +257,11 @@ useEffect(() => {
                       ))
                     }
                   </div>
+                  <a href={`https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-red-600 text-sm font-semibold mt-2 block">
+                    Get Directions →
+                  </a>
                 </div>
               </Popup>
             </Marker>
