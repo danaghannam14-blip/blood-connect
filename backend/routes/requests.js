@@ -14,21 +14,44 @@ const compatibleDonors = {
 };
 
 const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) => {
-   const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
+  const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
     compatibleDonors[donor].includes(blood_type)
   );
 
   const placeholders = canDonateFrom.map(() => '?').join(',');
   db.query(
     `SELECT id, full_name, email FROM donors WHERE blood_type IN (${placeholders}) AND is_eligible = 1`,
-     canDonateFrom,
+    canDonateFrom,
     async (err, donors) => {
-      console.log('Compatible donors found:', donors ? donors.length : 0, 'for blood type:', blood_type);
       if (err) { console.log('DB error:', err.message); return; }
       if (donors.length === 0) { console.log('No eligible donors found'); return; }
 
       for (const donor of donors) {
         try {
+          // Check if notification already exists for this donor/hospital/blood_type
+          const alreadyNotified = await new Promise((resolve) => {
+            db.query(
+              'SELECT id FROM notifications WHERE donor_id = ? AND hospital_id = ? AND blood_type = ?',
+              [donor.id, hospital_id, blood_type],
+              (err, existing) => resolve(existing && existing.length > 0)
+            );
+          });
+
+          if (alreadyNotified) continue;
+
+          // Insert notification first
+          await new Promise((resolve) => {
+            db.query(
+              'INSERT INTO notifications (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
+              [donor.id, hospital_id, blood_type],
+              (err) => {
+                if (err) console.log('Notification save error:', err.message);
+                resolve();
+              }
+            );
+          });
+
+          // Send email
           const result = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -71,11 +94,6 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) =>
           });
           const responseData = await result.json();
           console.log('Brevo response:', JSON.stringify(responseData));
-        db.query(
-  'INSERT INTO notifications (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
-  [donor.id, hospital_id, blood_type],
-  (err) => { if (err) console.log('Notification save error:', err.message); }
-);
         } catch (e) {
           console.error('Email error:', e.message);
         }
@@ -89,13 +107,11 @@ router.post('/create', (req, res) => {
   const sql = `INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed) VALUES (?, ?, ?)`;
   db.query(sql, [hospital_id, blood_type, quantity_needed], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to create request', error: err.message });
-    
     db.query('SELECT name FROM hospitals WHERE id = ?', [hospital_id], (err, results) => {
       if (!err && results.length > 0) {
         sendDonorNotifications(blood_type, results[0].name, hospital_id);
       }
     });
-
     res.status(201).json({ message: 'Blood request created successfully', id: result.insertId });
   });
 });
@@ -104,7 +120,6 @@ router.get('/compatible/:blood_type', (req, res) => {
   const blood_type = req.params.blood_type;
   const compatible = compatibleDonors[blood_type] || [blood_type];
   const placeholders = compatible.map(() => '?').join(',');
-
   const sql = `
     SELECT br.*, h.name as hospital_name, h.address as hospital_address 
     FROM blood_requests br
