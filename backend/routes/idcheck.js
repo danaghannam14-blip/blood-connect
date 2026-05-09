@@ -17,7 +17,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     const mimeType = req.file.mimetype;
 
     const completion = await groq.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+     model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         {
           role: 'user',
