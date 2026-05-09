@@ -45,7 +45,7 @@ const [mapCenter, setMapCenter] = useState(null)
       .then(res => res.json())
       .then(data => setHospitals(data))
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      (pos) => setUserLocation([33.8553, 35.5401]),
       () => setUserLocation([33.8553, 35.5401])
     )
   }, [])
@@ -142,13 +142,13 @@ const [mapCenter, setMapCenter] = useState(null)
         </div>
       )}
 
-     {showMap && userLocation && (
-  <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
-    <RecenterMap center={userLocation} />
-    <TileLayer
-      attribution='&copy; OpenStreetMap contributors'
-      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    />
+      {showMap && (
+       <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
+          <RecenterMap center={mapCenter} />
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
           <Marker position={userLocation}>
             <Popup>📍 Your Location</Popup>
           </Marker>
