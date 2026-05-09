@@ -16,6 +16,7 @@ function Admin() {
   const [adminMessage, setAdminMessage] = useState('')
   const [changePass, setChangePass] = useState({ email: '', old_password: '', new_password: '' })
   const [changePassMessage, setChangePassMessage] = useState('')
+  const [editHospital, setEditHospital] = useState(null)
   const [newHospital, setNewHospital] = useState({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
   const [hospitalMessage, setHospitalMessage] = useState('')
 
@@ -107,6 +108,16 @@ const deleteHospital = async (id) => {
   if (!window.confirm('Delete this hospital?')) return
   await axios.delete(`${API}/api/admin/hospitals/${id}`)
   setHospitals(hospitals.filter(h => h.id !== id))
+}
+const saveHospital = async (id) => {
+  try {
+    await axios.put(`${API}/api/admin/hospitals/${id}`, editHospital)
+    setEditHospital(null)
+    const res = await axios.get(`${API}/api/admin/hospitals`)
+    setHospitals(res.data)
+  } catch (err) {
+    console.log(err)
+  }
 }
   const handleLogout = () => {
     localStorage.removeItem('adminData')
@@ -224,19 +235,56 @@ const deleteHospital = async (id) => {
   </tr>
 </thead>
 <tbody>
-  {hospitals.map(h => (
-    <tr key={h.id} className="border-b last:border-0">
-      <td className="py-2 pr-4">{h.name}</td>
-      <td className="py-2 pr-4">{h.email}</td>
-      <td className="py-2 pr-4">{h.address}</td>
-      <td className="py-2">
-        <button onClick={() => deleteHospital(h.id)}
-          className="text-red-500 hover:text-red-700 text-xs font-semibold">
-          Delete
-        </button>
-      </td>
-    </tr>
-  ))}
+ {hospitals.map(h => (
+  <tr key={h.id} className="border-b last:border-0">
+    <td className="py-2 pr-4">
+      {editHospital?.id === h.id ? (
+        <input value={editHospital.name}
+          onChange={e => setEditHospital({...editHospital, name: e.target.value})}
+          className="border rounded p-1 text-sm w-full" />
+      ) : h.name}
+    </td>
+    <td className="py-2 pr-4">
+      {editHospital?.id === h.id ? (
+        <input value={editHospital.email}
+          onChange={e => setEditHospital({...editHospital, email: e.target.value})}
+          className="border rounded p-1 text-sm w-full" />
+      ) : h.email}
+    </td>
+    <td className="py-2 pr-4">
+      {editHospital?.id === h.id ? (
+        <input value={editHospital.address}
+          onChange={e => setEditHospital({...editHospital, address: e.target.value})}
+          className="border rounded p-1 text-sm w-full" />
+      ) : h.address}
+    </td>
+    <td className="py-2 flex gap-2">
+      {editHospital?.id === h.id ? (
+        <>
+          <button onClick={() => saveHospital(h.id)}
+            className="text-green-600 hover:text-green-800 text-xs font-semibold">
+            Save
+          </button>
+          <button onClick={() => setEditHospital(null)}
+            className="text-gray-500 hover:text-gray-700 text-xs font-semibold">
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <button onClick={() => setEditHospital({...h})}
+            className="text-blue-500 hover:text-blue-700 text-xs font-semibold">
+            Edit
+          </button>
+          <button onClick={() => deleteHospital(h.id)}
+            className="text-red-500 hover:text-red-700 text-xs font-semibold">
+            Delete
+          </button>
+        </>
+      )}
+    </td>
+  </tr>
+))}
 </tbody>
                 </table>
               </div>

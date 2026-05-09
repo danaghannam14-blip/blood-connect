@@ -145,5 +145,15 @@ router.delete('/hospitals/:id', (req, res) => {
     res.json({ message: 'Hospital deleted' });
   });
 });
-
+router.put('/hospitals/:id', (req, res) => {
+  const { name, email, address } = req.body;
+  db.query(
+    'UPDATE hospitals SET name = ?, email = ?, address = ? WHERE id = ?',
+    [name, email, address, req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Hospital updated successfully' });
+    }
+  );
+});
 module.exports = router;
