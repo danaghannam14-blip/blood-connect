@@ -147,16 +147,11 @@ const donateToRequest = async (item) => {
           <div className="grid grid-cols-3 gap-4">
             {inventory.length === 0
               ? <p className="text-gray-400 col-span-3">No urgent requests right now.</p>
-             : inventory.map(item => (
+            : inventory.map(item => (
   <div key={item.id} className="bg-red-50 rounded-xl p-4 text-center">
     <p className="text-2xl font-bold text-red-600">{item.blood_type}</p>
     <p className="text-gray-500 text-sm">{item.quantity_needed} units needed</p>
     <p className="text-xs text-gray-400">{item.hospital_name}</p>
-    <button
-      onClick={() => donateToRequest(item)}
-      className="mt-2 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 w-full">
-      Donate Now
-    </button>
   </div>
 ))
             }
