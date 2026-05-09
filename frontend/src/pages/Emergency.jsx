@@ -47,8 +47,8 @@ function Emergency() {
       .then(res => res.json())
       .then(data => setHospitals(data))
 
-    const myLat = import.meta.env.VITE_MY_LAT
-    const myLng = import.meta.env.VITE_MY_LNG
+    const myLat = import.meta.env.local.VITE_MY_LAT
+    const myLng = import.meta.env.local.VITE_MY_LNG
 
         navigator.geolocation.getCurrentPosition(
       (position) => {
