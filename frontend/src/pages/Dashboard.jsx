@@ -70,7 +70,25 @@ function Dashboard() {
     nextDate.setMonth(nextDate.getMonth() + 3)
     return nextDate > new Date() ? nextDate.toLocaleDateString() : 'You can donate now!'
   }
-
+const donateToRequest = async (item) => {
+  try {
+    await axios.post(`${API}/api/donors/donate`, {
+      donor_id: donor.id,
+      hospital_id: item.hospital_id,
+      blood_type: item.blood_type,
+      units: 1
+    })
+    // Refresh inventory
+    const res = await axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
+    setInventory(res.data)
+    // Refresh history
+    const histRes = await axios.get(`${API}/api/donors/history/${donor.id}`)
+    setHistory(histRes.data)
+    alert('Donation recorded! Thank you 🩸')
+  } catch (err) {
+    console.log(err)
+  }
+}
   const getCanDonateTo = (bt) => {
     const map = {
       'O-': 'Everyone (Universal Donor! 🌟)',
@@ -129,13 +147,18 @@ function Dashboard() {
           <div className="grid grid-cols-3 gap-4">
             {inventory.length === 0
               ? <p className="text-gray-400 col-span-3">No urgent requests right now.</p>
-              : inventory.map(item => (
-                <div key={item.id} className="bg-red-50 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-red-600">{item.blood_type}</p>
-                  <p className="text-gray-500 text-sm">{item.quantity_needed} units needed</p>
-                  <p className="text-xs text-gray-400">{item.hospital_name}</p>
-                </div>
-              ))
+             : inventory.map(item => (
+  <div key={item.id} className="bg-red-50 rounded-xl p-4 text-center">
+    <p className="text-2xl font-bold text-red-600">{item.blood_type}</p>
+    <p className="text-gray-500 text-sm">{item.quantity_needed} units needed</p>
+    <p className="text-xs text-gray-400">{item.hospital_name}</p>
+    <button
+      onClick={() => donateToRequest(item)}
+      className="mt-2 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 w-full">
+      Donate Now
+    </button>
+  </div>
+))
             }
           </div>
         </div>
