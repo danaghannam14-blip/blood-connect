@@ -13,15 +13,15 @@ const compatibleDonors = {
   'AB+': ['AB+']
 };
 
-const sendDonorNotifications = async (blood_type, hospital_name) => {
-  const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
+const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) => {
+   const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
     compatibleDonors[donor].includes(blood_type)
   );
 
   const placeholders = canDonateFrom.map(() => '?').join(',');
   db.query(
-    `SELECT full_name, email FROM donors WHERE blood_type IN (${placeholders}) AND is_eligible = 1`,
-    canDonateFrom,
+    `SELECT id, full_name, email FROM donors WHERE blood_type IN (${placeholders}) AND is_eligible = 1`,
+     canDonateFrom,
     async (err, donors) => {
       console.log('Compatible donors found:', donors ? donors.length : 0, 'for blood type:', blood_type);
       if (err) { console.log('DB error:', err.message); return; }
@@ -71,6 +71,11 @@ const sendDonorNotifications = async (blood_type, hospital_name) => {
           });
           const responseData = await result.json();
           console.log('Brevo response:', JSON.stringify(responseData));
+        db.query(
+  'INSERT INTO notifications (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
+  [donor.id, hospital_id, blood_type],
+  (err) => { if (err) console.log('Notification save error:', err.message); }
+);
         } catch (e) {
           console.error('Email error:', e.message);
         }
@@ -87,7 +92,7 @@ router.post('/create', (req, res) => {
     
     db.query('SELECT name FROM hospitals WHERE id = ?', [hospital_id], (err, results) => {
       if (!err && results.length > 0) {
-        sendDonorNotifications(blood_type, results[0].name);
+        sendDonorNotifications(blood_type, results[0].name, hospital_id);
       }
     });
 

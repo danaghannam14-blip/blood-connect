@@ -121,4 +121,24 @@ router.get('/history/:donor_id', (req, res) => {
     res.json(results);
   });
 });
+router.get('/notifications/:donor_id', (req, res) => {
+  const sql = `
+    SELECT n.*, h.name as hospital_name, h.address as hospital_address
+    FROM notifications n
+    JOIN hospitals h ON n.hospital_id = h.id
+    WHERE n.donor_id = ?
+    ORDER BY n.created_at DESC
+  `;
+  db.query(sql, [req.params.donor_id], (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json(results);
+  });
+});
+
+router.put('/notifications/:id/donated', (req, res) => {
+  db.query('UPDATE notifications SET donated = 1 WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json({ message: 'Marked as donated' });
+  });
+});
 module.exports = router;

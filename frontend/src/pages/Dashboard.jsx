@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ChangePassword from '../components/ChangePassword'
 import axios from 'axios'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
@@ -10,10 +9,8 @@ function Dashboard() {
   const [donor, setDonor] = useState(null)
   const [inventory, setInventory] = useState([])
   const [history, setHistory] = useState([])
-  const [donateForm, setDonateForm] = useState({ hospital_id: '' })
+  const [notifications, setNotifications] = useState([])
   const [hospitals, setHospitals] = useState([])
-  const [donateMessage, setDonateMessage] = useState('')
-  const [showDonate, setShowDonate] = useState(false)
 
   useEffect(() => {
     const data = localStorage.getItem('donorData')
@@ -33,6 +30,9 @@ function Dashboard() {
     axios.get(`${API}/api/donors/history/${donorData.id}`)
       .then(res => setHistory(res.data))
       .catch(err => console.log(err))
+    axios.get(`${API}/api/donors/notifications/${donorData.id}`)
+      .then(res => setNotifications(res.data))
+      .catch(err => console.log(err))
     axios.get(`${API}/api/hospitals/all`)
       .then(res => setHospitals(res.data))
       .catch(err => console.log(err))
@@ -44,21 +44,38 @@ function Dashboard() {
     navigate('/')
   }
 
-  const handleDonate = async (e) => {
-    e.preventDefault()
+  const markDonated = async (id) => {
     try {
-      await axios.post(`${API}/api/donors/donate`, {
-        donor_id: donor.id,
-        hospital_id: donateForm.hospital_id,
-        blood_type: donor.blood_type
-      })
-      setDonateMessage('Donation recorded! Thank you 🩸')
-      setShowDonate(false)
-      const res = await axios.get(`${API}/api/donors/history/${donor.id}`)
-      setHistory(res.data)
+      await axios.put(`${API}/api/donors/notifications/${id}/donated`)
+      setNotifications(prev => prev.map(n => n.id === id ? {...n, donated: true} : n))
     } catch (err) {
-      setDonateMessage('Failed to record donation')
+      console.log(err)
     }
+  }
+
+  const totalDonations = notifications.filter(n => n.donated).length + history.length
+
+  const getNextDonationDate = () => {
+    const allDonations = [...history, ...notifications.filter(n => n.donated)]
+    if (allDonations.length === 0) return 'You can donate now!'
+    const lastDate = new Date(allDonations[0]?.donated_at || allDonations[0]?.created_at)
+    const nextDate = new Date(lastDate)
+    nextDate.setMonth(nextDate.getMonth() + 3)
+    return nextDate > new Date() ? nextDate.toLocaleDateString() : 'You can donate now!'
+  }
+
+  const getCanDonateTo = (bt) => {
+    const map = {
+      'O-': 'Everyone (Universal Donor! 🌟)',
+      'O+': 'O+, A+, B+, AB+',
+      'A-': 'A-, A+, AB-, AB+',
+      'A+': 'A+, AB+',
+      'B-': 'B-, B+, AB-, AB+',
+      'B+': 'B+, AB+',
+      'AB-': 'AB-, AB+',
+      'AB+': 'AB+ only'
+    }
+    return map[bt] || bt
   }
 
   if (!donor) return null
@@ -75,12 +92,34 @@ function Dashboard() {
           </button>
         </div>
 
+        {/* Welcome */}
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Welcome, {donor.full_name} 👋</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Welcome, {donor.full_name} 👋</h2>
           <p className="text-gray-500">Blood Type: <span className="text-red-600 font-bold">{donor.blood_type}</span></p>
           <p className="text-gray-500">Email: {donor.email}</p>
         </div>
 
+        {/* Blood Type Info */}
+        <div className="bg-white rounded-2xl shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">🩸 Your Blood Type Info</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-red-50 rounded-xl p-4">
+              <p className="text-xs text-gray-500 mb-1">You can donate to</p>
+              <p className="text-red-600 font-bold text-sm">{getCanDonateTo(donor.blood_type)}</p>
+            </div>
+            <div className="bg-red-50 rounded-xl p-4">
+              <p className="text-xs text-gray-500 mb-1">Next donation available</p>
+              <p className="text-red-600 font-bold text-sm">{getNextDonationDate()}</p>
+            </div>
+            <div className="bg-red-50 rounded-xl p-4 col-span-2 text-center">
+              <p className="text-4xl font-extrabold text-red-600">{totalDonations * 3}</p>
+              <p className="text-gray-500 text-sm mt-1">❤️ Total Lives Saved</p>
+              <p className="text-xs text-gray-400">Each donation saves up to 3 lives</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Compatible Blood Requests */}
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">🚨 Compatible Blood Requests</h2>
           <div className="grid grid-cols-3 gap-4">
@@ -97,69 +136,59 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Donation History & Notifications */}
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">🩺 Health Screening</h2>
-          <p className="text-gray-500 mb-4">Redo your health screening to update your eligibility status.</p>
-          <button onClick={() => navigate('/donor/chatbot')}
-            className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700">
-            Start Health Screening
-          </button>
-        </div>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Donation Requests & History</h2>
 
-        <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">🗺️ Find Nearby Hospitals</h2>
-          <p className="text-gray-500 mb-4">See hospitals near you and what blood they need.</p>
-          <button onClick={() => navigate('/donor/map')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
-            View Map
-          </button>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-700">📋 Donation History</h2>
-            <button onClick={() => setShowDonate(!showDonate)}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
-              + Record Donation
-            </button>
-          </div>
-
-          {donateMessage && <p className="text-green-600 text-sm mb-4">{donateMessage}</p>}
-
-          {showDonate && (
-            <form onSubmit={handleDonate} className="flex flex-col gap-3 mb-6 bg-red-50 p-4 rounded-xl">
-              <p className="text-sm text-gray-600 font-medium">You're a hero! 🦸 Tell us where you saved a life today — select the hospital you donated at to earn your place in history.</p>
-              <select value={donateForm.hospital_id}
-                onChange={e => setDonateForm({...donateForm, hospital_id: e.target.value})}
-                className="border rounded-lg p-3 focus:outline-none text-sm" required>
-                <option value="">Select Hospital</option>
-                {hospitals.map(h => (
-                  <option key={h.id} value={h.id}>{h.name}</option>
-                ))}
-              </select>
-              <button type="submit"
-                className="bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 text-sm">
-                Record Donation
-              </button>
-            </form>
-          )}
-
-          {history.length === 0
-            ? <p className="text-gray-400">No donations recorded yet.</p>
-            : history.map(h => (
-              <div key={h.id} className="flex justify-between items-center border-b py-3 last:border-0">
-                <div>
-                  <p className="font-bold text-red-600">{h.blood_type}</p>
-                  <p className="text-gray-500 text-sm">{h.hospital_name}</p>
-                  <p className="text-xs text-gray-400">{new Date(h.donated_at).toLocaleDateString()}</p>
+          {notifications.length === 0 && history.length === 0 ? (
+            <p className="text-gray-400">No donation requests yet. You'll be notified when your blood type is needed!</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {/* Pending notifications */}
+              {notifications.filter(n => !n.donated).map(n => (
+                <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0">
+                  <div>
+                    <p className="font-bold text-red-600">🩸 {n.blood_type} needed</p>
+                    <p className="text-gray-600 text-sm font-medium">{n.hospital_name}</p>
+                    <p className="text-xs text-gray-400">{n.hospital_address}</p>
+                    <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 shrink-0 ml-4">
+                    <input type="checkbox"
+                      className="w-6 h-6 accent-red-600 cursor-pointer"
+                      onChange={() => markDonated(n.id)}
+                    />
+                    <p className="text-xs text-gray-400">I donated</p>
+                  </div>
                 </div>
-                <span className="text-green-500 text-sm font-semibold">✅ Donated</span>
-              </div>
-            ))
-          }
-        </div>
+              ))}
 
-       
+              {/* Completed from notifications */}
+              {notifications.filter(n => n.donated).map(n => (
+                <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0 opacity-60">
+                  <div>
+                    <p className="font-bold text-green-600">{n.blood_type}</p>
+                    <p className="text-gray-500 text-sm">{n.hospital_name}</p>
+                    <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-green-500 text-sm font-semibold">✅ Donated</span>
+                </div>
+              ))}
+
+              {/* Manual donation history */}
+              {history.map(h => (
+                <div key={h.id} className="flex justify-between items-center border-b py-3 last:border-0 opacity-60">
+                  <div>
+                    <p className="font-bold text-green-600">{h.blood_type}</p>
+                    <p className="text-gray-500 text-sm">{h.hospital_name}</p>
+                    <p className="text-xs text-gray-400">{new Date(h.donated_at).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-green-500 text-sm font-semibold">✅ Donated</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
