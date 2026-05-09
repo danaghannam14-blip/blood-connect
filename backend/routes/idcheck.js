@@ -17,7 +17,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     const mimeType = req.file.mimetype;
 
     const completion = await groq.chat.completions.create({
-     model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         {
           role: 'user',
@@ -55,6 +55,22 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
       return res.status(400).json({ 
         message: 'Please upload a valid Lebanese national ID card.' 
       });
+    }
+
+    // Fix common year/day swap issue
+    if (result.date_of_birth) {
+      const parts = result.date_of_birth.split('-');
+      if (parts.length === 3) {
+        let [year, month, day] = parts;
+        if (parseInt(year) < 32 && parseInt(day) > 1900) {
+          result.date_of_birth = `${day}-${month}-${year}`;
+          console.log('Fixed swapped year/day:', result.date_of_birth);
+        }
+        if (parseInt(year) > new Date().getFullYear()) {
+          result.date_of_birth = `${day}-${month}-${year}`;
+          console.log('Fixed future year:', result.date_of_birth);
+        }
+      }
     }
 
     const dob = new Date(result.date_of_birth);
