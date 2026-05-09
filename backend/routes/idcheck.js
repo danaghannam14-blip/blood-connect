@@ -17,14 +17,14 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     const mimeType = req.file.mimetype;
 
     const completion = await groq.chat.completions.create({
-   model: 'meta-llama/llama-4-maverick-17b-128e-instruct-fp8',
-    messages: [
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [
         {
           role: 'user',
           content: [
             {
               type: 'text',
-            text: 'This is a Lebanese national ID card (بطاقة هوية). It must have الجمهورية اللبنانية at the top. If this is NOT a Lebanese national ID card, return exactly: {"error": "not_lebanese_id"}. If it IS a Lebanese ID, find the field labeled تاريخ الولادة. The date format on Lebanese IDs is DD/MM/YYYY using Arabic-Indic numerals where ٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9. The date reads as DAY/MONTH/YEAR from left to right. For example ١٧/١٠/٢٠١٠ means day=17, month=10, year=2010, return "2010-10-17". Convert VERY carefully digit by digit and return ONLY: {"date_of_birth": "YYYY-MM-DD"}'
+              text: 'This is a Lebanese national ID card (بطاقة هوية). It must have الجمهورية اللبنانية at the top. If this is NOT a Lebanese national ID card, return exactly: {"error": "not_lebanese_id"}. If it IS a Lebanese ID, find the field labeled تاريخ الولادة. The date format on Lebanese IDs is DD/MM/YYYY using Arabic-Indic numerals where ٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9. The date reads as DAY/MONTH/YEAR from left to right. For example ١٧/١٠/٢٠١٠ means day=17, month=10, year=2010, return "2010-10-17". Convert VERY carefully digit by digit and return ONLY: {"date_of_birth": "YYYY-MM-DD"}'
             },
             {
               type: 'image_url',
@@ -40,19 +40,23 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     });
 
     let text = completion.choices[0].message.content.trim();
+    console.log('Groq raw response:', text);
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     let result;
     try {
       result = JSON.parse(text);
     } catch {
+      console.log('JSON parse failed for:', text);
       return res.status(400).json({ message: 'Could not read date of birth from ID. Please try a clearer photo.' });
     }
-if (result.error === 'not_lebanese_id') {
-  return res.status(400).json({ 
-    message: 'Please upload a valid Lebanese national ID card.' 
-  });
-}
+
+    if (result.error === 'not_lebanese_id') {
+      return res.status(400).json({ 
+        message: 'Please upload a valid Lebanese national ID card.' 
+      });
+    }
+
     const dob = new Date(result.date_of_birth);
     const today = new Date();
     const age = today.getFullYear() - dob.getFullYear()
