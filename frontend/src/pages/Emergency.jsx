@@ -100,8 +100,20 @@ function Emergency() {
         </button>
       </div>
 
-      {sortedHospitals.length > 0 && (
-        <div className="mx-4 mt-4 bg-white rounded-2xl shadow p-4">
+      {/* Toggle buttons */}
+      <div className="flex gap-2 px-4 pt-3">
+        <button onClick={() => setShowMap(false)}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold ${!showMap ? 'bg-red-600 text-white' : 'bg-white text-gray-600 border'}`}>
+          📋 Hospital List
+        </button>
+        <button onClick={() => setShowMap(true)}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold ${showMap ? 'bg-red-600 text-white' : 'bg-white text-gray-600 border'}`}>
+          🗺️ Map View
+        </button>
+      </div>
+
+      {!showMap && sortedHospitals.length > 0 && (
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow p-4" style={{maxHeight: 'calc(100vh - 200px)', overflowY: 'auto'}}>
           <h2 className="text-lg font-bold text-gray-800 mb-3">🏥 Hospitals Nearest to You</h2>
           <div className="flex flex-col gap-2">
             {sortedHospitals.map((h, index) => (
@@ -118,7 +130,7 @@ function Emergency() {
                     </p>
                   </div>
                 </div>
-                <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`}
+                <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shrink-0">
@@ -130,29 +142,31 @@ function Emergency() {
         </div>
       )}
 
-      <MapContainer center={mapCenter} zoom={13} style={{ height: '50vh', width: '100%', marginTop: '16px' }}>
-        <RecenterMap center={mapCenter} />
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={userLocation}>
-          <Popup>📍 Your Location</Popup>
-        </Marker>
-        {hospitals.filter(h => h.latitude && h.longitude).map(h => (
-          <Marker key={h.id} position={[h.latitude, h.longitude]} icon={hospitalIcon}>
-            <Popup>
-              <h3 className="font-bold text-red-600">{h.name}</h3>
-              <p className="text-gray-500 text-sm">{h.address}</p>
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`}
-                target="_blank" rel="noopener noreferrer"
-                className="text-red-600 text-sm font-semibold">
-                Get Directions →
-              </a>
-            </Popup>
+      {showMap && (
+        <MapContainer center={mapCenter} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
+          <RecenterMap center={mapCenter} />
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={userLocation}>
+            <Popup>📍 Your Location</Popup>
           </Marker>
-        ))}
-      </MapContainer>
+          {hospitals.filter(h => h.latitude && h.longitude).map(h => (
+            <Marker key={h.id} position={[h.latitude, h.longitude]} icon={hospitalIcon}>
+              <Popup>
+                <h3 className="font-bold text-red-600">{h.name}</h3>
+                <p className="text-gray-500 text-sm">{h.address}</p>
+                <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-red-600 text-sm font-semibold">
+                  Get Directions →
+                </a>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      )}
     </div>
   )
 }
