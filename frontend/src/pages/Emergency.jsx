@@ -47,20 +47,19 @@ function Emergency() {
       .then(res => res.json())
       .then(data => setHospitals(data))
 
-    const myLat = import.meta.env.local.VITE_MY_LAT
-    const myLng = import.meta.env.local.VITE_MY_LNG
-
-        navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const loc = (myLat && myLng)
-          ? [parseFloat(myLat), parseFloat(myLng)]
-          : [position.coords.latitude, position.coords.longitude]
-        setUserLocation(loc)
-        setMainLocation(loc)
-      },
-      () => setLocationDenied(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      () => {
+        const myLat = import.meta.env.VITE_MY_LAT
+        const myLng = import.meta.env.VITE_MY_LNG
+        if (myLat && myLng) {
+          setUserLocation([parseFloat(myLat), parseFloat(myLng)])
+        } else {
+          setLocationDenied(true)
+          setUserLocation(null)
+        }
+      }
     )
-
   }, [])
 
   useEffect(() => {
@@ -94,7 +93,7 @@ function Emergency() {
     </div>
   )
 
-  if (locationDenied && userLocation === null) return (
+  if (locationDenied) return (
     <div className="min-h-screen bg-red-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-5xl">📍</p>
       <h2 className="text-xl font-bold text-gray-800">Location Access Required</h2>
