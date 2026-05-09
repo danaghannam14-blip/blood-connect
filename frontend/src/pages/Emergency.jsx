@@ -19,17 +19,19 @@ const hospitalIcon = new L.Icon({
 
 function RecenterMap({ center }) {
   const map = useMap()
-  useEffect(() => { map.setView(center, 13) }, [center])
+  useEffect(() => { if (center) map.setView(center, 13) }, [center])
   return null
 }
 
 function Emergency() {
   const [hospitals, setHospitals] = useState([])
-  const [userLocation, setUserLocation] = useState(null)
+  const [userLocation, setUserLocation] = useState(undefined)
+  const [locationDenied, setLocationDenied] = useState(false)
   const [sortedHospitals, setSortedHospitals] = useState([])
   const [search, setSearch] = useState('')
   const [showMap, setShowMap] = useState(false)
-const [mapCenter, setMapCenter] = useState(null)
+  const [mapCenter, setMapCenter] = useState(null)
+
   const getDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -41,6 +43,10 @@ const [mapCenter, setMapCenter] = useState(null)
   }
 
   useEffect(() => {
+    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/all')
+      .then(res => res.json())
+      .then(data => setHospitals(data))
+
     const myLat = import.meta.env.VITE_MY_LAT
     const myLng = import.meta.env.VITE_MY_LNG
 
@@ -50,11 +56,16 @@ const [mapCenter, setMapCenter] = useState(null)
           ? [parseFloat(myLat), parseFloat(myLng)]
           : [position.coords.latitude, position.coords.longitude]
         setUserLocation(loc)
-        setMainLocation(loc)
       },
-      () => setLocationDenied(true)
+      () => {
+        if (myLat && myLng) {
+          setUserLocation([parseFloat(myLat), parseFloat(myLng)])
+        } else {
+          setLocationDenied(true)
+          setUserLocation(null)
+        }
+      }
     )
-
   }, [])
 
   useEffect(() => {
@@ -78,12 +89,32 @@ const [mapCenter, setMapCenter] = useState(null)
       const newLocation = [parseFloat(data[0].lat), parseFloat(data[0].lon)]
       setUserLocation(newLocation)
       setMapCenter(newLocation)
+      setLocationDenied(false)
     }
   }
 
-  if (!userLocation) return (
+  if (userLocation === undefined) return (
     <div className="min-h-screen bg-red-50 flex items-center justify-center">
       <p className="text-gray-500">Getting your location...</p>
+    </div>
+  )
+
+  if (locationDenied && userLocation === null) return (
+    <div className="min-h-screen bg-red-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <p className="text-5xl">📍</p>
+      <h2 className="text-xl font-bold text-gray-800">Location Access Required</h2>
+      <p className="text-gray-500">Please allow location access to find the nearest hospital.</p>
+      <p className="text-gray-400 text-sm">Or search your location below:</p>
+      <div className="flex gap-2 w-full max-w-sm">
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSearch()}
+          placeholder="Search your location..."
+          className="flex-1 border rounded-lg p-3 focus:outline-none text-sm" />
+        <button onClick={handleSearch}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">
+          Go
+        </button>
+      </div>
     </div>
   )
 
@@ -94,20 +125,16 @@ const [mapCenter, setMapCenter] = useState(null)
       </div>
 
       <div className="flex gap-2 px-4 pt-4">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+        <input value={search} onChange={e => setSearch(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
           placeholder="Search your location in Lebanon..."
-          className="flex-1 border rounded-lg p-3 focus:outline-none text-sm"
-        />
+          className="flex-1 border rounded-lg p-3 focus:outline-none text-sm" />
         <button onClick={handleSearch}
           className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">
           Go
         </button>
       </div>
 
-      {/* Toggle buttons */}
       <div className="flex gap-2 px-4 pt-3">
         <button onClick={() => setShowMap(false)}
           className={`flex-1 py-2 rounded-lg text-sm font-semibold ${!showMap ? 'bg-red-600 text-white' : 'bg-white text-gray-600 border'}`}>
@@ -138,8 +165,7 @@ const [mapCenter, setMapCenter] = useState(null)
                   </div>
                 </div>
                 <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target="_blank" rel="noopener noreferrer"
                   className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shrink-0">
                   Get Directions
                 </a>
@@ -149,9 +175,9 @@ const [mapCenter, setMapCenter] = useState(null)
         </div>
       )}
 
-      {showMap && (
-       <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
-          <RecenterMap center={mapCenter} />
+      {showMap && userLocation && (
+        <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
+          <RecenterMap center={mapCenter || userLocation} />
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
