@@ -23,15 +23,16 @@ const fixDate = (dateStr) => {
     [year, day] = [day, year];
   }
 
-  // Fix common digit confusion: 2001 vs 2010, 2002 vs 2020, etc.
-  // If the person would be unrealistically old or young, try reversing last two digits
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - parseInt(year);
-  if (age > 100 || age < 0) {
-    // Reverse last two digits of year
+  // Fix specific confusion between digits like 2010 vs 2001, 2005 vs 2050
+  // Lebanese IDs have birth years typically between 1920 and 2008
+  const yearInt = parseInt(year);
+  if (yearInt > 2008 && yearInt <= new Date().getFullYear()) {
+    // Try reversing last two digits
     const yearStr = year.toString();
-    const fixedYear = yearStr.slice(0, 2) + yearStr.slice(2).split('').reverse().join('');
-    year = fixedYear;
+    const reversed = yearStr.slice(0, 2) + yearStr[3] + yearStr[2];
+    if (parseInt(reversed) >= 1920 && parseInt(reversed) <= 2008) {
+      year = reversed;
+    }
   }
 
   return `${year}-${month}-${day}`;
