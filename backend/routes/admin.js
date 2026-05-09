@@ -85,7 +85,7 @@ router.get('/donors', (req, res) => {
 });
 
 router.get('/hospitals', (req, res) => {
-  db.query('SELECT id, name, email, address FROM hospitals ORDER BY id DESC', (err, results) => {
+  db.query('SELECT id, name, email, address FROM hospitals ORDER BY name ASC', (err, results) => {
     if (err) return res.status(500).json({ message: err.message });
     res.json(results);
   });

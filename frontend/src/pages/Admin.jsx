@@ -19,7 +19,7 @@ function Admin() {
   const [editHospital, setEditHospital] = useState(null)
   const [newHospital, setNewHospital] = useState({ name: '', email: '', password: '', address: '', latitude: '', longitude: '' })
   const [hospitalMessage, setHospitalMessage] = useState('')
-
+const [hospitalSearch, setHospitalSearch] = useState('')
   useEffect(() => {
     const adminData = localStorage.getItem('adminData')
     if (adminData) {
@@ -223,7 +223,15 @@ const saveHospital = async (id) => {
             </div>
 
             <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">🏥 Hospitals ({hospitals.length})</h2>
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-xl font-semibold">🏥 Hospitals ({hospitals.filter(h => h.name.toLowerCase().includes(hospitalSearch.toLowerCase())).length})</h2>
+    <input
+      placeholder="🔍 Search hospitals..."
+      value={hospitalSearch}
+      onChange={e => setHospitalSearch(e.target.value)}
+      className="border rounded-lg px-3 py-2 text-sm focus:outline-none w-64"
+    />
+  </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                  <thead>
@@ -235,7 +243,7 @@ const saveHospital = async (id) => {
   </tr>
 </thead>
 <tbody>
- {hospitals.map(h => (
+ {hospitals.filter(h => h.name.toLowerCase().includes(hospitalSearch.toLowerCase())).map(h => (
   <tr key={h.id} className="border-b last:border-0">
     <td className="py-2 pr-4">
       {editHospital?.id === h.id ? (
