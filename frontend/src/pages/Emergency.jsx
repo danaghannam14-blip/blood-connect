@@ -41,20 +41,20 @@ const [mapCenter, setMapCenter] = useState(null)
   }
 
   useEffect(() => {
-    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/all')
-      .then(res => res.json())
-      .then(data => setHospitals(data))
-   navigator.geolocation.getCurrentPosition(
-  (pos) => {
     const myLat = import.meta.env.VITE_MY_LAT
     const myLng = import.meta.env.VITE_MY_LNG
-    const loc = (myLat && myLng)
-      ? [parseFloat(myLat), parseFloat(myLng)]
-      : [pos.coords.latitude, pos.coords.longitude]
-    setUserLocation(loc)
-  },
-  () => setUserLocation(null)
-)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = (myLat && myLng)
+          ? [parseFloat(myLat), parseFloat(myLng)]
+          : [position.coords.latitude, position.coords.longitude]
+        setUserLocation(loc)
+        setMainLocation(loc)
+      },
+      () => setLocationDenied(true)
+    )
+
   }, [])
 
   useEffect(() => {
