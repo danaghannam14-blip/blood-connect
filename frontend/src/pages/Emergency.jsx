@@ -28,8 +28,8 @@ function Emergency() {
   const [userLocation, setUserLocation] = useState(null)
   const [sortedHospitals, setSortedHospitals] = useState([])
   const [search, setSearch] = useState('')
-  const [mapCenter, setMapCenter] = useState([33.8553, 35.5401])
-
+  const [showMap, setShowMap] = useState(false)
+const [mapCenter, setMapCenter] = useState(null)
   const getDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -143,7 +143,7 @@ function Emergency() {
       )}
 
       {showMap && (
-        <MapContainer center={mapCenter} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
+       <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
           <RecenterMap center={mapCenter} />
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
