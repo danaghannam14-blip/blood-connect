@@ -111,25 +111,17 @@ const handleDelete = async (id) => {
           {requests.length === 0
             ? <p className="text-gray-400">No requests yet.</p>
             : requests.map(r => (
-              <div key={r.id} className="flex justify-between items-center border-b py-3 last:border-0">
-                <div>
-                  <p className="font-bold text-red-600">{r.blood_type}</p>
-                  <p className="text-gray-500 text-sm">{r.quantity_needed} units needed</p>
-                  <p className="text-xs text-gray-400">Status: {r.status}</p>
-                </div>
-              <div className="flex gap-2">
-  {r.status === 'pending' && (
-    <button onClick={() => handleFulfill(r.id)}
-      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600">
-      Mark Fulfilled
-    </button>
-  )}
+            <div key={r.id} className="flex justify-between items-center border-b py-3 last:border-0">
+  <div>
+    <p className="font-bold text-red-600">{r.blood_type}</p>
+    <p className="text-gray-500 text-sm">{r.quantity_needed} units still needed</p>
+    <p className="text-xs text-gray-400">Status: {r.status}</p>
+  </div>
   <button onClick={() => handleDelete(r.id)}
     className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600">
     Delete
   </button>
 </div>
-              </div>
             ))
           }
         </div>

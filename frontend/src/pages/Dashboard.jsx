@@ -114,10 +114,7 @@ function Dashboard() {
               <p className="text-xs text-gray-500 mb-1">You can donate to</p>
               <p className="text-red-600 font-bold text-sm">{getCanDonateTo(donor.blood_type)}</p>
             </div>
-            <div className="bg-red-50 rounded-xl p-4">
-              <p className="text-xs text-gray-500 mb-1">Next donation available</p>
-              <p className="text-red-600 font-bold text-sm">{getNextDonationDate()}</p>
-            </div>
+            
             <div className="bg-red-50 rounded-xl p-4 col-span-2 text-center">
               <p className="text-4xl font-extrabold text-red-600">{totalDonations * 3}</p>
               <p className="text-gray-500 text-sm mt-1">❤️ Total Lives Saved</p>
@@ -184,8 +181,8 @@ function Dashboard() {
 
               {/* Completed from notifications */}
               {notifications.filter(n => n.donated).map(n => (
-                <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0 opacity-60">
-                  <div>
+               <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0 opacity-60">
+                <div>
                     <p className="font-bold text-green-600">{n.blood_type}</p>
                     <p className="text-gray-500 text-sm">{n.hospital_name}</p>
                     <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
@@ -196,8 +193,7 @@ function Dashboard() {
 
               {/* Manual donation history */}
               {history.map(h => (
-                <div key={h.id} className="flex justify-between items-center border-b py-3 last:border-0 opacity-60">
-                  <div>
+               <div key={h.id} className="flex justify-between items-center border-b py-3 last:border-0"><div>
                     <p className="font-bold text-green-600">{h.blood_type}</p>
                     <p className="text-gray-500 text-sm">{h.hospital_name}</p>
                     <p className="text-xs text-gray-400">{new Date(h.donated_at).toLocaleDateString()}</p>
