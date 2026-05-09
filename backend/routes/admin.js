@@ -105,9 +105,19 @@ router.get('/requests', (req, res) => {
 });
 
 router.delete('/donors/:id', (req, res) => {
-  db.query('DELETE FROM donors WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json({ message: 'Donor deleted' });
+  const id = req.params.id;
+  // Delete related records first
+  db.query('DELETE FROM notifications WHERE donor_id = ?', [id], () => {
+    db.query('DELETE FROM donation_history WHERE donor_id = ?', [id], () => {
+      db.query('DELETE FROM health_screenings WHERE donor_id = ?', [id], () => {
+        db.query('DELETE FROM password_resets WHERE email = (SELECT email FROM donors WHERE id = ?)', [id], () => {
+          db.query('DELETE FROM donors WHERE id = ?', [id], (err) => {
+            if (err) return res.status(500).json({ message: err.message });
+            res.json({ message: 'Donor deleted' });
+          });
+        });
+      });
+    });
   });
 });
 
