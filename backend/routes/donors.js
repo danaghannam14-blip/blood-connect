@@ -97,13 +97,35 @@ router.put('/change-password', async (req, res) => {
   });
 });
 router.post('/donate', (req, res) => {
-  const { donor_id, hospital_id, blood_type } = req.body;
+  const { donor_id, hospital_id, blood_type, units } = req.body;
+  
   db.query(
     'INSERT INTO donation_history (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
     [donor_id, hospital_id, blood_type],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).json({ message: err.message });
-      res.json({ message: 'Donation recorded successfully' });
+
+      // Find matching pending request and decrease units
+      db.query(
+        'SELECT id, quantity_needed FROM blood_requests WHERE hospital_id = ? AND blood_type = ? AND status = ? ORDER BY created_at ASC',
+        [hospital_id, blood_type, 'pending'],
+        (err, requests) => {
+          if (err || requests.length === 0) return res.json({ message: 'Donation recorded successfully' });
+
+          const request = requests[0];
+          const newQuantity = request.quantity_needed - (units || 1);
+
+          if (newQuantity <= 0) {
+            db.query('UPDATE blood_requests SET status = ?, quantity_needed = 0 WHERE id = ?',
+              ['fulfilled', request.id], () => {});
+          } else {
+            db.query('UPDATE blood_requests SET quantity_needed = ? WHERE id = ?',
+              [newQuantity, request.id], () => {});
+          }
+
+          res.json({ message: 'Donation recorded successfully' });
+        }
+      );
     }
   );
 });

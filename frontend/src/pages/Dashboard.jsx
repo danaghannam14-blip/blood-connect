@@ -10,7 +10,7 @@ function Dashboard() {
   const [inventory, setInventory] = useState([])
   const [history, setHistory] = useState([])
   const [notifications, setNotifications] = useState([])
-  const [hospitals, setHospitals] = useState([])
+  const [donationUnits, setDonationUnits] = useState({})
 
   useEffect(() => {
     const data = localStorage.getItem('donorData')
@@ -33,9 +33,6 @@ function Dashboard() {
     axios.get(`${API}/api/donors/notifications/${donorData.id}`)
       .then(res => setNotifications(res.data))
       .catch(err => console.log(err))
-    axios.get(`${API}/api/hospitals/all`)
-      .then(res => setHospitals(res.data))
-      .catch(err => console.log(err))
   }, [])
 
   const handleLogout = () => {
@@ -44,10 +41,20 @@ function Dashboard() {
     navigate('/')
   }
 
-  const markDonated = async (id) => {
+  const markDonated = async (id, hospital_id, blood_type) => {
+    const units = donationUnits[id] || 1
     try {
       await axios.put(`${API}/api/donors/notifications/${id}/donated`)
+      await axios.post(`${API}/api/donors/donate`, {
+        donor_id: donor.id,
+        hospital_id,
+        blood_type,
+        units
+      })
       setNotifications(prev => prev.map(n => n.id === id ? {...n, donated: true} : n))
+      // Refresh inventory
+      axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
+        .then(res => setInventory(res.data))
     } catch (err) {
       console.log(err)
     }
@@ -146,19 +153,31 @@ function Dashboard() {
             <div className="flex flex-col gap-2">
               {/* Pending notifications */}
               {notifications.filter(n => !n.donated).map(n => (
-                <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0">
+                <div key={n.id} className="border-b py-3 last:border-0">
                   <div>
                     <p className="font-bold text-red-600">🩸 {n.blood_type} needed</p>
                     <p className="text-gray-600 text-sm font-medium">{n.hospital_name}</p>
                     <p className="text-xs text-gray-400">{n.hospital_address}</p>
                     <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex flex-col items-center gap-1 shrink-0 ml-4">
-                    <input type="checkbox"
-                      className="w-6 h-6 accent-red-600 cursor-pointer"
-                      onChange={() => markDonated(n.id)}
-                    />
-                    <p className="text-xs text-gray-400">I donated</p>
+                  <div className="mt-2 bg-red-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-2">💡 Max allowed: <strong>1 unit (450ml)</strong> per session. Next donation after 3 months.</p>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number"
+                        min="1"
+                        max="2"
+                        value={donationUnits[n.id] || 1}
+                        onChange={e => setDonationUnits(prev => ({...prev, [n.id]: parseInt(e.target.value)}))}
+                        className="border rounded-lg p-2 text-sm w-20 focus:outline-none"
+                      />
+                      <span className="text-xs text-gray-400">unit(s)</span>
+                      <button
+                        onClick={() => markDonated(n.id, n.hospital_id, n.blood_type)}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700">
+                        ✅ I Donated
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
