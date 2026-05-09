@@ -50,22 +50,17 @@ function Emergency() {
     const myLat = import.meta.env.VITE_MY_LAT
     const myLng = import.meta.env.VITE_MY_LNG
 
-    navigator.geolocation.getCurrentPosition(
+        navigator.geolocation.getCurrentPosition(
       (position) => {
         const loc = (myLat && myLng)
           ? [parseFloat(myLat), parseFloat(myLng)]
           : [position.coords.latitude, position.coords.longitude]
         setUserLocation(loc)
+        setMainLocation(loc)
       },
-      () => {
-        if (myLat && myLng) {
-          setUserLocation([parseFloat(myLat), parseFloat(myLng)])
-        } else {
-          setLocationDenied(true)
-          setUserLocation(null)
-        }
-      }
+      () => setLocationDenied(true)
     )
+
   }, [])
 
   useEffect(() => {
