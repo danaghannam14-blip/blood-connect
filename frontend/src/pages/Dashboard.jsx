@@ -176,8 +176,14 @@ const donateToRequest = async (item) => {
                     <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="mt-2 bg-red-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-2">💡 Max allowed: <strong>1 unit (450ml)</strong> per session. Next donation after 3 months.</p>
-                    <div className="flex gap-2 items-center">
+                  <p className="text-xs text-gray-500 mb-2">
+  {totalDonations === 0 
+    ? '💡 Max allowed: 1 unit (450ml) per session. Your first donation saves up to 3 lives!'
+    : totalDonations === 1
+    ? '⚠️ You have donated once already. Remember your body needs at least 3 months to recover. Stay hydrated!'
+    : '🛑 You have been incredibly generous! Please rest for at least 3 months before donating again. Your health matters!'}
+</p>
+ <div className="flex gap-2 items-center">
                       <input
                         type="number"
                         min="1"
