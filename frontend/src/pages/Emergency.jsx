@@ -142,13 +142,13 @@ const [mapCenter, setMapCenter] = useState(null)
         </div>
       )}
 
-      {showMap && (
-       <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
-          <RecenterMap center={mapCenter} />
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+     {showMap && userLocation && (
+  <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 200px)', width: '100%', marginTop: '8px' }}>
+    <RecenterMap center={userLocation} />
+    <TileLayer
+      attribution='&copy; OpenStreetMap contributors'
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    />
           <Marker position={userLocation}>
             <Popup>📍 Your Location</Popup>
           </Marker>
