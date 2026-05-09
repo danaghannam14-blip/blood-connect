@@ -24,7 +24,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
           content: [
             {
               type: 'text',
-            text: 'Look at this image. First determine if this is a Lebanese national ID card (it must have الجمهورية اللبنانية or وزارة الداخلية at the top). If it is NOT a Lebanese national ID card, return exactly: {"error": "not_lebanese_id"}. If it IS a Lebanese ID, find the تاريخ الولادة field. The date format on Lebanese IDs is DD/MM/YYYY using Arabic-Indic numerals. For example ١٧/١٠/٢٠١٠ means day=17, month=10, year=2010, so return "2010-10-17". Convert carefully and return: {"date_of_birth": "YYYY-MM-DD"}. Return JSON only, no extra text.'
+            text: 'This is a Lebanese national ID card (بطاقة هوية). It must have الجمهورية اللبنانية at the top. If this is NOT a Lebanese national ID card, return exactly: {"error": "not_lebanese_id"}. If it IS a Lebanese ID, find the field labeled تاريخ الولادة. The date format on Lebanese IDs is DD/MM/YYYY using Arabic-Indic numerals where ٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9. The date reads as DAY/MONTH/YEAR from left to right. For example ١٧/١٠/٢٠١٠ means day=17, month=10, year=2010, return "2010-10-17". Convert VERY carefully digit by digit and return ONLY: {"date_of_birth": "YYYY-MM-DD"}'
             },
             {
               type: 'image_url',
