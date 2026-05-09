@@ -7,6 +7,10 @@ const Groq = require('groq-sdk');
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const upload = multer({ storage: multer.memoryStorage() });
 
+const arabicToWestern = (str) => {
+  return str.replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+}
+
 router.post('/scan', upload.single('id_photo'), async (req, res) => {
   try {
     if (!req.file) {
@@ -19,32 +23,37 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     const completion = await groq.chat.completions.create({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
-  {
-    role: 'system',
-    content: 'You are a JSON-only response bot. You NEVER write explanations. You ONLY output valid JSON objects. No text before or after the JSON.'
-  },
-  {
-    role: 'user',
-    content: [
-      {
-        type: 'text',
-        text: 'Look at this Lebanese ID card. Find the تاريخ الولادة field. Read each Arabic-Indic digit carefully: ٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9. The format is DD/MM/YYYY. Return ONLY: {"date_of_birth": "YYYY-MM-DD"}'
-      },
-      {
-        type: 'image_url',
-        image_url: {
-          url: `data:${mimeType};base64,${base64Image}`
+        {
+          role: 'system',
+          content: 'You are a JSON-only response bot. Output ONLY valid JSON, nothing else. No explanations, no text, just JSON.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Find the تاريخ الولادة field in this Lebanese ID card. Copy the EXACT digits you see without converting them. The date format is DD/MM/YYYY. Return ONLY this JSON: {"date_of_birth": "DD/MM/YYYY"} with the actual digits from the card. If not a Lebanese ID return: {"error": "not_lebanese_id"}'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${mimeType};base64,${base64Image}`
+              }
+            }
+          ]
         }
-      }
-    ]
-  }
-],
+      ],
       temperature: 0.1,
-      max_completion_tokens: 100
+      max_completion_tokens: 50
     });
 
     let text = completion.choices[0].message.content.trim();
     console.log('Groq raw response:', text);
+    
+    // Convert Arabic-Indic numerals to Western
+    text = arabicToWestern(text);
+    
+    // Remove markdown
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     let result;
@@ -61,9 +70,23 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
       });
     }
 
+    // Convert DD/MM/YYYY to YYYY-MM-DD
+    if (result.date_of_birth && result.date_of_birth.includes('/')) {
+      const parts = result.date_of_birth.split('/')
+      if (parts.length === 3) {
+        result.date_of_birth = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`
+      }
+    }
+
+    console.log('Converted date:', result.date_of_birth);
+
     const dob = new Date(result.date_of_birth);
     const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear()
+    let age = today.getFullYear() - dob.getFullYear()
+    const monthDiff = today.getMonth() - dob.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--
+    }
 
     if (age < 18) {
       return res.status(400).json({ 
