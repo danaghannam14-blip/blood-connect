@@ -12,17 +12,30 @@ const fixDate = (dateStr) => {
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
   let [year, month, day] = parts;
+  
   // If year looks like a day and day looks like a year, swap them
   if (parseInt(year) < 32 && parseInt(day) > 1900) {
-    return `${day}-${month}-${year}`;
+    [year, day] = [day, year];
   }
+  
   // If year is in the future
   if (parseInt(year) > new Date().getFullYear()) {
-    return `${day}-${month}-${year}`;
+    [year, day] = [day, year];
   }
-  return dateStr;
-}
 
+  // Fix common digit confusion: 2001 vs 2010, 2002 vs 2020, etc.
+  // If the person would be unrealistically old or young, try reversing last two digits
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - parseInt(year);
+  if (age > 100 || age < 0) {
+    // Reverse last two digits of year
+    const yearStr = year.toString();
+    const fixedYear = yearStr.slice(0, 2) + yearStr.slice(2).split('').reverse().join('');
+    year = fixedYear;
+  }
+
+  return `${year}-${month}-${day}`;
+}
 router.post('/scan', upload.single('id_photo'), async (req, res) => {
   try {
     if (!req.file) {
