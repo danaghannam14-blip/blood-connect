@@ -150,9 +150,16 @@ router.post('/add-hospital', async (req, res) => {
   );
 });
 router.delete('/hospitals/:id', (req, res) => {
-  db.query('DELETE FROM hospitals WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json({ message: 'Hospital deleted' });
+  const id = req.params.id;
+  db.query('DELETE FROM notifications WHERE hospital_id = ?', [id], () => {
+    db.query('DELETE FROM blood_requests WHERE hospital_id = ?', [id], () => {
+      db.query('DELETE FROM blood_inventory WHERE hospital_id = ?', [id], () => {
+        db.query('DELETE FROM hospitals WHERE id = ?', [id], (err) => {
+          if (err) return res.status(500).json({ message: err.message });
+          res.json({ message: 'Hospital deleted' });
+        });
+      });
+    });
   });
 });
 router.put('/hospitals/:id', (req, res) => {
