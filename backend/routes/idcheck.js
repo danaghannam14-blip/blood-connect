@@ -16,8 +16,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const prompt = `This is a Lebanese national ID card (بطاقة هوية - الجمهورية اللبنانية). 
     Find the تاريخ الولادة (date of birth) field.
     The date is written in Arabic-Indic numerals in DD/MM/YYYY format.
