@@ -45,7 +45,7 @@ const [mapCenter, setMapCenter] = useState(null)
       .then(res => res.json())
       .then(data => setHospitals(data))
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation([33.8553, 35.5401]),
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
       () => setUserLocation([33.8553, 35.5401])
     )
   }, [])
