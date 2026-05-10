@@ -42,12 +42,18 @@ router.post('/screen', async (req, res) => {
       };
     }
 
-    const sql = `INSERT INTO health_screenings (donor_id, questions, answers, is_eligible) VALUES (?, ?, ?, ?)`;
-    const questions = Object.keys(answers).join(', ');
-    const answersStr = JSON.stringify(answers);
+    const sql = `INSERT INTO health_screenings (donor_id, feeling_healthy, chronic_illness, recent_surgery, medications, recent_travel, is_eligible) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(sql, [donor_id, questions, answersStr, result.eligible], (err) => {
-      if (err) {
+db.query(sql, [
+  donor_id,
+  answers.feeling_healthy || 'no',
+  answers.chronic_illness || 'no',
+  answers.recent_surgery || 'no',
+  answers.medications || 'no',
+  answers.recent_travel || 'no',
+  result.eligible
+], (err) => {
+   if (err) {
         return res.status(500).json({ message: 'Failed to save screening', error: err.message });
       }
       const updateSql = `UPDATE donors SET is_eligible = ? WHERE id = ?`;
