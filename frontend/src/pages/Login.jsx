@@ -9,7 +9,7 @@ function Login() {
   const [form, setForm] = useState({ identifier: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
+const [showPassword, setShowPassword] = useState(false)
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -91,15 +91,23 @@ function Login() {
               required />
           </div>
           <div>
-            <label className="text-sm text-gray-600 font-medium mb-1 block">Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={e => setForm({...form, password: e.target.value})}
-              className="w-full border rounded-xl p-3 focus:outline-none focus:border-red-400 text-sm"
-              required />
-          </div>
+  <label className="text-sm text-gray-600 font-medium mb-1 block">Password</label>
+  <div className="relative">
+    <input
+      type={showPassword ? 'text' : 'password'}
+      placeholder="Enter your password"
+      value={form.password}
+      onChange={e => setForm({...form, password: e.target.value})}
+      className="w-full border rounded-xl p-3 focus:outline-none focus:border-red-400 text-sm pr-10"
+      required />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm">
+      {showPassword ? '🙈' : '👁️'}
+    </button>
+  </div>
+</div>
           <div className="text-right">
   <span onClick={() => navigate('/forgot-password')}
     className="text-red-600 text-sm cursor-pointer hover:underline">
