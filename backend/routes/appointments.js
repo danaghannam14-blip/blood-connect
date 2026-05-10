@@ -34,7 +34,7 @@ const sendReminderEmail = async (donor, hospital, appointment) => {
             </div>
             <a href="https://bloodconnect-lb.vercel.app/donor/dashboard"
                style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
-              Confirm My Donation
+              View Dashboard
             </a>
             <p style="color: #666; margin-top: 20px; font-size: 14px;">
               Every drop counts. Thank you for being a BloodConnect donor.
@@ -53,9 +53,9 @@ const sendReminderEmail = async (donor, hospital, appointment) => {
 router.post('/book', (req, res) => {
   const { donor_id, hospital_id, appointment_date, appointment_time } = req.body
 
-  // Check for overlap
+  // Check for overlap at this hospital
   db.query(
-    'SELECT id FROM appointments WHERE hospital_id = ? AND appointment_date = ? AND appointment_time = ? AND status = "scheduled"',
+    'SELECT id FROM appointments WHERE hospital_id = ? AND appointment_date = ? AND appointment_time = ? AND status = \'scheduled\'',
     [hospital_id, appointment_date, appointment_time],
     (err, existing) => {
       if (err) return res.status(500).json({ message: err.message })
@@ -63,9 +63,9 @@ router.post('/book', (req, res) => {
         return res.status(400).json({ message: 'This time slot is already booked. Please choose another time.' })
       }
 
-      // Check donor doesn't already have appointment at same date/time
+      // Check donor doesn't already have appointment on same date
       db.query(
-        'SELECT id FROM appointments WHERE donor_id = ? AND appointment_date = ? AND status = "scheduled"',
+        'SELECT id FROM appointments WHERE donor_id = ? AND appointment_date = ? AND status = \'scheduled\'',
         [donor_id, appointment_date],
         (err2, donorExisting) => {
           if (err2) return res.status(500).json({ message: err2.message })
@@ -78,40 +78,6 @@ router.post('/book', (req, res) => {
             [donor_id, hospital_id, appointment_date, appointment_time],
             (err3, result) => {
               if (err3) return res.status(500).json({ message: err3.message })
-
-              // Schedule reminder email — send after 30 minutes
-              const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}`)
-              const reminderTime = appointmentDateTime.getTime() + 30 * 60 * 1000
-              const delay = reminderTime - Date.now()
-
-              if (delay > 0) {
-                setTimeout(async () => {
-                  db.query(
-                    `SELECT d.full_name, d.email, h.name, a.appointment_date, a.appointment_time
-                     FROM appointments a
-                     JOIN donors d ON a.donor_id = d.id
-                     JOIN hospitals h ON a.hospital_id = h.id
-                     WHERE a.id = ? AND a.status = 'scheduled' AND a.reminder_sent = 0`,
-                    [result.insertId],
-                    async (err4, rows) => {
-                      if (err4 || rows.length === 0) return
-                      const row = rows[0]
-                      try {
-                        await sendReminderEmail(
-                          { full_name: row.full_name, email: row.email },
-                          { name: row.name },
-                          { appointment_date: row.appointment_date, appointment_time: row.appointment_time }
-                        )
-                        db.query('UPDATE appointments SET reminder_sent = 1 WHERE id = ?', [result.insertId])
-                        console.log(`Reminder sent to ${row.email}`)
-                      } catch (e) {
-                        console.error('Reminder email error:', e.message)
-                      }
-                    }
-                  )
-                }, delay)
-              }
-
               res.json({ message: 'Appointment booked successfully!', id: result.insertId })
             }
           )
@@ -139,7 +105,7 @@ router.get('/donor/:donor_id', (req, res) => {
 // Get booked slots for a hospital on a date
 router.get('/slots/:hospital_id/:date', (req, res) => {
   db.query(
-    'SELECT appointment_time FROM appointments WHERE hospital_id = ? AND appointment_date = ? AND status = "scheduled"',
+    'SELECT appointment_time FROM appointments WHERE hospital_id = ? AND appointment_date = ? AND status = \'scheduled\'',
     [req.params.hospital_id, req.params.date],
     (err, results) => {
       if (err) return res.status(500).json({ message: err.message })
@@ -150,42 +116,41 @@ router.get('/slots/:hospital_id/:date', (req, res) => {
 
 // Cancel appointment
 router.put('/cancel/:id', (req, res) => {
-  db.query('UPDATE appointments SET status = "cancelled" WHERE id = ?', [req.params.id], (err) => {
+  db.query('UPDATE appointments SET status = \'cancelled\' WHERE id = ?', [req.params.id], (err) => {
     if (err) return res.status(500).json({ message: err.message })
     res.json({ message: 'Appointment cancelled' })
   })
 })
+
 // Hospital confirms donation
 router.put('/confirm/:id', (req, res) => {
   db.query(
     'SELECT a.*, d.id as donor_id FROM appointments a JOIN donors d ON a.donor_id = d.id WHERE a.id = ?',
     [req.params.id],
     (err, rows) => {
-      if (err || rows.length === 0) return res.status(500).json({ message: err?.message || 'Not found' });
-      const appointment = rows[0];
-      db.query('UPDATE appointments SET status = "completed" WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ message: err.message });
-        // Update donor last donation date
-        db.query('UPDATE donors SET last_donation_date = CURDATE() WHERE id = ?', [appointment.donor_id], () => {});
-        // Insert into donation history
+      if (err || rows.length === 0) return res.status(500).json({ message: err?.message || 'Not found' })
+      const appointment = rows[0]
+      db.query('UPDATE appointments SET status = \'completed\' WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ message: err.message })
+        db.query('UPDATE donors SET last_donation_date = CURDATE() WHERE id = ?', [appointment.donor_id], () => {})
         db.query(
           'INSERT INTO donation_history (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
           [appointment.donor_id, appointment.hospital_id, appointment.blood_type || 'Unknown'],
           () => {}
-        );
-        res.json({ message: 'Donation confirmed successfully' });
-      });
+        )
+        res.json({ message: 'Donation confirmed successfully' })
+      })
     }
-  );
-});
+  )
+})
 
 // Mark appointment as missed
 router.put('/missed/:id', (req, res) => {
-  db.query('UPDATE appointments SET status = "missed" WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json({ message: 'Appointment marked as missed' });
-  });
-});
+  db.query('UPDATE appointments SET status = \'missed\' WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message })
+    res.json({ message: 'Appointment marked as missed' })
+  })
+})
 
 // Get appointments for a hospital
 router.get('/hospital/:hospital_id', (req, res) => {
@@ -195,10 +160,11 @@ router.get('/hospital/:hospital_id', (req, res) => {
     JOIN donors d ON a.donor_id = d.id
     WHERE a.hospital_id = ? AND a.status = 'scheduled'
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
-  `;
+  `
   db.query(sql, [req.params.hospital_id], (err, results) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json(results);
-  });
-});
+    if (err) return res.status(500).json({ message: err.message })
+    res.json(results)
+  })
+})
+
 module.exports = router
