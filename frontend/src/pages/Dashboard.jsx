@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import AppointmentBooker from '../components/AppointmentBooker'
+
 const API = 'https://blood-bank-eqyr.onrender.com'
 
 function Dashboard() {
@@ -28,18 +29,10 @@ function Dashboard() {
 
   const markDonated = async (notifId, hospital_id, blood_type) => {
     try {
-      // Mark this notification as donated
       await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
-
-      // Record in donation_history and decrease blood request units
-      await axios.post(`${API}/api/donors/donate`, {
-        donor_id: donor.id, hospital_id, blood_type
-      })
-
+      await axios.post(`${API}/api/donors/donate`, { donor_id: donor.id, hospital_id, blood_type })
       const currentDonated = notifications.filter(n => n.donated).length
-
       if (currentDonated === 0) {
-        // This was the 1st donation — create a 2nd notification slot
         const res = await axios.post(`${API}/api/donors/notifications/duplicate`, {
           donor_id: donor.id, hospital_id, blood_type
         })
@@ -48,10 +41,8 @@ function Dashboard() {
           res.data
         ])
       } else {
-        // This was the 2nd donation — just mark it
         setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, donated: true } : n))
       }
-
       axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
     } catch (err) { console.log(err) }
   }
@@ -75,7 +66,6 @@ function Dashboard() {
   const totalDonations = notifications.filter(n => n.donated).length
   const maxReached = totalDonations >= 2
 
-  // Group notifications by hospital — one row per hospital
   const hospitalMap = {}
   notifications.forEach(n => {
     if (!hospitalMap[n.hospital_id]) {
@@ -146,23 +136,23 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Donation Requests & History */}
+        {/* Appointment Booking — always visible */}
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Donation Requests & History</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-1">📅 Book a Donation Appointment</h2>
+          <p className="text-xs text-gray-400 mb-4">Book your slot at a hospital first — after your appointment, you'll receive a reminder to confirm your donation.</p>
+          <AppointmentBooker donor={donor} />
+        </div>
 
-          {hospitalRows.length === 0 ? (
-            <p className="text-gray-400 text-sm">No donation requests yet. You'll be notified when your blood type is needed!</p>
-          ) : (
+        {/* Donation Requests & History — only shown once donor has notifications */}
+        {hospitalRows.length > 0 && (
+          <div className="bg-white rounded-2xl shadow p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Donation History</h2>
             <div className="flex flex-col gap-3">
-
               {hospitalRows.map(row => {
                 const unitsDonatedHere = row.donated_count
                 const canDonateHere = !!row.pending_notif_id && !maxReached
-
                 return (
                   <div key={row.hospital_id} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-
-                    {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <p className="font-semibold text-gray-800 text-sm">{row.hospital_name}</p>
@@ -173,8 +163,6 @@ function Dashboard() {
                         {row.blood_type}
                       </span>
                     </div>
-
-                    {/* Unit dots */}
                     <div className="flex items-center gap-2 mb-3">
                       {[1, 2].map(i => (
                         <div key={i} className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border
@@ -190,8 +178,6 @@ function Dashboard() {
                         {unitsDonatedHere >= 2 && '2 units donated here'}
                       </span>
                     </div>
-
-                    {/* Donate button — visible until global max reached */}
                     {canDonateHere && (
                       <button
                         onClick={() => markDonated(row.pending_notif_id, row.hospital_id, row.blood_type)}
@@ -199,41 +185,28 @@ function Dashboard() {
                         {unitsDonatedHere === 0 ? 'I donated here' : 'I donated a second unit here'}
                       </button>
                     )}
-
-                    {/* Hospital fully done */}
                     {unitsDonatedHere >= 2 && (
                       <p className="text-green-600 text-xs font-semibold">✅ 2 units donated at this hospital — complete!</p>
                     )}
-
-                    {/* Global max reached, hospital still had a slot */}
                     {!canDonateHere && unitsDonatedHere < 2 && row.pending_notif_id && maxReached && (
                       <p className="text-gray-400 text-xs mt-1">Global limit reached — rest before donating again.</p>
                     )}
                   </div>
                 )
               })}
-
-              {/* Rest tip — ONLY after 2nd donation */}
               {maxReached && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-1">
                   <p className="text-amber-800 font-semibold text-sm mb-1">You've given your all — now it's time to recharge. 🌿</p>
                   <p className="text-amber-700 text-xs leading-relaxed">
-                    Your body just did something incredible. Here's how to recover well:
-                    💧 Drink extra water today · 🥩 Eat iron-rich foods (spinach, red meat, lentils) ·
-                    😴 Get a full night's sleep · 🚫 Skip intense workouts for 24 hours.
-                    Come back in 3 months — your blood will be ready to save lives again.
+                    💧 Drink extra water · 🥩 Eat iron-rich foods · 😴 Sleep well · 🚫 Skip intense workouts for 24 hours.
+                    Come back in 3 months!
                   </p>
                 </div>
               )}
-
             </div>
-          )}
-        </div>
-{/* Appointment Booking */}
-<div className="bg-white rounded-2xl shadow p-6 mb-6">
-  <h2 className="text-xl font-semibold text-gray-700 mb-4">📅 Book a Donation Appointment</h2>
-  <AppointmentBooker donor={donor} />
-</div>
+          </div>
+        )}
+
       </div>
     </div>
   )
