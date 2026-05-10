@@ -5,7 +5,6 @@ import DonorRegister from './pages/DonorRegister'
 import DonorLogin from './pages/DonorLogin'
 import Dashboard from './pages/Dashboard'
 import Chatbot from './pages/Chatbot'
-import DonorMap from './pages/DonorMap'
 import Emergency from './pages/Emergency'
 import HospitalLogin from './pages/HospitalLogin'
 import HospitalDashboard from './pages/HospitalDashboard'
@@ -24,7 +23,6 @@ function App() {
         <Route path="/donor/login" element={<DonorLogin />} />
         <Route path="/donor/dashboard" element={<Dashboard />} />
         <Route path="/donor/chatbot" element={<Chatbot />} />
-        <Route path="/donor/map" element={<DonorMap />} />
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/hospital/login" element={<HospitalLogin />} />
         <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
