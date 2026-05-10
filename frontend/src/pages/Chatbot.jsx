@@ -19,9 +19,9 @@ function Chatbot() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
   const [done, setDone] = useState(false)
-const [loading, setLoading] = useState(false)
-const [dots, setDots] = useState('.')
-const [eligible, setEligible] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [dots, setDots] = useState('.')
+  const [eligible, setEligible] = useState(false)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -52,7 +52,6 @@ const [eligible, setEligible] = useState(false)
       }, 500)
     } else {
       setLoading(true)
-
       const donorData = JSON.parse(localStorage.getItem('donorData'))
       try {
         const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/chatbot/screen', {
@@ -60,22 +59,20 @@ const [eligible, setEligible] = useState(false)
           answers: newAnswers
         })
 
-        // Keep analyzing visible for at least 2 seconds
         await new Promise(resolve => setTimeout(resolve, 2000))
-
         setLoading(false)
+        setEligible(res.data.eligible)
 
-   setEligible(res.data.eligible)
-const eligible = res.data.eligible
-if (res.data.eligible) {
-  const donorData = JSON.parse(localStorage.getItem('donorData'))
-  donorData.is_eligible = true
-  localStorage.setItem('donorData', JSON.stringify(donorData))
-}
-        const reason = res.data.reason
-       const resultText = eligible
-  ? `✅ You are eligible to donate blood! Your heart is ready, your blood is needed — go be someone's hero today! 🦸`
-  : `❌ You are not eligible to donate at this time. Your body needs a little more time — take care of yourself and try again soon! 💙`
+        if (res.data.eligible) {
+          const stored = JSON.parse(localStorage.getItem('donorData'))
+          stored.is_eligible = true
+          localStorage.setItem('donorData', JSON.stringify(stored))
+        }
+
+        const resultText = res.data.eligible
+          ? '✅ You are eligible to donate blood! Your heart is ready, your blood is needed — go be someone\'s hero today! 🦸'
+          : '❌ You are not eligible to donate at this time. Your body needs a little more time — take care of yourself and try again soon! 💙'
+
         setMessages(prev => [...prev, { from: 'bot', text: resultText }])
       } catch (err) {
         setLoading(false)
@@ -85,57 +82,92 @@ if (res.data.eligible) {
     }
   }
 
+  const progress = Math.round((step / questions.length) * 100)
+
   return (
-    <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md flex flex-col" style={{height: '85vh'}}>
-        <div className="bg-red-600 text-white p-4 rounded-t-2xl">
-          <h2 className="text-xl font-bold">🩺 Health Screening</h2>
+    <div className="min-h-screen bg-red-50 flex items-center justify-center p-3">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md flex flex-col" style={{ height: '90vh', maxHeight: '700px' }}>
+
+        {/* Header */}
+        <div className="bg-red-600 text-white p-4 rounded-t-2xl flex-shrink-0">
+          <h2 className="text-lg font-bold">🩺 Health Screening</h2>
+          {!done && (
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-red-200 mb-1">
+                <span>Question {Math.min(step + 1, questions.length)} of {questions.length}</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="w-full bg-red-400 rounded-full h-1.5">
+                <div
+                  className="bg-white rounded-full h-1.5 transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`rounded-2xl px-4 py-2 max-w-xs text-sm ${msg.from === 'user' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              {msg.from === 'bot' && (
+                <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center text-sm mr-2 flex-shrink-0 mt-1">
+                  🩺
+                </div>
+              )}
+              <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed max-w-[75%]
+                ${msg.from === 'user'
+                  ? 'bg-red-600 text-white rounded-br-sm'
+                  : 'bg-gray-100 text-gray-700 rounded-bl-sm'}`}>
                 {msg.text}
               </div>
             </div>
           ))}
+
           {loading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-500 rounded-2xl px-4 py-3 text-sm italic">
-                🤔 Analyzing your answers{dots}
+            <div className="flex justify-start items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center text-sm flex-shrink-0">
+                🩺
+              </div>
+              <div className="bg-gray-100 text-gray-500 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm italic">
+                Analyzing your answers{dots}
               </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
-        <div className="p-4 border-t">
+        {/* Action area */}
+        <div className="p-4 border-t flex-shrink-0">
           {!done && !loading && (
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-3">
               <button onClick={() => handleAnswer('yes')}
-                className="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600">
-                Yes
+                className="flex-1 bg-green-500 text-white py-3.5 rounded-xl font-semibold hover:bg-green-600 text-base active:scale-95 transition-transform">
+                ✅ Yes
               </button>
               <button onClick={() => handleAnswer('no')}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600">
-                No
+                className="flex-1 bg-red-500 text-white py-3.5 rounded-xl font-semibold hover:bg-red-600 text-base active:scale-95 transition-transform">
+                ❌ No
               </button>
             </div>
           )}
-        {done && eligible && (
-  <button onClick={() => navigate('/donor/dashboard')}
-    className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700">
-    Go Donate Now 🩸
-  </button>
-)}
-{done && !eligible && (
-  <button onClick={() => navigate('/')}
-    className="w-full bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700">
-    Back to Home
-  </button>
-)}
+
+          {done && eligible && (
+            <button onClick={() => navigate('/donor/dashboard')}
+              className="w-full bg-red-600 text-white py-3.5 rounded-xl font-semibold hover:bg-red-700 text-base">
+              Go Donate Now 🩸
+            </button>
+          )}
+
+          {done && !eligible && (
+            <button onClick={() => navigate('/')}
+              className="w-full bg-gray-600 text-white py-3.5 rounded-xl font-semibold hover:bg-gray-700 text-base">
+              Back to Home
+            </button>
+          )}
         </div>
+
       </div>
     </div>
   )
