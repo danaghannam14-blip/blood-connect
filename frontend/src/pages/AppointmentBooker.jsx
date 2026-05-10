@@ -3,8 +3,6 @@ import axios from 'axios'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 
-
-
 function AppointmentBooker({ donor }) {
   const [hospitals, setHospitals] = useState([])
   const [appointments, setAppointments] = useState([])
@@ -34,6 +32,17 @@ function AppointmentBooker({ donor }) {
       .catch(console.log)
   }, [form.hospital_id, form.date])
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return ''
+    const [hourStr, minuteStr] = timeStr.split(':')
+    let h = parseInt(hourStr)
+    const m = minuteStr || '00'
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    if (h > 12) h -= 12
+    if (h === 0) h = 12
+    return `${h}:${m} ${ampm}`
+  }
+
   const handleBook = async (e) => {
     e.preventDefault()
     setMessage('')
@@ -47,8 +56,8 @@ function AppointmentBooker({ donor }) {
         appointment_time: form.time
       })
       setMessage('✅ Appointment booked! You will receive a reminder email after your appointment time.')
-     setForm({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
-     setHospitalSearch('')
+      setForm({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
+      setHospitalSearch('')
       setShowForm(false)
       loadAppointments()
     } catch (err) {
@@ -66,10 +75,20 @@ function AppointmentBooker({ donor }) {
     } catch (err) { console.log(err) }
   }
 
-  const formatTime = (timeStr) => {
-    if (!timeStr) return ''
-    const slot = TIME_SLOTS.find(s => s.value === timeStr || s.value.startsWith(timeStr))
-    return slot ? slot.label : timeStr
+  const handleSetTime = () => {
+    let h = parseInt(form.hour || 9)
+    const m = parseInt(form.minute || 0)
+    const ampm = form.ampm || 'AM'
+    if (ampm === 'PM' && h !== 12) h += 12
+    if (ampm === 'AM' && h === 12) h = 0
+    const timeValue = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
+    const isBooked = bookedSlots.some(b => b.startsWith(timeValue.slice(0, 5)))
+    if (isBooked) {
+      setError('This time is already booked. Please choose another time.')
+      return
+    }
+    setError('')
+    setForm({ ...form, time: timeValue })
   }
 
   const today = new Date().toISOString().split('T')[0]
@@ -126,7 +145,7 @@ function AppointmentBooker({ donor }) {
               value={hospitalSearch}
               onChange={e => {
                 setHospitalSearch(e.target.value)
-                setForm({...form, hospital_id: '', time: ''})
+                setForm({ ...form, hospital_id: '', time: '' })
               }}
               className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-2"
             />
@@ -135,7 +154,7 @@ function AppointmentBooker({ donor }) {
                 {filteredHospitals.slice(0, 8).map(h => (
                   <button key={h.id} type="button"
                     onClick={() => {
-                      setForm({...form, hospital_id: h.id.toString(), time: ''})
+                      setForm({ ...form, hospital_id: h.id.toString(), time: '' })
                       setHospitalSearch(h.name)
                     }}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 border-b last:border-0">
@@ -154,127 +173,99 @@ function AppointmentBooker({ donor }) {
             <label className="text-xs text-gray-500 font-medium mb-1 block">Date</label>
             <input type="date" min={today}
               value={form.date}
-              onChange={e => setForm({...form, date: e.target.value, time: ''})}
+              onChange={e => setForm({ ...form, date: e.target.value, time: '' })}
               className="w-full border rounded-xl p-3 text-sm focus:outline-none" required />
           </div>
 
-         {/* Custom time picker */}
-{form.hospital_id && form.date && (
-  <div>
-    <label className="text-xs text-gray-500 font-medium mb-2 block">Choose Your Time</label>
-    <div className="bg-white border rounded-xl p-4">
-      <div className="flex items-center justify-center gap-3">
+          {/* Custom time picker */}
+          {form.hospital_id && form.date && (
+            <div>
+              <label className="text-xs text-gray-500 font-medium mb-2 block">Choose Your Time</label>
+              <div className="bg-white border rounded-xl p-4">
+                <div className="flex items-center justify-center gap-3">
 
-        {/* Hour */}
-        <div className="flex flex-col items-center">
-          <button type="button"
-            onClick={() => {
-              const h = parseInt(form.hour || 9)
-              const newH = h >= 12 ? 1 : h + 1
-              setForm({...form, hour: newH, time: ''})
-            }}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▲
-          </button>
-          <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
-            {String(form.hour || 9).padStart(2, '0')}
-          </div>
-          <button type="button"
-            onClick={() => {
-              const h = parseInt(form.hour || 9)
-              const newH = h <= 1 ? 12 : h - 1
-              setForm({...form, hour: newH, time: ''})
-            }}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▼
-          </button>
-          <p className="text-xs text-gray-400 mt-1">Hour</p>
-        </div>
+                  {/* Hour */}
+                  <div className="flex flex-col items-center">
+                    <button type="button"
+                      onClick={() => {
+                        const h = parseInt(form.hour || 9)
+                        setForm({ ...form, hour: h >= 12 ? 1 : h + 1, time: '' })
+                      }}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▲</button>
+                    <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
+                      {String(form.hour || 9).padStart(2, '0')}
+                    </div>
+                    <button type="button"
+                      onClick={() => {
+                        const h = parseInt(form.hour || 9)
+                        setForm({ ...form, hour: h <= 1 ? 12 : h - 1, time: '' })
+                      }}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▼</button>
+                    <p className="text-xs text-gray-400 mt-1">Hour</p>
+                  </div>
 
-        <div className="text-2xl font-extrabold text-gray-400">:</div>
+                  <div className="text-2xl font-extrabold text-gray-400">:</div>
 
-        {/* Minute */}
-        <div className="flex flex-col items-center">
-          <button type="button"
-            onClick={() => {
-              const m = parseInt(form.minute || 0)
-              const newM = m >= 55 ? 0 : m + 5
-              setForm({...form, minute: newM, time: ''})
-            }}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▲
-          </button>
-          <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
-            {String(form.minute || 0).padStart(2, '0')}
-          </div>
-          <button type="button"
-            onClick={() => {
-              const m = parseInt(form.minute || 0)
-              const newM = m <= 0 ? 55 : m - 5
-              setForm({...form, minute: newM, time: ''})
-            }}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▼
-          </button>
-          <p className="text-xs text-gray-400 mt-1">Minute</p>
-        </div>
+                  {/* Minute */}
+                  <div className="flex flex-col items-center">
+                    <button type="button"
+                      onClick={() => {
+                        const m = parseInt(form.minute || 0)
+                        setForm({ ...form, minute: m >= 55 ? 0 : m + 5, time: '' })
+                      }}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▲</button>
+                    <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
+                      {String(form.minute || 0).padStart(2, '0')}
+                    </div>
+                    <button type="button"
+                      onClick={() => {
+                        const m = parseInt(form.minute || 0)
+                        setForm({ ...form, minute: m <= 0 ? 55 : m - 5, time: '' })
+                      }}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▼</button>
+                    <p className="text-xs text-gray-400 mt-1">Minute</p>
+                  </div>
 
-        <div className="text-2xl font-extrabold text-gray-400 mx-1"></div>
+                  <div className="text-2xl font-extrabold text-gray-400 mx-1"></div>
 
-        {/* AM/PM */}
-        <div className="flex flex-col items-center">
-          <button type="button"
-            onClick={() => setForm({...form, ampm: form.ampm === 'AM' ? 'PM' : 'AM', time: ''})}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▲
-          </button>
-          <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
-            {form.ampm || 'AM'}
-          </div>
-          <button type="button"
-            onClick={() => setForm({...form, ampm: form.ampm === 'AM' ? 'PM' : 'AM', time: ''})}
-            className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">
-            ▼
-          </button>
-          <p className="text-xs text-gray-400 mt-1">AM/PM</p>
-        </div>
-      </div>
+                  {/* AM/PM */}
+                  <div className="flex flex-col items-center">
+                    <button type="button"
+                      onClick={() => setForm({ ...form, ampm: form.ampm === 'AM' ? 'PM' : 'AM', time: '' })}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▲</button>
+                    <div className="text-2xl font-extrabold text-gray-800 w-12 text-center">
+                      {form.ampm || 'AM'}
+                    </div>
+                    <button type="button"
+                      onClick={() => setForm({ ...form, ampm: form.ampm === 'AM' ? 'PM' : 'AM', time: '' })}
+                      className="text-red-600 text-xl font-bold w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-lg">▼</button>
+                    <p className="text-xs text-gray-400 mt-1">AM/PM</p>
+                  </div>
 
-      {/* Confirm time button */}
-      <button type="button"
-        onClick={() => {
-          let h = parseInt(form.hour || 9)
-          const m = parseInt(form.minute || 0)
-          const ampm = form.ampm || 'AM'
-          if (ampm === 'PM' && h !== 12) h += 12
-          if (ampm === 'AM' && h === 12) h = 0
-          const timeValue = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`
+                </div>
 
-          // Check if booked
-          const isBooked = bookedSlots.some(b => b.startsWith(timeValue.slice(0,5)))
-          if (isBooked) {
-            setError('This time is already booked. Please choose another time.')
-            return
-          }
-          setError('')
-          setForm({...form, time: timeValue})
-        }}
-        className="w-full mt-4 bg-red-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-red-700">
-        Set This Time
-      </button>
+                <button type="button" onClick={handleSetTime}
+                  className="w-full mt-4 bg-red-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-red-700">
+                  Set This Time
+                </button>
 
-      {form.time && (
-        <p className="text-green-600 text-xs font-semibold text-center mt-2">
-          ✓ Time set: {form.hour || 9}:{String(form.minute || 0).padStart(2,'0')} {form.ampm || 'AM'}
-        </p>
-      )}
-    </div>
-  </div>
-)}
+                {form.time && (
+                  <p className="text-green-600 text-xs font-semibold text-center mt-2">
+                    ✓ Time set: {form.hour || 9}:{String(form.minute || 0).padStart(2, '0')} {form.ampm || 'AM'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2 mt-1">
             <button type="button"
-              onClick={() => { setShowForm(false); setError(''); setHospitalSearch(''); setForm({ hospital_id: '', date: '', time: '' }) }}
+              onClick={() => {
+                setShowForm(false)
+                setError('')
+                setHospitalSearch('')
+                setForm({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
+              }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50">
               Cancel
             </button>
