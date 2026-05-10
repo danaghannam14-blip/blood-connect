@@ -5,7 +5,7 @@ const conn = mysql.createConnection({
   host: 'mysql-16d1c321-blood-bank2026.k.aivencloud.com',
   port: 18083,
   user: 'avnadmin',
-  password: 'AVNS__T6tTjAsWDY7Ra3rKdV',
+ password: process.env.AIVEN_PASSWORD,
   database: 'defaultdb',
   ssl: { rejectUnauthorized: false }
 })
