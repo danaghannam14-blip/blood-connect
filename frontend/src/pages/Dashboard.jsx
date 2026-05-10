@@ -26,16 +26,30 @@ function Dashboard() {
     navigate('/')
   }
 
-  const markDonated = async (notifId, hospital_id, blood_type) => {
-    try {
-      await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
+const markDonated = async (notifId, hospital_id, blood_type) => {
+  try {
+    await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
+
+    const currentTotal = notifications.filter(n => n.donated).length
+
+    // If this is the 1st donation (total becomes 1), create a 2nd notification slot
+    if (currentTotal === 0) {
+      const res = await axios.post(`${API}/api/donors/notifications/duplicate`, {
+        donor_id: donor.id,
+        hospital_id,
+        blood_type
+      })
       setNotifications(prev => {
         const updated = prev.map(n => n.id === notifId ? { ...n, donated: true } : n)
-        return updated
+        return [...updated, res.data]
       })
-      axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
-    } catch (err) { console.log(err) }
-  }
+    } else {
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, donated: true } : n))
+    }
+
+    axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
+  } catch (err) { console.log(err) }
+}
 
   const getCanDonateTo = (bt) => {
     const map = {

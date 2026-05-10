@@ -163,4 +163,24 @@ router.put('/notifications/:id/donated', (req, res) => {
     res.json({ message: 'Marked as donated' });
   });
 });
+router.post('/notifications/duplicate', (req, res) => {
+  const { donor_id, hospital_id, blood_type } = req.body;
+  db.query(
+    'INSERT INTO notifications (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
+    [donor_id, hospital_id, blood_type],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: err.message });
+      db.query(
+        `SELECT n.*, h.name as hospital_name, h.address as hospital_address
+         FROM notifications n JOIN hospitals h ON n.hospital_id = h.id
+         WHERE n.id = ?`,
+        [result.insertId],
+        (err2, rows) => {
+          if (err2) return res.status(500).json({ message: err2.message });
+          res.json(rows[0]);
+        }
+      );
+    }
+  );
+});
 module.exports = router;
