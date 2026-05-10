@@ -50,7 +50,7 @@ cron.schedule('*/5 * * * *', async () => {
     JOIN hospitals h ON a.hospital_id = h.id
     WHERE a.status = 'scheduled'
       AND a.reminder_sent = 0
-      AND TIMESTAMP(a.appointment_date, a.appointment_time) <= NOW() - INTERVAL 30 MINUTE
+      AND TIMESTAMP(a.appointment_date, a.appointment_time) <= NOW() - INTERVAL 3 MINUTE
   `
   const db = require('./db')
   db.query(sql, async (err, rows) => {
