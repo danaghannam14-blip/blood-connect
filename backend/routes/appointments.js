@@ -155,5 +155,50 @@ router.put('/cancel/:id', (req, res) => {
     res.json({ message: 'Appointment cancelled' })
   })
 })
+// Hospital confirms donation
+router.put('/confirm/:id', (req, res) => {
+  db.query(
+    'SELECT a.*, d.id as donor_id FROM appointments a JOIN donors d ON a.donor_id = d.id WHERE a.id = ?',
+    [req.params.id],
+    (err, rows) => {
+      if (err || rows.length === 0) return res.status(500).json({ message: err?.message || 'Not found' });
+      const appointment = rows[0];
+      db.query('UPDATE appointments SET status = "completed" WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ message: err.message });
+        // Update donor last donation date
+        db.query('UPDATE donors SET last_donation_date = CURDATE() WHERE id = ?', [appointment.donor_id], () => {});
+        // Insert into donation history
+        db.query(
+          'INSERT INTO donation_history (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
+          [appointment.donor_id, appointment.hospital_id, appointment.blood_type || 'Unknown'],
+          () => {}
+        );
+        res.json({ message: 'Donation confirmed successfully' });
+      });
+    }
+  );
+});
 
+// Mark appointment as missed
+router.put('/missed/:id', (req, res) => {
+  db.query('UPDATE appointments SET status = "missed" WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json({ message: 'Appointment marked as missed' });
+  });
+});
+
+// Get appointments for a hospital
+router.get('/hospital/:hospital_id', (req, res) => {
+  const sql = `
+    SELECT a.*, d.full_name as donor_name, d.blood_type as donor_blood_type, d.phone as donor_phone
+    FROM appointments a
+    JOIN donors d ON a.donor_id = d.id
+    WHERE a.hospital_id = ? AND a.status = 'scheduled'
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+  `;
+  db.query(sql, [req.params.hospital_id], (err, results) => {
+    if (err) return res.status(500).json({ message: err.message });
+    res.json(results);
+  });
+});
 module.exports = router

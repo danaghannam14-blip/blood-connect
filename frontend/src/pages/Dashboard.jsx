@@ -5,13 +5,20 @@ import AppointmentBooker from '../components/AppointmentBooker'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 
+const URGENCY_CONFIG = {
+  critical: { label: 'Critical', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  urgent:   { label: 'Urgent',   bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+  medium:   { label: 'Medium',   bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  low:      { label: 'Low',      bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' }
+}
+
 function Dashboard() {
   const navigate = useNavigate()
   const [donor, setDonor] = useState(null)
   const [inventory, setInventory] = useState([])
   const [notifications, setNotifications] = useState([])
-  const [activeStep, setActiveStep] = useState(null)
-const [appointments, setAppointments] = useState([])
+  const [appointments, setAppointments] = useState([])
+
   useEffect(() => {
     const data = localStorage.getItem('donorData')
     if (!data) { navigate('/login'); return }
@@ -20,33 +27,13 @@ const [appointments, setAppointments] = useState([])
     setDonor(donorData)
     axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`).then(res => setInventory(res.data)).catch(console.log)
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
-  axios.get(`${API}/api/appointments/donor/${donorData.id}`).then(res => setAppointments(res.data)).catch(console.log)
+    axios.get(`${API}/api/appointments/donor/${donorData.id}`).then(res => setAppointments(res.data)).catch(console.log)
   }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('donorToken')
     localStorage.removeItem('donorData')
     navigate('/')
-  }
-
-  const markDonated = async (notifId, hospital_id, blood_type) => {
-    try {
-      await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
-      await axios.post(`${API}/api/donors/donate`, { donor_id: donor.id, hospital_id, blood_type })
-      const currentDonated = notifications.filter(n => n.donated).length
-      if (currentDonated === 0) {
-        const res = await axios.post(`${API}/api/donors/notifications/duplicate`, {
-          donor_id: donor.id, hospital_id, blood_type
-        })
-        setNotifications(prev => [
-          ...prev.map(n => n.id === notifId ? { ...n, donated: true } : n),
-          res.data
-        ])
-      } else {
-        setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, donated: true } : n))
-      }
-      axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
-    } catch (err) { console.log(err) }
   }
 
   const getCanDonateTo = (bt) => {
@@ -63,10 +50,19 @@ const [appointments, setAppointments] = useState([])
     return map[bt] || bt
   }
 
+  const getNextEligibleDate = () => {
+    if (!donor?.last_donation_date) return null
+    const last = new Date(donor.last_donation_date)
+    const next = new Date(last)
+    next.setDate(next.getDate() + 56)
+    return next > new Date() ? next.toLocaleDateString('en-GB') : null
+  }
+
   if (!donor) return null
 
   const totalDonations = notifications.filter(n => n.donated).length
   const maxReached = totalDonations >= 2
+  const nextEligible = getNextEligibleDate()
 
   const hospitalMap = {}
   notifications.forEach(n => {
@@ -86,11 +82,10 @@ const [appointments, setAppointments] = useState([])
   })
   const hospitalRows = Object.values(hospitalMap)
 
-  // Steps for the progress indicator
   const steps = [
     { id: 1, label: 'Health Screening', icon: '🩺', done: true },
     { id: 2, label: 'Hospital Matched', icon: '🏥', done: inventory.length > 0 },
-    { id: 3, label: 'Appointment Booked', icon: '📅', done: appointments.some(a => a.status === 'scheduled') },
+    { id: 3, label: 'Appointment Booked', icon: '📅', done: appointments.some(a => a.status === 'scheduled' || a.status === 'completed') },
     { id: 4, label: 'Donation Complete', icon: '✅', done: totalDonations > 0 },
   ]
 
@@ -148,13 +143,33 @@ const [appointments, setAppointments] = useState([])
           </div>
         </div>
 
-        {/* Blood compatibility */}
+        {/* Donor stats */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-5">
-          <p className="text-xs text-gray-500 font-medium mb-2">Your blood can help</p>
-          <p className="text-red-600 font-bold">{getCanDonateTo(donor.blood_type)}</p>
+          <p className="text-xs text-gray-500 font-medium mb-3">Your Profile</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-1">Can donate to</p>
+              <p className="text-red-600 font-bold text-sm">{getCanDonateTo(donor.blood_type)}</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-1">Total donations</p>
+              <p className="text-gray-800 font-bold text-sm">{totalDonations} unit{totalDonations !== 1 ? 's' : ''}</p>
+            </div>
+            {nextEligible ? (
+              <div className="bg-orange-50 rounded-xl p-3 col-span-2">
+                <p className="text-xs text-orange-500 mb-1">Next eligible donation date</p>
+                <p className="text-orange-700 font-bold text-sm">📅 {nextEligible}</p>
+              </div>
+            ) : (
+              <div className="bg-green-50 rounded-xl p-3 col-span-2">
+                <p className="text-xs text-green-600 mb-1">Donation eligibility</p>
+                <p className="text-green-700 font-bold text-sm">✅ You can donate now!</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* STEP 2 — Compatible requests */}
+        {/* STEP 1 — Compatible requests */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
@@ -168,45 +183,69 @@ const [appointments, setAppointments] = useState([])
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {inventory.map(item => (
-                <div key={item.id} className="flex justify-between items-center bg-red-50 border border-red-100 rounded-xl p-4">
-                  <div>
-                    <p className="font-bold text-gray-800 text-sm">{item.hospital_name}</p>
-                    <p className="text-xs text-gray-500">{item.hospital_address}</p>
-                    <p className="text-xs text-red-500 font-medium mt-1">🩸 Needs {item.quantity_needed} units of {item.blood_type}</p>
+              {inventory.map(item => {
+                const urgency = URGENCY_CONFIG[item.urgency] || URGENCY_CONFIG.urgent
+                return (
+                  <div key={item.id} className={`border rounded-xl p-4 ${urgency.bg}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-bold text-gray-800 text-sm">{item.hospital_name}</p>
+                        <p className="text-xs text-gray-500">{item.hospital_address}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="bg-red-600 text-white text-sm font-extrabold px-3 py-0.5 rounded-xl">
+                          {item.blood_type}
+                        </span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${urgency.bg} ${urgency.text} flex items-center gap-1`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${urgency.dot} inline-block`}></span>
+                          {urgency.label}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-red-600 font-medium">🩸 Needs {item.quantity_needed} units</p>
                   </div>
-                  <span className="bg-red-600 text-white text-sm font-extrabold px-3 py-1 rounded-xl">
-                    {item.blood_type}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* STEP 3 — Book appointment */}
-        {!maxReached && (
+        {/* STEP 2 — Book appointment */}
+        {!maxReached && !nextEligible && (
           <div className="bg-white rounded-2xl shadow-sm p-5 mb-5">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
               <h2 className="text-base font-bold text-gray-800">Book Your Donation Appointment</h2>
             </div>
             <p className="text-xs text-gray-400 mb-4 ml-9">
-              Choose a hospital from the list above and pick a time. After your appointment, you'll receive a reminder email to confirm your donation.
+              Choose a hospital from the list above and pick a time. After your appointment, the hospital will confirm your donation.
             </p>
-           <AppointmentBooker donor={donor} onAppointmentsChange={setAppointments} />
+            <AppointmentBooker donor={donor} onAppointmentsChange={setAppointments} />
           </div>
         )}
 
-        {/* STEP 4 — Donation history */}
+        {/* Next eligible — can't book yet */}
+        {nextEligible && !maxReached && (
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+              <h2 className="text-base font-bold text-orange-700">Donation Cooldown Active</h2>
+            </div>
+            <p className="text-sm text-orange-600 ml-9">
+              You donated recently. You can book your next appointment from <strong>{nextEligible}</strong>.
+            </p>
+          </div>
+        )}
+
+        {/* STEP 3 — Donation history */}
         {hospitalRows.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-5 mb-5">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-              <h2 className="text-base font-bold text-gray-800">Confirm Your Donation</h2>
+              <h2 className="text-base font-bold text-gray-800">Donation History</h2>
             </div>
             <p className="text-xs text-gray-400 mb-4 ml-9">
-              Already donated? Mark it below. Each confirmation updates the hospital's blood inventory.
+              The hospital will confirm your donation after your appointment. You'll see it reflected here.
             </p>
             <div className="flex flex-col gap-3">
               {hospitalRows.map(row => {
@@ -232,17 +271,15 @@ const [appointments, setAppointments] = useState([])
                         </div>
                       ))}
                       <span className="text-xs text-gray-400 ml-1">
-                        {unitsDonatedHere === 0 && 'Not yet confirmed'}
-                        {unitsDonatedHere === 1 && '1 unit confirmed'}
-                        {unitsDonatedHere >= 2 && '2 units confirmed'}
+                        {unitsDonatedHere === 0 && 'Awaiting hospital confirmation'}
+                        {unitsDonatedHere === 1 && '1 unit confirmed by hospital'}
+                        {unitsDonatedHere >= 2 && '2 units confirmed by hospital'}
                       </span>
                     </div>
                     {canDonateHere && (
-                      <button
-                        onClick={() => markDonated(row.pending_notif_id, row.hospital_id, row.blood_type)}
-                        className="bg-green-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-green-700">
-                        {unitsDonatedHere === 0 ? '✅ I donated here' : '✅ I donated a second unit here'}
-                      </button>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
+                        ⏳ Waiting for hospital to confirm your donation after your appointment.
+                      </div>
                     )}
                     {unitsDonatedHere >= 2 && (
                       <p className="text-green-600 text-xs font-semibold">✅ Complete — 2 units donated!</p>

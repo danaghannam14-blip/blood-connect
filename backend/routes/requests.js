@@ -13,11 +13,12 @@ const compatibleDonors = {
   'AB+': ['AB+']
 };
 
-const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) => {
+const urgencyOrder = { critical: 0, urgent: 1, medium: 2, low: 3 };
+
+const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, urgency) => {
   const canDonateFrom = Object.keys(compatibleDonors).filter(donor =>
     compatibleDonors[donor].includes(blood_type)
   );
-
   const placeholders = canDonateFrom.map(() => '?').join(',');
   db.query(
     `SELECT id, full_name, email FROM donors WHERE blood_type IN (${placeholders}) AND is_eligible = 1`,
@@ -25,10 +26,8 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) =>
     async (err, donors) => {
       if (err) { console.log('DB error:', err.message); return; }
       if (donors.length === 0) { console.log('No eligible donors found'); return; }
-
       for (const donor of donors) {
         try {
-          // Check if notification already exists for this donor/hospital/blood_type
           const alreadyNotified = await new Promise((resolve) => {
             db.query(
               'SELECT id FROM notifications WHERE donor_id = ? AND hospital_id = ? AND blood_type = ?',
@@ -36,57 +35,43 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) =>
               (err, existing) => resolve(existing && existing.length > 0)
             );
           });
-
           if (alreadyNotified) continue;
-
-          // Insert notification first
           await new Promise((resolve) => {
             db.query(
               'INSERT INTO notifications (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
               [donor.id, hospital_id, blood_type],
-              (err) => {
-                if (err) console.log('Notification save error:', err.message);
-                resolve();
-              }
+              (err) => { if (err) console.log('Notification save error:', err.message); resolve(); }
             );
           });
-
-          // Send email
+          const urgencyLabel = urgency === 'critical' ? '🚨 CRITICAL' : urgency === 'urgent' ? '⚠️ Urgent' : urgency === 'medium' ? '📢 Medium Priority' : '📋 Low Priority';
+          const urgencyColor = urgency === 'critical' ? '#dc2626' : urgency === 'urgent' ? '#ea580c' : urgency === 'medium' ? '#ca8a04' : '#6b7280';
           const result = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
-            headers: {
-              'accept': 'application/json',
-              'api-key': process.env.BREVO_API_KEY,
-              'content-type': 'application/json'
-            },
+            headers: { 'accept': 'application/json', 'api-key': process.env.BREVO_API_KEY, 'content-type': 'application/json' },
             body: JSON.stringify({
               sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
               to: [{ email: donor.email, name: donor.full_name }],
-              subject: `🩸 Urgent: ${blood_type} Blood Needed at ${hospital_name}`,
+              subject: `${urgencyLabel}: ${blood_type} Blood Needed at ${hospital_name}`,
               htmlContent: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <div style="background-color: #dc2626; padding: 20px; text-align: center;">
+                  <div style="background-color: ${urgencyColor}; padding: 20px; text-align: center;">
                     <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
                   </div>
                   <div style="padding: 30px; background: #fff;">
-                    <h2 style="color: #dc2626;">Urgent Blood Request</h2>
+                    <h2 style="color: ${urgencyColor};">${urgencyLabel} Blood Request</h2>
                     <p>Dear ${donor.full_name},</p>
-                    <p><strong>${hospital_name}</strong> urgently needs <strong>${blood_type}</strong> blood.</p>
-                    <p>Your blood type is compatible and you can help save lives!</p>
-                    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
+                    <p><strong>${hospital_name}</strong> needs <strong>${blood_type}</strong> blood — your type is compatible!</p>
+                    <div style="background: #fef2f2; border-left: 4px solid ${urgencyColor}; padding: 15px; margin: 20px 0;">
                       <p style="margin: 0;"><strong>Hospital:</strong> ${hospital_name}</p>
-                      <p style="margin: 8px 0 0;"><strong>Blood Type Needed:</strong> ${blood_type}</p>
+                      <p style="margin: 8px 0 0;"><strong>Blood Type:</strong> ${blood_type}</p>
+                      <p style="margin: 8px 0 0;"><strong>Priority:</strong> ${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</p>
                     </div>
-                    <a href="https://bloodconnect-lb.vercel.app/login" 
-                       style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
-                      View Dashboard
+                    <a href="https://bloodconnect-lb.vercel.app/donor/dashboard" style="background: ${urgencyColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                      Book Appointment
                     </a>
-                    <p style="color: #666; margin-top: 20px; font-size: 14px;">
-                      Every drop counts. Thank you for being a BloodConnect donor.
-                    </p>
                   </div>
                   <div style="background: #111; padding: 15px; text-align: center;">
-                    <p style="color: #666; margin: 0; font-size: 12px;">© 2024 BloodConnect. Smart Donor Matching System.</p>
+                    <p style="color: #666; margin: 0; font-size: 12px;">© 2026 BloodConnect. Smart Donor Matching System.</p>
                   </div>
                 </div>
               `
@@ -103,13 +88,13 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id) =>
 };
 
 router.post('/create', (req, res) => {
-  const { hospital_id, blood_type, quantity_needed } = req.body;
-  const sql = `INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed) VALUES (?, ?, ?)`;
-  db.query(sql, [hospital_id, blood_type, quantity_needed], (err, result) => {
+  const { hospital_id, blood_type, quantity_needed, urgency = 'urgent' } = req.body;
+  const sql = `INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed, urgency) VALUES (?, ?, ?, ?)`;
+  db.query(sql, [hospital_id, blood_type, quantity_needed, urgency], (err, result) => {
     if (err) return res.status(500).json({ message: 'Failed to create request', error: err.message });
     db.query('SELECT name FROM hospitals WHERE id = ?', [hospital_id], (err, results) => {
       if (!err && results.length > 0) {
-        sendDonorNotifications(blood_type, results[0].name, hospital_id);
+        sendDonorNotifications(blood_type, results[0].name, hospital_id, urgency);
       }
     });
     res.status(201).json({ message: 'Blood request created successfully', id: result.insertId });
@@ -125,7 +110,7 @@ router.get('/compatible/:blood_type', (req, res) => {
     FROM blood_requests br
     JOIN hospitals h ON br.hospital_id = h.id
     WHERE br.blood_type IN (${placeholders}) AND br.status = 'pending'
-    ORDER BY br.created_at DESC
+    ORDER BY FIELD(br.urgency, 'critical', 'urgent', 'medium', 'low'), br.created_at DESC
   `;
   db.query(sql, compatible, (err, results) => {
     if (err) return res.status(500).json({ message: 'Failed to get requests', error: err.message });
@@ -139,7 +124,7 @@ router.get('/all', (req, res) => {
     FROM blood_requests br
     JOIN hospitals h ON br.hospital_id = h.id
     WHERE br.status = 'pending'
-    ORDER BY br.created_at DESC
+    ORDER BY FIELD(br.urgency, 'critical', 'urgent', 'medium', 'low'), br.created_at DESC
   `;
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ message: 'Failed to get requests', error: err.message });
@@ -178,27 +163,23 @@ router.delete('/:id', (req, res) => {
     res.json({ message: 'Request deleted' });
   });
 });
+
 router.get('/inventory/status', (req, res) => {
   const sql = `
-    SELECT blood_type,
-      COUNT(*) as pending_requests,
-      SUM(quantity_needed) as units_needed
-    FROM blood_requests
-    WHERE status = 'pending'
-    GROUP BY blood_type
-  `
+    SELECT blood_type, COUNT(*) as pending_requests, SUM(quantity_needed) as units_needed
+    FROM blood_requests WHERE status = 'pending' GROUP BY blood_type
+  `;
   db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: err.message })
-
-    const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+    if (err) return res.status(500).json({ message: err.message });
+    const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     const inventory = bloodTypes.map(bt => {
-      const found = results.find(r => r.blood_type === bt)
-      const unitsNeeded = found ? found.units_needed : 0
-      const status = unitsNeeded === 0 ? 'available' : unitsNeeded <= 2 ? 'low' : 'critical'
-      return { blood_type: bt, units_needed: unitsNeeded, status }
-    })
+      const found = results.find(r => r.blood_type === bt);
+      const unitsNeeded = found ? found.units_needed : 0;
+      const status = unitsNeeded === 0 ? 'available' : unitsNeeded <= 2 ? 'low' : 'critical';
+      return { blood_type: bt, units_needed: unitsNeeded, status };
+    });
+    res.json(inventory);
+  });
+});
 
-    res.json(inventory)
-  })
-})
 module.exports = router;
