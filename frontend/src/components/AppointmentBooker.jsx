@@ -3,8 +3,8 @@ import axios from 'axios'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 
-function AppointmentBooker({ donor }) {
-  const [hospitals, setHospitals] = useState([])
+function AppointmentBooker({ donor, onAppointmentsChange }) {
+   const [hospitals, setHospitals] = useState([])
   const [appointments, setAppointments] = useState([])
   const [form, setForm] = useState({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
   const [bookedSlots, setBookedSlots] = useState([])
@@ -20,10 +20,13 @@ function AppointmentBooker({ donor }) {
   }, [])
 
   const loadAppointments = () => {
-    axios.get(`${API}/api/appointments/donor/${donor.id}`)
-      .then(res => setAppointments(res.data))
-      .catch(console.log)
-  }
+  axios.get(`${API}/api/appointments/donor/${donor.id}`)
+    .then(res => {
+      setAppointments(res.data)
+      if (onAppointmentsChange) onAppointmentsChange(res.data)
+    })
+    .catch(console.log)
+}
 
   useEffect(() => {
     if (!form.hospital_id || !form.date) return
