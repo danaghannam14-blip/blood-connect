@@ -21,6 +21,10 @@ function Home() {
             className="text-gray-600 hover:text-red-600 text-sm font-medium">How It Works</button>
           <button onClick={() => navigate('/impact')}
             className="text-gray-600 hover:text-red-600 text-sm font-medium">Impact</button>
+          <button onClick={() => navigate('/inventory')}
+  className="text-gray-600 hover:text-red-600 text-sm font-medium">
+  Blood Status
+</button>
           <button onClick={() => navigate('/emergency')}
             className="text-red-600 border border-red-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-red-50">
             🚨 Emergency
@@ -48,6 +52,10 @@ function Home() {
             className="text-gray-700 text-sm font-medium text-left py-2 border-b border-gray-100">
             Impact
           </button>
+          <button onClick={() => { navigate('/inventory'); setMenuOpen(false) }}
+  className="text-gray-700 text-sm font-medium text-left py-2 border-b border-gray-100">
+  Blood Status
+</button>
           <button onClick={() => { navigate('/emergency'); setMenuOpen(false) }}
             className="text-red-600 text-sm font-semibold text-left py-2 border-b border-gray-100">
             🚨 Emergency

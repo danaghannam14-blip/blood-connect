@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-
+import AppointmentBooker from '../components/AppointmentBooker'
 const API = 'https://blood-bank-eqyr.onrender.com'
 
 function Dashboard() {

@@ -14,10 +14,12 @@ import Impact from './pages/Impact'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
+import Inventory from './pages/Inventory'
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/inventory" element={<Inventory />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/donor/register" element={<DonorRegister />} />
