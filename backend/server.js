@@ -41,6 +41,7 @@ const cron = require('node-cron')
 
 // Run every 5 minutes — check for appointments that ended 30+ min ago and need reminder
 cron.schedule('*/5 * * * *', async () => {
+  console.log('Cron running at:', new Date().toISOString())
   const sql = `
     SELECT a.id, a.appointment_date, a.appointment_time,
            d.full_name, d.email,
@@ -50,14 +51,14 @@ cron.schedule('*/5 * * * *', async () => {
     JOIN hospitals h ON a.hospital_id = h.id
     WHERE a.status = 'scheduled'
       AND a.reminder_sent = 0
-      AND TIMESTAMP(a.appointment_date, a.appointment_time) <= NOW() - INTERVAL 3 MINUTE
-  `
+     AND TIMESTAMP(a.appointment_date, a.appointment_time) <= DATE_ADD(NOW(), INTERVAL 3 HOUR) - INTERVAL 3 MINUTE  `
   const db = require('./db')
   db.query(sql, async (err, rows) => {
     if (err || rows.length === 0) return
     for (const row of rows) {
       try {
-        await fetch('https://api.brevo.com/v3/smtp/email', {
+        await fetch('https://api.brevo.com/v3/smtp/email',
+           {
           method: 'POST',
           headers: {
             'accept': 'application/json',
