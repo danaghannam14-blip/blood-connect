@@ -26,30 +26,35 @@ function Dashboard() {
     navigate('/')
   }
 
-const markDonated = async (notifId, hospital_id, blood_type) => {
-  try {
-    await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
+  const markDonated = async (notifId, hospital_id, blood_type) => {
+    try {
+      // Mark this notification as donated
+      await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
 
-    const currentTotal = notifications.filter(n => n.donated).length
-
-    // If this is the 1st donation (total becomes 1), create a 2nd notification slot
-    if (currentTotal === 0) {
-      const res = await axios.post(`${API}/api/donors/notifications/duplicate`, {
-        donor_id: donor.id,
-        hospital_id,
-        blood_type
+      // Record in donation_history and decrease blood request units
+      await axios.post(`${API}/api/donors/donate`, {
+        donor_id: donor.id, hospital_id, blood_type
       })
-      setNotifications(prev => {
-        const updated = prev.map(n => n.id === notifId ? { ...n, donated: true } : n)
-        return [...updated, res.data]
-      })
-    } else {
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, donated: true } : n))
-    }
 
-    axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
-  } catch (err) { console.log(err) }
-}
+      const currentDonated = notifications.filter(n => n.donated).length
+
+      if (currentDonated === 0) {
+        // This was the 1st donation — create a 2nd notification slot
+        const res = await axios.post(`${API}/api/donors/notifications/duplicate`, {
+          donor_id: donor.id, hospital_id, blood_type
+        })
+        setNotifications(prev => [
+          ...prev.map(n => n.id === notifId ? { ...n, donated: true } : n),
+          res.data
+        ])
+      } else {
+        // This was the 2nd donation — just mark it
+        setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, donated: true } : n))
+      }
+
+      axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
+    } catch (err) { console.log(err) }
+  }
 
   const getCanDonateTo = (bt) => {
     const map = {
@@ -67,11 +72,10 @@ const markDonated = async (notifId, hospital_id, blood_type) => {
 
   if (!donor) return null
 
-  // Count only notification-based donations
   const totalDonations = notifications.filter(n => n.donated).length
   const maxReached = totalDonations >= 2
 
-  // Group notifications by hospital into one row each
+  // Group notifications by hospital — one row per hospital
   const hospitalMap = {}
   notifications.forEach(n => {
     if (!hospitalMap[n.hospital_id]) {
@@ -153,7 +157,6 @@ const markDonated = async (notifId, hospital_id, blood_type) => {
 
               {hospitalRows.map(row => {
                 const unitsDonatedHere = row.donated_count
-                // Show donate button only if: this hospital has a pending slot AND global max not yet reached
                 const canDonateHere = !!row.pending_notif_id && !maxReached
 
                 return (
@@ -188,9 +191,7 @@ const markDonated = async (notifId, hospital_id, blood_type) => {
                       </span>
                     </div>
 
-                 
-
-                    {/* Donate button */}
+                    {/* Donate button — visible until global max reached */}
                     {canDonateHere && (
                       <button
                         onClick={() => markDonated(row.pending_notif_id, row.hospital_id, row.blood_type)}
@@ -199,20 +200,20 @@ const markDonated = async (notifId, hospital_id, blood_type) => {
                       </button>
                     )}
 
-                    {/* This hospital fully done */}
+                    {/* Hospital fully done */}
                     {unitsDonatedHere >= 2 && (
                       <p className="text-green-600 text-xs font-semibold">✅ 2 units donated at this hospital — complete!</p>
                     )}
 
-                    {/* Global max reached but hospital had more slots */}
-                    {!canDonateHere && unitsDonatedHere < 2 && row.pending_notif_id && maxReached && unitsDonatedHere > 0 && (
-                      <p className="text-gray-400 text-xs mt-1">You've reached your global limit — rest before donating again.</p>
+                    {/* Global max reached, hospital still had a slot */}
+                    {!canDonateHere && unitsDonatedHere < 2 && row.pending_notif_id && maxReached && (
+                      <p className="text-gray-400 text-xs mt-1">Global limit reached — rest before donating again.</p>
                     )}
                   </div>
                 )
               })}
 
-              {/* Rest tip — only shows AFTER 2nd donation is confirmed */}
+              {/* Rest tip — ONLY after 2nd donation */}
               {maxReached && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-1">
                   <p className="text-amber-800 font-semibold text-sm mb-1">You've given your all — now it's time to recharge. 🌿</p>
