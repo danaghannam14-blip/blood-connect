@@ -174,12 +174,7 @@ function Dashboard() {
                       </span>
                     </div>
 
-                    {/* Blue tip after 1st donation at this hospital — only show if 2nd still possible */}
-                    {unitsDonatedHere === 1 && !maxReached && (
-                      <div className="bg-blue-50 border-l-2 border-blue-400 rounded-r-lg px-3 py-2 mb-3 text-xs text-blue-700 leading-relaxed">
-                        Great job on your first unit here! You can still donate one more — stay hydrated and eat well before coming back.
-                      </div>
-                    )}
+                 
 
                     {/* Donate button */}
                     {canDonateHere && (
