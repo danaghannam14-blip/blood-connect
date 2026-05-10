@@ -14,10 +14,29 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
   const [showForm, setShowForm] = useState(false)
   const [hospitalSearch, setHospitalSearch] = useState('')
 
-  useEffect(() => {
-    axios.get(`${API}/api/hospitals/all`).then(res => setHospitals(res.data)).catch(console.log)
-    loadAppointments()
-  }, [])
+ useEffect(() => {
+  // Only fetch hospitals that have active compatible requests
+  axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
+    .then(res => {
+      // Extract unique hospitals from requests
+      const uniqueHospitals = []
+      const seen = new Set()
+      res.data.forEach(req => {
+        if (!seen.has(req.hospital_id)) {
+          seen.add(req.hospital_id)
+          uniqueHospitals.push({
+            id: req.hospital_id,
+            name: req.hospital_name,
+            address: req.hospital_address,
+            blood_type: req.blood_type,
+            quantity_needed: req.quantity_needed
+          })
+        }
+      })
+      setHospitals(uniqueHospitals)
+    }).catch(console.log)
+  loadAppointments()
+}, [])
 
   const loadAppointments = () => {
   axios.get(`${API}/api/appointments/donor/${donor.id}`)
@@ -154,16 +173,17 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
             />
             {hospitalSearch && filteredHospitals.length > 0 && !form.hospital_id && (
               <div className="border rounded-xl overflow-hidden bg-white max-h-40 overflow-y-auto">
-                {filteredHospitals.slice(0, 8).map(h => (
-                  <button key={h.id} type="button"
-                    onClick={() => {
-                      setForm({ ...form, hospital_id: h.id.toString(), time: '' })
-                      setHospitalSearch(h.name)
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 border-b last:border-0">
-                    {h.name}
-                  </button>
-                ))}
+              {filteredHospitals.slice(0, 8).map(h => (
+  <button key={h.id} type="button"
+    onClick={() => {
+      setForm({ ...form, hospital_id: h.id.toString(), time: '' })
+      setHospitalSearch(h.name)
+    }}
+    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 border-b last:border-0">
+    <p className="font-medium text-gray-800">{h.name}</p>
+    <p className="text-xs text-red-500">Needs {h.quantity_needed} units of {h.blood_type}</p>
+  </button>
+))}
               </div>
             )}
             {form.hospital_id && (
