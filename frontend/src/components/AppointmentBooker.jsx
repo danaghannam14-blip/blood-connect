@@ -4,7 +4,7 @@ import axios from 'axios'
 const API = 'https://blood-bank-eqyr.onrender.com'
 
 function AppointmentBooker({ donor, onAppointmentsChange }) {
-   const [hospitals, setHospitals] = useState([])
+  const [hospitals, setHospitals] = useState([])
   const [appointments, setAppointments] = useState([])
   const [form, setForm] = useState({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
   const [bookedSlots, setBookedSlots] = useState([])
@@ -12,40 +12,37 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
-  const [hospitalSearch, setHospitalSearch] = useState('')
 
- useEffect(() => {
-  // Only fetch hospitals that have active compatible requests
-  axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
-    .then(res => {
-      // Extract unique hospitals from requests
-      const uniqueHospitals = []
-      const seen = new Set()
-      res.data.forEach(req => {
-        if (!seen.has(req.hospital_id)) {
-          seen.add(req.hospital_id)
-          uniqueHospitals.push({
-            id: req.hospital_id,
-            name: req.hospital_name,
-            address: req.hospital_address,
-            blood_type: req.blood_type,
-            quantity_needed: req.quantity_needed
-          })
-        }
-      })
-      setHospitals(uniqueHospitals)
-    }).catch(console.log)
-  loadAppointments()
-}, [])
+  useEffect(() => {
+    axios.get(`${API}/api/requests/compatible/${donor.blood_type}`)
+      .then(res => {
+        const uniqueHospitals = []
+        const seen = new Set()
+        res.data.forEach(req => {
+          if (!seen.has(req.hospital_id)) {
+            seen.add(req.hospital_id)
+            uniqueHospitals.push({
+              id: req.hospital_id,
+              name: req.hospital_name,
+              address: req.hospital_address,
+              blood_type: req.blood_type,
+              quantity_needed: req.quantity_needed
+            })
+          }
+        })
+        setHospitals(uniqueHospitals)
+      }).catch(console.log)
+    loadAppointments()
+  }, [])
 
   const loadAppointments = () => {
-  axios.get(`${API}/api/appointments/donor/${donor.id}`)
-    .then(res => {
-      setAppointments(res.data)
-      if (onAppointmentsChange) onAppointmentsChange(res.data)
-    })
-    .catch(console.log)
-}
+    axios.get(`${API}/api/appointments/donor/${donor.id}`)
+      .then(res => {
+        setAppointments(res.data)
+        if (onAppointmentsChange) onAppointmentsChange(res.data)
+      })
+      .catch(console.log)
+  }
 
   useEffect(() => {
     if (!form.hospital_id || !form.date) return
@@ -79,7 +76,6 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
       })
       setMessage('✅ Appointment booked! You will receive a reminder email after your appointment time.')
       setForm({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
-      setHospitalSearch('')
       setShowForm(false)
       loadAppointments()
     } catch (err) {
@@ -115,9 +111,6 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
 
   const today = new Date().toISOString().split('T')[0]
   const scheduled = appointments.filter(a => a.status === 'scheduled')
-  const filteredHospitals = hospitals.filter(h =>
-    h.name.toLowerCase().includes(hospitalSearch.toLowerCase())
-  )
 
   return (
     <div>
@@ -158,37 +151,31 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
       {showForm && (
         <form onSubmit={handleBook} className="flex flex-col gap-3 bg-gray-50 rounded-xl p-4 mt-2">
 
-          {/* Hospital search */}
+          {/* Hospital list */}
           <div>
-            <label className="text-xs text-gray-500 font-medium mb-1 block">Search Hospital</label>
-            <input
-              type="text"
-              placeholder="Type hospital name..."
-              value={hospitalSearch}
-              onChange={e => {
-                setHospitalSearch(e.target.value)
-                setForm({ ...form, hospital_id: '', time: '' })
-              }}
-              className="w-full border rounded-xl p-3 text-sm focus:outline-none mb-2"
-            />
-            {hospitalSearch && filteredHospitals.length > 0 && !form.hospital_id && (
-              <div className="border rounded-xl overflow-hidden bg-white max-h-40 overflow-y-auto">
-              {filteredHospitals.slice(0, 8).map(h => (
-  <button key={h.id} type="button"
-    onClick={() => {
-      setForm({ ...form, hospital_id: h.id.toString(), time: '' })
-      setHospitalSearch(h.name)
-    }}
-    className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 border-b last:border-0">
-    <p className="font-medium text-gray-800">{h.name}</p>
-    <p className="text-xs text-red-500">Needs {h.quantity_needed} units of {h.blood_type}</p>
-  </button>
-))}
-              </div>
-            )}
-            {form.hospital_id && (
-              <p className="text-xs text-green-600 font-medium">✓ Hospital selected</p>
-            )}
+            <label className="text-xs text-gray-500 font-medium mb-2 block">Select Hospital in Need</label>
+            <div className="flex flex-col gap-2">
+              {hospitals.length === 0 ? (
+                <p className="text-gray-400 text-sm">No hospitals currently need your blood type.</p>
+              ) : hospitals.map(h => (
+                <button key={h.id} type="button"
+                  onClick={() => setForm({ ...form, hospital_id: h.id.toString(), time: '' })}
+                  className={`w-full text-left px-4 py-3 rounded-xl border transition-all
+                    ${form.hospital_id === h.id.toString()
+                      ? 'bg-red-600 border-red-600 text-white'
+                      : 'bg-white border-gray-200 hover:border-red-300 text-gray-800'}`}>
+                  <p className="font-semibold text-sm">{h.name}</p>
+                  <p className={`text-xs mt-0.5 ${form.hospital_id === h.id.toString() ? 'text-red-200' : 'text-red-500'}`}>
+                    🩸 Needs {h.quantity_needed} units of {h.blood_type}
+                  </p>
+                  {h.address && (
+                    <p className={`text-xs mt-0.5 ${form.hospital_id === h.id.toString() ? 'text-red-100' : 'text-gray-400'}`}>
+                      📍 {h.address}
+                    </p>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Date */}
@@ -286,7 +273,6 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
               onClick={() => {
                 setShowForm(false)
                 setError('')
-                setHospitalSearch('')
                 setForm({ hospital_id: '', date: '', time: '', hour: 9, minute: 0, ampm: 'AM' })
               }}
               className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50">
