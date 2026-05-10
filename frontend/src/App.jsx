@@ -13,6 +13,7 @@ import HowItWorks from './pages/HowItWorks'
 import Impact from './pages/Impact'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import NotFound from './pages/NotFound'
 function App() {
   return (
     <BrowserRouter>
@@ -29,6 +30,7 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/impact" element={<Impact />} />
+     <Route path="*" element={<NotFound />} />
      <Route path="/forgot-password" element={<ForgotPassword />} />
 <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
