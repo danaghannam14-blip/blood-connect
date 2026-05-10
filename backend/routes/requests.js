@@ -178,5 +178,27 @@ router.delete('/:id', (req, res) => {
     res.json({ message: 'Request deleted' });
   });
 });
+router.get('/inventory/status', (req, res) => {
+  const sql = `
+    SELECT blood_type,
+      COUNT(*) as pending_requests,
+      SUM(quantity_needed) as units_needed
+    FROM blood_requests
+    WHERE status = 'pending'
+    GROUP BY blood_type
+  `
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: err.message })
 
+    const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+    const inventory = bloodTypes.map(bt => {
+      const found = results.find(r => r.blood_type === bt)
+      const unitsNeeded = found ? found.units_needed : 0
+      const status = unitsNeeded === 0 ? 'available' : unitsNeeded <= 2 ? 'low' : 'critical'
+      return { blood_type: bt, units_needed: unitsNeeded, status }
+    })
+
+    res.json(inventory)
+  })
+})
 module.exports = router;

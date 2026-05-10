@@ -229,7 +229,11 @@ function Dashboard() {
             </div>
           )}
         </div>
-
+{/* Appointment Booking */}
+<div className="bg-white rounded-2xl shadow p-6 mb-6">
+  <h2 className="text-xl font-semibold text-gray-700 mb-4">📅 Book a Donation Appointment</h2>
+  <AppointmentBooker donor={donor} />
+</div>
       </div>
     </div>
   )
