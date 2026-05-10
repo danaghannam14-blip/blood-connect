@@ -23,8 +23,7 @@ function Dashboard() {
     const data = localStorage.getItem('donorData')
     if (!data) { navigate('/login'); return }
     const donorData = JSON.parse(data)
-    if (!donorData.is_eligible) { navigate('/donor/chatbot'); return }
-    setDonor(donorData)
+     setDonor(donorData)
     axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`).then(res => setInventory(res.data)).catch(console.log)
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
     axios.get(`${API}/api/appointments/donor/${donorData.id}`).then(res => setAppointments(res.data)).catch(console.log)

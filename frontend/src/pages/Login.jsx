@@ -59,7 +59,7 @@ const [showPassword, setShowPassword] = useState(false)
       })
       localStorage.setItem('donorToken', res.data.token)
       localStorage.setItem('donorData', JSON.stringify(res.data.donor))
-      navigate('/donor/dashboard')
+      navigate('/donor/chatbot')
       setLoading(false)
       return
     } catch {
