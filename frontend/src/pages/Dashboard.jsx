@@ -10,7 +10,6 @@ function Dashboard() {
   const [inventory, setInventory] = useState([])
   const [history, setHistory] = useState([])
   const [notifications, setNotifications] = useState([])
-  const [donationUnits, setDonationUnits] = useState({})
 
   useEffect(() => {
     const data = localStorage.getItem('donorData')
@@ -29,23 +28,20 @@ function Dashboard() {
     navigate('/')
   }
 
-  const markDonated = async (id, hospital_id, blood_type) => {
-    const units = donationUnits[id] || 1
-    const donatedSoFar = notifications.filter(n => n.donated).length + history.length
+  const markDonated = async (notifId, hospital_id, blood_type) => {
     try {
-      await axios.put(`${API}/api/donors/notifications/${id}/donated`)
-      await axios.post(`${API}/api/donors/donate`, { donor_id: donor.id, hospital_id, blood_type, units })
-      const newTotal = donatedSoFar + 1
-      if (newTotal >= 2) {
-        alert('🛑 You are a true hero! You have reached your maximum of 2 donations.\n\n💧 Drink plenty of water\n🍎 Eat iron-rich foods (spinach, meat, beans)\n😴 Get enough sleep\n🚫 Avoid heavy exercise for 24 hours\n\nYour body needs to rest now. Thank you for saving lives! ❤️')
-      }
-      setNotifications(prev => prev.map(n => n.id === id ? {...n, donated: true} : n))
+      await axios.put(`${API}/api/donors/notifications/${notifId}/donated`)
+      await axios.post(`${API}/api/donors/donate`, { donor_id: donor.id, hospital_id, blood_type, units: 1 })
+      setNotifications(prev => {
+        const updated = [...prev]
+        const idx = updated.findIndex(n => n.id === notifId)
+        if (idx !== -1) updated[idx] = { ...updated[idx], donated: true }
+        return updated
+      })
       axios.get(`${API}/api/requests/compatible/${donor.blood_type}`).then(res => setInventory(res.data))
       axios.get(`${API}/api/donors/history/${donor.id}`).then(res => setHistory(res.data))
     } catch (err) { console.log(err) }
   }
-
-  const totalDonations = notifications.filter(n => n.donated).length + history.length
 
   const getCanDonateTo = (bt) => {
     const map = {
@@ -61,17 +57,33 @@ function Dashboard() {
     return map[bt] || bt
   }
 
-  const getDonationWarning = (count) => {
-    if (count === 0) return { msg: '💡 Max allowed: 2 units total. Your first donation saves up to 3 lives!', color: 'text-gray-500' }
-    if (count === 1) return { msg: '⚠️ You donated 1 unit already. You can donate 1 more unit. Stay hydrated and eat well!', color: 'text-yellow-600' }
-    return { msg: '🛑 Maximum reached. Please rest before donating again!', color: 'text-red-600' }
-  }
-
   if (!donor) return null
 
-  const donatedSoFar = notifications.filter(n => n.donated).length + history.length
-  const warn = getDonationWarning(donatedSoFar)
-  const maxReached = donatedSoFar >= 2
+  // Total donations across all sources
+  const totalDonations = notifications.filter(n => n.donated).length + history.length
+  const maxReached = totalDonations >= 2
+
+  // Group notifications by hospital_id into rows
+  const hospitalMap = {}
+  notifications.forEach(n => {
+    if (!hospitalMap[n.hospital_id]) {
+      hospitalMap[n.hospital_id] = {
+        hospital_id: n.hospital_id,
+        hospital_name: n.hospital_name,
+        hospital_address: n.hospital_address,
+        blood_type: n.blood_type,
+        created_at: n.created_at,
+        donated_count: 0,
+        pending_notif_id: null
+      }
+    }
+    if (n.donated) {
+      hospitalMap[n.hospital_id].donated_count++
+    } else if (!hospitalMap[n.hospital_id].pending_notif_id) {
+      hospitalMap[n.hospital_id].pending_notif_id = n.id
+    }
+  })
+  const hospitalRows = Object.values(hospitalMap)
 
   return (
     <div className="min-h-screen bg-red-50 p-6">
@@ -126,65 +138,102 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Donation Requests & History</h2>
 
-          {notifications.length === 0 && history.length === 0 ? (
-            <p className="text-gray-400">No donation requests yet. You'll be notified when your blood type is needed!</p>
+          {hospitalRows.length === 0 && history.length === 0 ? (
+            <p className="text-gray-400 text-sm">No donation requests yet. You'll be notified when your blood type is needed!</p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
 
-              {/* Pending notifications */}
-              {notifications.filter(n => !n.donated).map(n => (
-                <div key={n.id} className="border-b py-3 last:border-0">
-                  <p className="font-bold text-red-600">🩸 {n.blood_type} needed</p>
-                  <p className="text-gray-600 text-sm font-medium">{n.hospital_name}</p>
-                  <p className="text-xs text-gray-400">{n.hospital_address}</p>
-                  <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
-                  <div className="mt-2 bg-red-50 rounded-xl p-3">
-                    <p className={`text-xs mb-2 ${warn.color}`}>{warn.msg}</p>
-                    {!maxReached ? (
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="number" min="1" max="1"
-                          value={donationUnits[n.id] || 1}
-                          onChange={e => setDonationUnits(prev => ({...prev, [n.id]: parseInt(e.target.value)}))}
-                          className="border rounded-lg p-2 text-sm w-20 focus:outline-none"
-                        />
-                        <span className="text-xs text-gray-400">unit(s)</span>
-                        <button
-                          onClick={() => markDonated(n.id, n.hospital_id, n.blood_type)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-700">
-                          ✅ I Donated
-                        </button>
+              {/* One row per hospital */}
+              {hospitalRows.map(row => {
+                const unitsDonatedHere = row.donated_count
+                const hasPending = !!row.pending_notif_id && !maxReached
+
+                return (
+                  <div key={row.hospital_id} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">{row.hospital_name}</p>
+                        <p className="text-xs text-gray-400">{row.hospital_address}</p>
+                        <p className="text-xs text-gray-400">{new Date(row.created_at).toLocaleDateString()}</p>
                       </div>
-                    ) : (
-                      <p className="text-red-600 text-xs font-semibold">Maximum donations reached. Please rest! 🙏</p>
+                      <span className="bg-red-50 text-red-700 text-xs font-semibold px-3 py-1 rounded-full border border-red-100">
+                        {row.blood_type}
+                      </span>
+                    </div>
+
+                    {/* Unit tracker dots */}
+                    <div className="flex items-center gap-2 mb-3">
+                      {[1, 2].map(i => (
+                        <div key={i} className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border
+                          ${i <= unitsDonatedHere
+                            ? 'bg-green-100 border-green-400 text-green-700'
+                            : 'bg-white border-gray-300 text-gray-400'}`}>
+                          {i <= unitsDonatedHere ? '✓' : i}
+                        </div>
+                      ))}
+                      <span className="text-xs text-gray-400 ml-1">
+                        {unitsDonatedHere === 0 && 'No donations yet for this hospital'}
+                        {unitsDonatedHere === 1 && '1 unit donated here'}
+                        {unitsDonatedHere >= 2 && '2 units donated here'}
+                      </span>
+                    </div>
+
+                    {/* Tip after first donation at this hospital */}
+                    {unitsDonatedHere === 1 && !maxReached && (
+                      <div className="bg-blue-50 border-l-2 border-blue-400 rounded-r-lg px-3 py-2 mb-3 text-xs text-blue-700 leading-relaxed">
+                        You donated once here — you're amazing! You can still give a second unit. Drink water and eat well before coming back.
+                      </div>
+                    )}
+
+                    {/* Donate button — only if this hospital still has a pending slot AND global max not reached */}
+                    {hasPending && (
+                      <button
+                        onClick={() => markDonated(row.pending_notif_id, row.hospital_id, row.blood_type)}
+                        className="bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-red-700">
+                        {unitsDonatedHere === 0 ? 'I donated here' : 'I donated a second unit here'}
+                      </button>
+                    )}
+
+                    {/* Hospital fully done (2 units donated here) */}
+                    {unitsDonatedHere >= 2 && (
+                      <p className="text-green-600 text-xs font-semibold">✅ 2 units donated at this hospital — complete!</p>
+                    )}
+
+                    {/* Global max reached but this hospital still had a pending slot */}
+                    {!hasPending && unitsDonatedHere < 2 && row.pending_notif_id && maxReached && (
+                      <p className="text-gray-400 text-xs">Global donation limit reached — please rest before donating again.</p>
                     )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
-              {/* Completed from notifications */}
-              {notifications.filter(n => n.donated).map(n => (
-                <div key={n.id} className="flex justify-between items-center border-b py-3 last:border-0">
-                  <div>
-                    <p className="font-bold text-green-600">{n.blood_type}</p>
-                    <p className="text-gray-500 text-sm">{n.hospital_name}</p>
-                    <p className="text-xs text-gray-400">{new Date(n.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-green-500 text-sm font-semibold">✅ Donated</span>
+              {/* Global max reached banner */}
+              {maxReached && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-1">
+                  <p className="text-red-700 font-semibold text-sm mb-1">You've reached your limit for now — thank you, hero! 🦸</p>
+                  <p className="text-red-600 text-xs leading-relaxed">
+                    Rest up: drink plenty of water · eat iron-rich foods (spinach, meat, lentils) · avoid heavy exercise for 24 hours · sleep well tonight. Your body gave so much — let it recover before your next donation.
+                  </p>
                 </div>
-              ))}
+              )}
 
-              {/* Manual donation history */}
-              {history.map(h => (
-                <div key={h.id} className="flex justify-between items-center border-b py-3 last:border-0">
-                  <div>
-                    <p className="font-bold text-green-600">{h.blood_type}</p>
-                    <p className="text-gray-500 text-sm">{h.hospital_name}</p>
-                    <p className="text-xs text-gray-400">{new Date(h.donated_at).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-green-500 text-sm font-semibold">✅ Donated</span>
+              {/* Manual donation history (from donate route, not notifications) */}
+              {history.length > 0 && (
+                <div className="border-t border-gray-100 pt-3 mt-1">
+                  <p className="text-xs text-gray-400 mb-2">Earlier donations</p>
+                  {history.map(h => (
+                    <div key={h.id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{h.hospital_name}</p>
+                        <p className="text-xs text-gray-400">{h.blood_type} · {new Date(h.donated_at).toLocaleDateString()}</p>
+                      </div>
+                      <span className="text-green-600 text-xs font-semibold">✅ Donated</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
 
             </div>
           )}
