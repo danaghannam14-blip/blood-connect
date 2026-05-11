@@ -153,7 +153,12 @@ router.put('/confirm/:id', (req, res) => {
           [appointment.hospital_id, appointment.blood_type || 'O+'],
           () => {}
         )
-
+// Mark notification as donated
+db.query(
+  'UPDATE notifications SET donated = 1 WHERE donor_id = ? AND hospital_id = ?',
+  [appointment.donor_id, appointment.hospital_id],
+  () => {}
+)
         // Send thank you email
         sendThankYouEmail(appointment.donor_name, appointment.donor_email, appointment.hospital_name)
           .then(() => console.log(`Thank you email sent to ${appointment.donor_email}`))
