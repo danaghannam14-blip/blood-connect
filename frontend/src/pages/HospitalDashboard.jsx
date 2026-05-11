@@ -17,6 +17,8 @@ function HospitalDashboard() {
   const [hospital, setHospital] = useState(null)
   const [requests, setRequests] = useState([])
   const [appointments, setAppointments] = useState([])
+  const [bloodStock, setBloodStock] = useState({})
+  const [stockMessage, setStockMessage] = useState('')
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -37,12 +39,16 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [reqRes, apptRes] = await Promise.all([
+      const [reqRes, apptRes, stockRes] = await Promise.all([
         axios.get(`${API}/api/requests/hospital/${hospital.id}`),
-        axios.get(`${API}/api/appointments/hospital/${hospital.id}`)
+        axios.get(`${API}/api/appointments/hospital/${hospital.id}`),
+        axios.get(`${API}/api/hospitals/stock/${hospital.id}`)
       ])
       setRequests(reqRes.data)
       setAppointments(apptRes.data)
+      const stockMap = {}
+      stockRes.data.forEach(s => { stockMap[s.blood_type] = s.units_available })
+      setBloodStock(stockMap)
     } catch (err) { console.log(err) }
     finally { setLoading(false) }
   }
@@ -90,6 +96,23 @@ function HospitalDashboard() {
     } catch (err) { console.log(err) }
   }
 
+  const handleSaveStock = async () => {
+    setStockMessage('')
+    try {
+      await Promise.all(
+        Object.entries(bloodStock).map(([bt, units]) =>
+          axios.put(`${API}/api/hospitals/stock/${hospital.id}`, {
+            blood_type: bt,
+            units_available: units
+          })
+        )
+      )
+      setStockMessage('✅ Blood stock updated successfully!')
+    } catch (err) {
+      setStockMessage('Failed to update stock')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('hospitalToken')
     localStorage.removeItem('hospitalData')
@@ -100,10 +123,6 @@ function HospitalDashboard() {
 
   const pendingCount = requests.filter(r => r.status === 'pending').length
   const fulfilledCount = requests.filter(r => r.status === 'fulfilled').length
-  const todayAppts = appointments.filter(a => {
-    const today = new Date().toISOString().split('T')[0]
-    return a.appointment_date?.startsWith(today)
-  })
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -141,11 +160,14 @@ function HospitalDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {['requests', 'appointments', 'post'].map(t => (
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {['requests', 'appointments', 'stock', 'post'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize ${activeTab === t ? 'bg-gray-800 text-white' : 'bg-white text-gray-600'}`}>
-              {t === 'post' ? '+ Post Request' : t === 'appointments' ? `📅 Appointments ${appointments.length > 0 ? `(${appointments.length})` : ''}` : '🩸 Requests'}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === t ? 'bg-gray-800 text-white' : 'bg-white text-gray-600'}`}>
+              {t === 'post' ? '+ Post Request' :
+               t === 'appointments' ? `📅 Appointments${appointments.length > 0 ? ` (${appointments.length})` : ''}` :
+               t === 'stock' ? '🩸 Blood Stock' :
+               '🩸 Requests'}
             </button>
           ))}
         </div>
@@ -256,7 +278,6 @@ function HospitalDashboard() {
           <div className="bg-white rounded-2xl shadow p-6">
             <h2 className="text-xl font-semibold text-gray-700 mb-2">📅 Donor Appointments</h2>
             <p className="text-xs text-gray-400 mb-4">Confirm donations when donors arrive, or mark as missed if they don't show up.</p>
-
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin"></div>
@@ -292,9 +313,7 @@ function HospitalDashboard() {
                             })()}
                           </p>
                         </div>
-                        <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
-                          Scheduled
-                        </span>
+                        <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">Scheduled</span>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => handleConfirmDonation(a.id, a.donor_name)}
@@ -311,6 +330,62 @@ function HospitalDashboard() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* BLOOD STOCK TAB */}
+        {activeTab === 'stock' && (
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">🩸 Current Blood Stock</h2>
+            <p className="text-xs text-gray-400 mb-2">Update your current blood inventory. This is visible to donors on the map.</p>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-5">
+              <p className="text-xs text-orange-700 font-medium">
+                ⚠️ Having stock doesn't mean donations aren't needed. Blood expires quickly and reserves must stay topped up. Always encourage donations even when stock is available.
+              </p>
+            </div>
+
+            {stockMessage && (
+              <p className={`mb-4 text-sm font-medium ${stockMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                {stockMessage}
+              </p>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bt => {
+                const units = bloodStock[bt] ?? 0
+                const dotColor = units === 0 ? 'bg-red-500' : units <= 5 ? 'bg-orange-400' : 'bg-green-500'
+                const bgColor = units === 0 ? 'bg-red-50 border-red-200' : units <= 5 ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'
+                return (
+                  <div key={bt} className={`border rounded-xl p-3 flex items-center justify-between gap-3 ${bgColor}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${dotColor}`}></div>
+                      <span className="text-red-600 font-bold text-lg">{bt}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={units}
+                        onChange={e => setBloodStock(prev => ({...prev, [bt]: parseInt(e.target.value) || 0}))}
+                        className="border rounded-lg p-2 text-sm w-16 focus:outline-none text-center bg-white"
+                      />
+                      <span className="text-xs text-gray-400">units</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <button onClick={handleSaveStock}
+              className="w-full bg-gray-800 text-white py-3 rounded-xl font-semibold hover:bg-gray-900">
+              Save Blood Stock
+            </button>
+
+            <div className="mt-4 flex gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500"></div> Empty (0)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div> Low (1–5)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-500"></div> Available (6+)</div>
+            </div>
           </div>
         )}
 

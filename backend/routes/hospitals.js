@@ -91,4 +91,63 @@ router.put('/change-password', async (req, res) => {
     });
   });
 });
+// Get blood stock for a hospital
+router.get('/stock/:hospital_id', (req, res) => {
+  db.query(
+    'SELECT blood_type, units_available FROM blood_stock WHERE hospital_id = ? ORDER BY blood_type',
+    [req.params.hospital_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: err.message })
+      res.json(results)
+    }
+  )
+})
+
+// Update blood stock
+router.put('/stock/:hospital_id', (req, res) => {
+  const { blood_type, units_available } = req.body
+  db.query(
+    'INSERT INTO blood_stock (hospital_id, blood_type, units_available) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE units_available = ?',
+    [req.params.hospital_id, blood_type, units_available, units_available],
+    (err) => {
+      if (err) return res.status(500).json({ message: err.message })
+      res.json({ message: 'Stock updated' })
+    }
+  )
+})
+
+// Get all hospitals with their blood stock
+router.get('/with-stock', (req, res) => {
+  const sql = `
+    SELECT h.id, h.name, h.address, h.latitude, h.longitude,
+           bs.blood_type, bs.units_available
+    FROM hospitals h
+    LEFT JOIN blood_stock bs ON h.id = bs.hospital_id
+    WHERE h.latitude IS NOT NULL AND h.longitude IS NOT NULL
+    ORDER BY h.name, bs.blood_type
+  `
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: err.message })
+
+    // Group by hospital
+    const hospitalMap = {}
+    results.forEach(row => {
+      if (!hospitalMap[row.id]) {
+        hospitalMap[row.id] = {
+          id: row.id,
+          name: row.name,
+          address: row.address,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          blood_stock: {}
+        }
+      }
+      if (row.blood_type) {
+        hospitalMap[row.id].blood_stock[row.blood_type] = row.units_available || 0
+      }
+    })
+
+    res.json(Object.values(hospitalMap))
+  })
+})
 module.exports = router;
