@@ -203,9 +203,11 @@ const filteredHospitals = filterBt
                     <div>
                       <p className="font-semibold text-gray-800 text-sm">{h.name}</p>
                       <p className="text-gray-500 text-xs">{h.address}</p>
-                      <p className={`text-xs font-semibold mt-0.5 ${index === 0 && !filterBt ? 'text-red-600' : 'text-green-600'}`}>
-                        📍 {h.distance.toFixed(1)} km away
-                      </p>
+                      {h.distance !== undefined && (
+  <p className={`text-xs font-semibold mt-0.5 ${index === 0 && !filterBt ? 'text-red-600' : 'text-green-600'}`}>
+    📍 {h.distance.toFixed(1)} km away
+  </p>
+)}
                     </div>
                   </div>
                   <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
