@@ -45,7 +45,7 @@ function Emergency() {
   const [search, setSearch] = useState('')
   const [showMap, setShowMap] = useState(false)
   const [mapCenter, setMapCenter] = useState(null)
-
+const [loadingHospitals, setLoadingHospitals] = useState(false)
   const getDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -58,10 +58,14 @@ function Emergency() {
 
   useEffect(() => {
     if (!bloodTypeSelected) return
-    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/with-stock')
-      .then(res => res.json())
-      .then(data => setHospitals(Array.isArray(data) ? data : []))
-
+   setLoadingHospitals(true)
+fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/with-stock')
+  .then(res => res.json())
+  .then(data => {
+    setHospitals(Array.isArray(data) ? data : [])
+    setLoadingHospitals(false)
+  })
+  .catch(() => setLoadingHospitals(false))
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
       () => {
@@ -213,12 +217,16 @@ function Emergency() {
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Available</div>
           </div>
 
-          {filteredHospitals.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-3xl mb-2">😔</p>
-              <p className="text-gray-500 text-sm">No hospitals found with compatible blood nearby.</p>
-              <p className="text-gray-400 text-xs mt-1">Try searching a different location or call hospitals directly.</p>
-            </div>
+          {loadingHospitals ? (
+  <div className="flex items-center justify-center py-16">
+    <div className="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+  </div>
+) : filteredHospitals.length === 0 ? (
+  <div className="text-center py-10">
+    <p className="text-3xl mb-2">😔</p>
+    <p className="text-gray-500 text-sm">No hospitals found with compatible blood nearby.</p>
+    <p className="text-gray-400 text-xs mt-1">Try searching a different location or call hospitals directly.</p>
+  </div>
           ) : filteredHospitals.map((h, index) => (
             <div key={h.id} className="border-b pb-3 mb-3 last:border-0 last:mb-0">
               <div className="flex justify-between items-start mb-2">
