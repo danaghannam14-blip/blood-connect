@@ -221,9 +221,7 @@ const filteredHospitals = filterBt
                 <BloodStockBadges stock={h.blood_stock} />
 
                 {/* Donation reminder */}
-                <p className="text-xs text-orange-500 mt-1.5 italic">
-                  💡 Even if blood is available, hospitals always welcome donations to maintain reserves.
-                </p>
+                
               </div>
             ))}
           </div>
