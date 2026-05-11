@@ -2,10 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../db')
 
-const sendReminderEmail = async (donor, hospital, appointment) => {
-  const appointmentTime = appointment.appointment_time
-  const appointmentDate = new Date(appointment.appointment_date).toLocaleDateString('en-GB')
-
+const sendThankYouEmail = async (donorName, donorEmail, hospitalName) => {
   await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
@@ -15,26 +12,31 @@ const sendReminderEmail = async (donor, hospital, appointment) => {
     },
     body: JSON.stringify({
       sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
-      to: [{ email: donor.email, name: donor.full_name }],
-      subject: '🩸 Did you donate? Confirm your donation on BloodConnect!',
+      to: [{ email: donorEmail, name: donorName }],
+      subject: '🩸 Thank You for Your Donation!',
       htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #dc2626; padding: 20px; text-align: center;">
             <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
           </div>
           <div style="padding: 30px; background: #fff;">
-            <h2 style="color: #dc2626;">Did you donate today?</h2>
-            <p>Dear ${donor.full_name},</p>
-            <p>You had an appointment at <strong>${hospital.name}</strong> today at <strong>${appointmentTime}</strong>.</p>
-            <p>If you donated, please confirm it on your dashboard so we can update the blood inventory and track your impact!</p>
-            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
-              <p style="margin: 0;"><strong>Hospital:</strong> ${hospital.name}</p>
-              <p style="margin: 8px 0 0;"><strong>Date:</strong> ${appointmentDate}</p>
-              <p style="margin: 8px 0 0;"><strong>Time:</strong> ${appointmentTime}</p>
+            <h2 style="color: #dc2626;">Thank You for Donating! 🦸</h2>
+            <p>Dear ${donorName},</p>
+            <p><strong>${hospitalName}</strong> has confirmed your blood donation. You are a hero!</p>
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 8px; text-align: center;">
+              <p style="margin: 0; font-size: 20px;">❤️ Your donation may save up to <strong>3 lives</strong></p>
             </div>
+            <p>Here's how to recover well:</p>
+            <ul>
+              <li>💧 Drink extra water today</li>
+              <li>🥩 Eat iron-rich foods (spinach, red meat, lentils)</li>
+              <li>😴 Get a full night's sleep</li>
+              <li>🚫 Skip intense workouts for 24 hours</li>
+            </ul>
+            <p>You can donate again in <strong>56 days</strong>. We'll be counting on you!</p>
             <a href="https://bloodconnect-lb.vercel.app/donor/dashboard"
                style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
-              View Dashboard
+              View Your Dashboard
             </a>
             <p style="color: #666; margin-top: 20px; font-size: 14px;">
               Every drop counts. Thank you for being a BloodConnect donor.
@@ -53,7 +55,6 @@ const sendReminderEmail = async (donor, hospital, appointment) => {
 router.post('/book', (req, res) => {
   const { donor_id, hospital_id, appointment_date, appointment_time } = req.body
 
-  // Check for overlap at this hospital
   db.query(
     'SELECT id FROM appointments WHERE hospital_id = ? AND appointment_date = ? AND appointment_time = ? AND status = \'scheduled\'',
     [hospital_id, appointment_date, appointment_time],
@@ -63,7 +64,6 @@ router.post('/book', (req, res) => {
         return res.status(400).json({ message: 'This time slot is already booked. Please choose another time.' })
       }
 
-      // Check donor doesn't already have appointment on same date
       db.query(
         'SELECT id FROM appointments WHERE donor_id = ? AND appointment_date = ? AND status = \'scheduled\'',
         [donor_id, appointment_date],
@@ -125,19 +125,40 @@ router.put('/cancel/:id', (req, res) => {
 // Hospital confirms donation
 router.put('/confirm/:id', (req, res) => {
   db.query(
-    'SELECT a.*, d.id as donor_id FROM appointments a JOIN donors d ON a.donor_id = d.id WHERE a.id = ?',
+    `SELECT a.*, d.id as donor_id, d.full_name as donor_name, d.email as donor_email,
+            h.name as hospital_name
+     FROM appointments a
+     JOIN donors d ON a.donor_id = d.id
+     JOIN hospitals h ON a.hospital_id = h.id
+     WHERE a.id = ?`,
     [req.params.id],
     (err, rows) => {
       if (err || rows.length === 0) return res.status(500).json({ message: err?.message || 'Not found' })
       const appointment = rows[0]
+
       db.query('UPDATE appointments SET status = \'completed\' WHERE id = ?', [req.params.id], (err) => {
         if (err) return res.status(500).json({ message: err.message })
+
         db.query('UPDATE donors SET last_donation_date = CURDATE() WHERE id = ?', [appointment.donor_id], () => {})
+
         db.query(
           'INSERT INTO donation_history (donor_id, hospital_id, blood_type) VALUES (?, ?, ?)',
           [appointment.donor_id, appointment.hospital_id, appointment.blood_type || 'Unknown'],
           () => {}
         )
+
+        // Increment blood stock
+        db.query(
+          'INSERT INTO blood_stock (hospital_id, blood_type, units_available) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE units_available = units_available + 1',
+          [appointment.hospital_id, appointment.blood_type || 'O+'],
+          () => {}
+        )
+
+        // Send thank you email
+        sendThankYouEmail(appointment.donor_name, appointment.donor_email, appointment.hospital_name)
+          .then(() => console.log(`Thank you email sent to ${appointment.donor_email}`))
+          .catch(e => console.error('Thank you email error:', e.message))
+
         res.json({ message: 'Donation confirmed successfully' })
       })
     }
