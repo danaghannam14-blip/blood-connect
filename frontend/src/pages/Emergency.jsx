@@ -108,7 +108,9 @@ function Emergency() {
       setLocationDenied(false)
     }
   }
-const displayHospitals = sortedHospitals.length > 0 ? sortedHospitals : hospitals
+const displayHospitals = Array.isArray(sortedHospitals) && sortedHospitals.length > 0 
+  ? sortedHospitals 
+  : Array.isArray(hospitals) ? hospitals : []
 const filteredHospitals = filterBt
   ? displayHospitals.filter(h => h.blood_stock && (h.blood_stock[filterBt] ?? 0) > 0)
   : displayHospitals

@@ -131,6 +131,24 @@ router.get('/with-stock', (req, res) => {
 
     // Group by hospital
     const hospitalMap = {}
+   router.get('/with-stock', (req, res) => {
+  const sql = `
+    SELECT h.id, h.name, h.address, h.latitude, h.longitude,
+           bs.blood_type, bs.units_available
+    FROM hospitals h
+    LEFT JOIN blood_stock bs ON h.id = bs.hospital_id
+    WHERE h.latitude IS NOT NULL AND h.longitude IS NOT NULL
+    ORDER BY h.name, bs.blood_type
+  `
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('with-stock error:', err.message)
+      return res.status(500).json({ message: err.message })
+    }
+    if (!results || results.length === 0) {
+      return res.json([])
+    }
+    const hospitalMap = {}
     results.forEach(row => {
       if (!hospitalMap[row.id]) {
         hospitalMap[row.id] = {
@@ -146,7 +164,6 @@ router.get('/with-stock', (req, res) => {
         hospitalMap[row.id].blood_stock[row.blood_type] = row.units_available || 0
       }
     })
-
     res.json(Object.values(hospitalMap))
   })
 })
