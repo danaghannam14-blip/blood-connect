@@ -108,10 +108,10 @@ function Emergency() {
       setLocationDenied(false)
     }
   }
-
-  const filteredHospitals = filterBt
-    ? sortedHospitals.filter(h => h.blood_stock && (h.blood_stock[filterBt] ?? 0) > 0)
-    : sortedHospitals
+const displayHospitals = sortedHospitals.length > 0 ? sortedHospitals : hospitals
+const filteredHospitals = filterBt
+  ? displayHospitals.filter(h => h.blood_stock && (h.blood_stock[filterBt] ?? 0) > 0)
+  : displayHospitals
 
   if (userLocation === undefined) return (
     <div className="min-h-screen bg-red-50 flex items-center justify-center">
@@ -119,24 +119,7 @@ function Emergency() {
     </div>
   )
 
-  if (locationDenied) return (
-    <div className="min-h-screen bg-red-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
-      <p className="text-5xl">📍</p>
-      <h2 className="text-xl font-bold text-gray-800">Location Access Required</h2>
-      <p className="text-gray-500">Please allow location access to find the nearest hospital.</p>
-      <p className="text-gray-400 text-sm">Or search your location below:</p>
-      <div className="flex gap-2 w-full max-w-sm">
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          placeholder="Search your location..."
-          className="flex-1 border rounded-lg p-3 focus:outline-none text-sm" />
-        <button onClick={handleSearch}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">
-          Go
-        </button>
-      </div>
-    </div>
-  )
+ 
 
   return (
     <div className="min-h-screen bg-red-50">
