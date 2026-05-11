@@ -25,7 +25,6 @@ function RecenterMap({ center }) {
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
-// What blood types can a patient with this blood type receive
 const compatibleBloodForPatient = {
   'A+':  ['A+', 'A-', 'O+', 'O-'],
   'A-':  ['A-', 'O-'],
@@ -103,7 +102,6 @@ function Emergency() {
     }
   }
 
-  // Filter hospitals to only show ones that have compatible blood stock
   const compatibleTypes = patientBloodType ? compatibleBloodForPatient[patientBloodType] : []
 
   const filteredHospitals = sortedHospitals.filter(h => {
@@ -111,7 +109,7 @@ function Emergency() {
     return compatibleTypes.some(bt => (h.blood_stock[bt] ?? 0) > 0)
   })
 
-  // Blood type screen
+  // Blood type selection screen
   if (!bloodTypeSelected) {
     return (
       <div className="min-h-screen bg-red-50 flex items-center justify-center p-6">
@@ -148,10 +146,6 @@ function Emergency() {
             className="w-full bg-red-600 text-white py-3.5 rounded-xl font-bold text-base hover:bg-red-700 disabled:opacity-40">
             Find Compatible Hospitals 🚨
           </button>
-          <button onClick={() => { setPatientBloodType(''); setBloodTypeSelected(true) }}
-            className="w-full mt-2 text-gray-400 text-sm hover:text-gray-600">
-            Skip — show all hospitals
-          </button>
         </div>
       </div>
     )
@@ -171,7 +165,7 @@ function Emergency() {
             <h1 className="text-xl font-bold">🚨 Emergency — Find Hospital</h1>
             {patientBloodType && (
               <p className="text-red-200 text-xs mt-0.5">
-                Showing hospitals with blood compatible for <span className="font-bold text-white">{patientBloodType}</span> patients
+                Compatible blood for <span className="font-bold text-white">{patientBloodType}</span> patient
               </p>
             )}
           </div>
@@ -214,9 +208,7 @@ function Emergency() {
             <span className="text-xs text-gray-400">{filteredHospitals.length} found</span>
           </div>
 
-          {/* Legend */}
           <div className="flex gap-3 text-xs text-gray-500 mb-3 pb-3 border-b">
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Empty</div>
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"></span>Low (≤5)</div>
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Available</div>
           </div>
@@ -227,51 +219,42 @@ function Emergency() {
               <p className="text-gray-500 text-sm">No hospitals found with compatible blood nearby.</p>
               <p className="text-gray-400 text-xs mt-1">Try searching a different location or call hospitals directly.</p>
             </div>
-          ) : filteredHospitals.map((h, index) => {
-            const compatibleStock = compatibleTypes.filter(bt => (h.blood_stock?.[bt] ?? 0) > 0)
-            return (
-              <div key={h.id} className="border-b pb-3 mb-3 last:border-0 last:mb-0">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-start gap-3">
-                    <span className={`text-lg font-bold flex-shrink-0 ${index === 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                      #{index + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{h.name}</p>
-                      <p className="text-gray-500 text-xs">{h.address}</p>
-                      {h.distance !== null && h.distance !== undefined && (
-                        <p className={`text-xs font-semibold mt-0.5 ${index === 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          📍 {h.distance.toFixed(1)} km away
-                        </p>
-                      )}
-                    </div>
+          ) : filteredHospitals.map((h, index) => (
+            <div key={h.id} className="border-b pb-3 mb-3 last:border-0 last:mb-0">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-start gap-3">
+                  <span className={`text-lg font-bold flex-shrink-0 ${index === 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    #{index + 1}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{h.name}</p>
+                    <p className="text-gray-500 text-xs">{h.address}</p>
+                    {h.distance !== null && h.distance !== undefined && (
+                      <p className={`text-xs font-semibold mt-0.5 ${index === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        📍 {h.distance.toFixed(1)} km away
+                      </p>
+                    )}
                   </div>
-                  <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shrink-0">
-                    Directions
-                  </a>
                 </div>
-
-                {/* Only show compatible blood types */}
-                <div className="flex flex-wrap gap-1">
-                  {compatibleTypes.map(bt => {
-                    const units = h.blood_stock?.[bt] ?? 0
-                    const bg = units === 0 ? 'bg-red-100 text-red-600' : units <= 5 ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
-                    return (
-                      <span key={bt} className={`text-xs px-2 py-0.5 rounded font-semibold ${bg}`}>
-                        {bt}: {units}
-                      </span>
-                    )
-                  })}
-                </div>
-
-                <p className="text-xs text-orange-500 mt-1.5 italic">
-                  💡 Call ahead to confirm availability before arriving.
-                </p>
+                <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold hover:bg-red-700 shrink-0">
+                  Directions
+                </a>
               </div>
-            )
-          })}
+              <div className="flex flex-wrap gap-1">
+                {compatibleTypes.filter(bt => (h.blood_stock?.[bt] ?? 0) > 0).map(bt => {
+                  const units = h.blood_stock?.[bt] ?? 0
+                  const bg = units <= 5 ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
+                  return (
+                    <span key={bt} className={`text-xs px-2 py-0.5 rounded font-semibold ${bg}`}>
+                      {bt}: {units}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -294,10 +277,10 @@ function Emergency() {
                   <p style={{fontSize: '11px', color: '#6b7280', marginBottom: '6px'}}>{h.address}</p>
                   <p style={{fontSize: '11px', fontWeight: 'bold', marginBottom: '3px'}}>Compatible Blood Available:</p>
                   <div style={{display: 'flex', flexWrap: 'wrap', gap: '2px', marginBottom: '6px'}}>
-                    {compatibleTypes.map(bt => {
+                    {compatibleTypes.filter(bt => (h.blood_stock?.[bt] ?? 0) > 0).map(bt => {
                       const units = h.blood_stock?.[bt] ?? 0
-                      const bg = units === 0 ? '#fee2e2' : units <= 5 ? '#ffedd5' : '#dcfce7'
-                      const color = units === 0 ? '#dc2626' : units <= 5 ? '#ea580c' : '#16a34a'
+                      const bg = units <= 5 ? '#ffedd5' : '#dcfce7'
+                      const color = units <= 5 ? '#ea580c' : '#16a34a'
                       return (
                         <span key={bt} style={{
                           fontSize: '10px', padding: '1px 4px', borderRadius: '4px',
