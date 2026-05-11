@@ -25,34 +25,27 @@ function RecenterMap({ center }) {
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
-function BloodStockBadges({ stock }) {
-  if (!stock) return null
-  return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {BLOOD_TYPES.map(bt => {
-        const units = stock[bt] ?? 0
-        return (
-          <span key={bt} className={`text-xs px-1.5 py-0.5 rounded font-semibold
-            ${units === 0 ? 'bg-red-100 text-red-600' :
-              units <= 5 ? 'bg-orange-100 text-orange-600' :
-              'bg-green-100 text-green-600'}`}>
-            {bt}: {units}
-          </span>
-        )
-      })}
-    </div>
-  )
+// What blood types can a patient with this blood type receive
+const compatibleBloodForPatient = {
+  'A+':  ['A+', 'A-', 'O+', 'O-'],
+  'A-':  ['A-', 'O-'],
+  'B+':  ['B+', 'B-', 'O+', 'O-'],
+  'B-':  ['B-', 'O-'],
+  'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+  'AB-': ['A-', 'B-', 'AB-', 'O-'],
+  'O+':  ['O+', 'O-'],
+  'O-':  ['O-']
 }
 
 function Emergency() {
+  const [patientBloodType, setPatientBloodType] = useState('')
+  const [bloodTypeSelected, setBloodTypeSelected] = useState(false)
   const [hospitals, setHospitals] = useState([])
   const [userLocation, setUserLocation] = useState(undefined)
-  const [locationDenied, setLocationDenied] = useState(false)
   const [sortedHospitals, setSortedHospitals] = useState([])
   const [search, setSearch] = useState('')
   const [showMap, setShowMap] = useState(false)
   const [mapCenter, setMapCenter] = useState(null)
-  const [filterBt, setFilterBt] = useState('')
 
   const getDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371
@@ -65,9 +58,10 @@ function Emergency() {
   }
 
   useEffect(() => {
+    if (!bloodTypeSelected) return
     fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/with-stock')
       .then(res => res.json())
-      .then(data => setHospitals(data))
+      .then(data => setHospitals(Array.isArray(data) ? data : []))
 
     navigator.geolocation.getCurrentPosition(
       (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
@@ -77,24 +71,25 @@ function Emergency() {
         if (myLat && myLng) {
           setUserLocation([parseFloat(myLat), parseFloat(myLng)])
         } else {
-          setLocationDenied(true)
           setUserLocation(null)
         }
       }
     )
-  }, [])
+  }, [bloodTypeSelected])
 
   useEffect(() => {
-    if (userLocation && hospitals.length > 0) {
+    if (hospitals.length === 0) return
+    const process = (loc) => {
       const withDistance = hospitals
         .filter(h => h.latitude && h.longitude)
         .map(h => ({
           ...h,
-          distance: getDistance(userLocation[0], userLocation[1], h.latitude, h.longitude)
+          distance: loc ? getDistance(loc[0], loc[1], h.latitude, h.longitude) : null
         }))
-        .sort((a, b) => a.distance - b.distance)
+        .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999))
       setSortedHospitals(withDistance)
     }
+    if (userLocation !== undefined) process(userLocation)
   }, [userLocation, hospitals])
 
   const handleSearch = async () => {
@@ -105,15 +100,62 @@ function Emergency() {
       const newLocation = [parseFloat(data[0].lat), parseFloat(data[0].lon)]
       setUserLocation(newLocation)
       setMapCenter(newLocation)
-      setLocationDenied(false)
     }
   }
-const displayHospitals = Array.isArray(sortedHospitals) && sortedHospitals.length > 0 
-  ? sortedHospitals 
-  : Array.isArray(hospitals) ? hospitals : []
-const filteredHospitals = filterBt
-  ? displayHospitals.filter(h => h.blood_stock && (h.blood_stock[filterBt] ?? 0) > 0)
-  : displayHospitals
+
+  // Filter hospitals to only show ones that have compatible blood stock
+  const compatibleTypes = patientBloodType ? compatibleBloodForPatient[patientBloodType] : []
+
+  const filteredHospitals = sortedHospitals.filter(h => {
+    if (!h.blood_stock) return false
+    return compatibleTypes.some(bt => (h.blood_stock[bt] ?? 0) > 0)
+  })
+
+  // Blood type screen
+  if (!bloodTypeSelected) {
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-8 text-center">
+          <p className="text-5xl mb-4">🩸</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Emergency Blood Finder</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            What is the patient's blood type? We'll show only hospitals that have compatible blood available.
+          </p>
+          <div className="grid grid-cols-4 gap-2 mb-6">
+            {BLOOD_TYPES.map(bt => (
+              <button key={bt} onClick={() => setPatientBloodType(bt)}
+                className={`py-3 rounded-xl font-bold text-sm border-2 transition-all
+                  ${patientBloodType === bt
+                    ? 'bg-red-600 text-white border-red-600'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-300'}`}>
+                {bt}
+              </button>
+            ))}
+          </div>
+          {patientBloodType && (
+            <div className="mb-4 bg-red-50 rounded-xl p-3">
+              <p className="text-xs text-gray-500 mb-1">Compatible blood types for <span className="font-bold text-red-600">{patientBloodType}</span> patient:</p>
+              <div className="flex flex-wrap gap-1 justify-center">
+                {compatibleBloodForPatient[patientBloodType].map(bt => (
+                  <span key={bt} className="bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">{bt}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => patientBloodType && setBloodTypeSelected(true)}
+            disabled={!patientBloodType}
+            className="w-full bg-red-600 text-white py-3.5 rounded-xl font-bold text-base hover:bg-red-700 disabled:opacity-40">
+            Find Compatible Hospitals 🚨
+          </button>
+          <button onClick={() => { setPatientBloodType(''); setBloodTypeSelected(true) }}
+            className="w-full mt-2 text-gray-400 text-sm hover:text-gray-600">
+            Skip — show all hospitals
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (userLocation === undefined) return (
     <div className="min-h-screen bg-red-50 flex items-center justify-center">
@@ -121,15 +163,23 @@ const filteredHospitals = filterBt
     </div>
   )
 
- 
-
   return (
     <div className="min-h-screen bg-red-50">
       <div className="bg-red-600 text-white p-4">
-        <h1 className="text-2xl font-bold text-center">🚨 Emergency — Find Nearest Hospital</h1>
-        <p className="text-red-200 text-xs text-center mt-1">
-          Blood stock shown may not reflect real-time availability — always call ahead
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">🚨 Emergency — Find Hospital</h1>
+            {patientBloodType && (
+              <p className="text-red-200 text-xs mt-0.5">
+                Showing hospitals with blood compatible for <span className="font-bold text-white">{patientBloodType}</span> patients
+              </p>
+            )}
+          </div>
+          <button onClick={() => { setBloodTypeSelected(false); setPatientBloodType('') }}
+            className="bg-white text-red-600 px-3 py-1 rounded-lg text-xs font-semibold">
+            Change
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -142,23 +192,6 @@ const filteredHospitals = filterBt
           className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">
           Go
         </button>
-      </div>
-
-      {/* Filter by blood type */}
-      <div className="px-4 pt-3">
-        <p className="text-xs text-gray-500 mb-2 font-medium">Filter by blood type availability:</p>
-        <div className="flex gap-1 flex-wrap">
-          <button onClick={() => setFilterBt('')}
-            className={`px-2 py-1 rounded-lg text-xs font-semibold border ${!filterBt ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-600 border-gray-200'}`}>
-            All
-          </button>
-          {BLOOD_TYPES.map(bt => (
-            <button key={bt} onClick={() => setFilterBt(filterBt === bt ? '' : bt)}
-              className={`px-2 py-1 rounded-lg text-xs font-semibold border ${filterBt === bt ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-600 border-gray-200'}`}>
-              {bt}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Toggle */}
@@ -175,39 +208,42 @@ const filteredHospitals = filterBt
 
       {/* Hospital List */}
       {!showMap && (
-        <div className="mx-4 mt-4 bg-white rounded-2xl shadow p-4" style={{maxHeight: 'calc(100vh - 280px)', overflowY: 'auto'}}>
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow p-4" style={{maxHeight: 'calc(100vh - 220px)', overflowY: 'auto'}}>
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold text-gray-800">🏥 Hospitals Nearest to You</h2>
+            <h2 className="text-base font-bold text-gray-800">🏥 Hospitals with Compatible Blood</h2>
             <span className="text-xs text-gray-400">{filteredHospitals.length} found</span>
           </div>
 
-          {/* Stock legend */}
+          {/* Legend */}
           <div className="flex gap-3 text-xs text-gray-500 mb-3 pb-3 border-b">
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Empty</div>
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"></span> Low (≤5)</div>
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Available</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Empty</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"></span>Low (≤5)</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Available</div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {filteredHospitals.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">
-                No hospitals found with {filterBt} blood available nearby.
-              </p>
-            ) : filteredHospitals.map((h, index) => (
-              <div key={h.id} className="border-b pb-3 last:border-0">
+          {filteredHospitals.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-3xl mb-2">😔</p>
+              <p className="text-gray-500 text-sm">No hospitals found with compatible blood nearby.</p>
+              <p className="text-gray-400 text-xs mt-1">Try searching a different location or call hospitals directly.</p>
+            </div>
+          ) : filteredHospitals.map((h, index) => {
+            const compatibleStock = compatibleTypes.filter(bt => (h.blood_stock?.[bt] ?? 0) > 0)
+            return (
+              <div key={h.id} className="border-b pb-3 mb-3 last:border-0 last:mb-0">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-start gap-3">
-                    <span className={`text-lg font-bold flex-shrink-0 ${index === 0 && !filterBt ? 'text-red-600' : 'text-gray-400'}`}>
+                    <span className={`text-lg font-bold flex-shrink-0 ${index === 0 ? 'text-red-600' : 'text-gray-400'}`}>
                       #{index + 1}
                     </span>
                     <div>
                       <p className="font-semibold text-gray-800 text-sm">{h.name}</p>
                       <p className="text-gray-500 text-xs">{h.address}</p>
-                      {h.distance !== undefined && (
-  <p className={`text-xs font-semibold mt-0.5 ${index === 0 && !filterBt ? 'text-red-600' : 'text-green-600'}`}>
-    📍 {h.distance.toFixed(1)} km away
-  </p>
-)}
+                      {h.distance !== null && h.distance !== undefined && (
+                        <p className={`text-xs font-semibold mt-0.5 ${index === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          📍 {h.distance.toFixed(1)} km away
+                        </p>
+                      )}
                     </div>
                   </div>
                   <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
@@ -217,20 +253,31 @@ const filteredHospitals = filterBt
                   </a>
                 </div>
 
-                {/* Blood stock */}
-                <BloodStockBadges stock={h.blood_stock} />
+                {/* Only show compatible blood types */}
+                <div className="flex flex-wrap gap-1">
+                  {compatibleTypes.map(bt => {
+                    const units = h.blood_stock?.[bt] ?? 0
+                    const bg = units === 0 ? 'bg-red-100 text-red-600' : units <= 5 ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
+                    return (
+                      <span key={bt} className={`text-xs px-2 py-0.5 rounded font-semibold ${bg}`}>
+                        {bt}: {units}
+                      </span>
+                    )
+                  })}
+                </div>
 
-                {/* Donation reminder */}
-                
+                <p className="text-xs text-orange-500 mt-1.5 italic">
+                  💡 Call ahead to confirm availability before arriving.
+                </p>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
       )}
 
       {/* Map View */}
       {showMap && userLocation && (
-        <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 280px)', width: '100%', marginTop: '8px' }}>
+        <MapContainer center={userLocation} zoom={13} style={{ height: 'calc(100vh - 220px)', width: '100%', marginTop: '8px' }}>
           <RecenterMap center={mapCenter || userLocation} />
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
@@ -239,32 +286,28 @@ const filteredHospitals = filterBt
           <Marker position={userLocation}>
             <Popup>📍 Your Location</Popup>
           </Marker>
-          {hospitals.filter(h => h.latitude && h.longitude).map(h => (
+          {filteredHospitals.filter(h => h.latitude && h.longitude).map(h => (
             <Marker key={h.id} position={[parseFloat(h.latitude), parseFloat(h.longitude)]} icon={hospitalIcon}>
               <Popup>
                 <div style={{minWidth: '180px'}}>
                   <p style={{fontWeight: 'bold', color: '#dc2626', marginBottom: '2px'}}>{h.name}</p>
                   <p style={{fontSize: '11px', color: '#6b7280', marginBottom: '6px'}}>{h.address}</p>
-                  {h.blood_stock && (
-                    <div style={{marginBottom: '6px'}}>
-                      <p style={{fontSize: '11px', fontWeight: 'bold', marginBottom: '3px'}}>Blood Stock:</p>
-                      <div style={{display: 'flex', flexWrap: 'wrap', gap: '2px'}}>
-                        {BLOOD_TYPES.map(bt => {
-                          const units = h.blood_stock[bt] ?? 0
-                          const bg = units === 0 ? '#fee2e2' : units <= 5 ? '#ffedd5' : '#dcfce7'
-                          const color = units === 0 ? '#dc2626' : units <= 5 ? '#ea580c' : '#16a34a'
-                          return (
-                            <span key={bt} style={{
-                              fontSize: '10px', padding: '1px 4px', borderRadius: '4px',
-                              fontWeight: 'bold', background: bg, color: color
-                            }}>
-                              {bt}: {units}
-                            </span>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  <p style={{fontSize: '11px', fontWeight: 'bold', marginBottom: '3px'}}>Compatible Blood Available:</p>
+                  <div style={{display: 'flex', flexWrap: 'wrap', gap: '2px', marginBottom: '6px'}}>
+                    {compatibleTypes.map(bt => {
+                      const units = h.blood_stock?.[bt] ?? 0
+                      const bg = units === 0 ? '#fee2e2' : units <= 5 ? '#ffedd5' : '#dcfce7'
+                      const color = units === 0 ? '#dc2626' : units <= 5 ? '#ea580c' : '#16a34a'
+                      return (
+                        <span key={bt} style={{
+                          fontSize: '10px', padding: '1px 4px', borderRadius: '4px',
+                          fontWeight: 'bold', background: bg, color: color
+                        }}>
+                          {bt}: {units}
+                        </span>
+                      )
+                    })}
+                  </div>
                   <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`}
                     target="_blank" rel="noopener noreferrer"
                     style={{color: '#dc2626', fontSize: '12px', fontWeight: 'bold'}}>
