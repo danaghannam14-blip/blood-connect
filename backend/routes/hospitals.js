@@ -125,5 +125,55 @@ router.get('/with-stock', (req, res) => {
     res.json(Object.values(hospitalMap));
   });
 });
+// Record blood transfusion (decrease stock)
+router.post('/transfusion/:hospital_id', (req, res) => {
+  const { blood_type, units, notes } = req.body
+  const hospital_id = req.params.hospital_id
 
+  // Check current stock
+  db.query(
+    'SELECT units_available FROM blood_stock WHERE hospital_id = ? AND blood_type = ?',
+    [hospital_id, blood_type],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: err.message })
+      if (results.length === 0) return res.status(404).json({ message: 'Blood type not found' })
+
+      const current = results[0].units_available
+      if (current < units) {
+        return res.status(400).json({ message: `Not enough stock. Only ${current} units available.` })
+      }
+
+      // Decrease stock
+      db.query(
+        'UPDATE blood_stock SET units_available = units_available - ? WHERE hospital_id = ? AND blood_type = ?',
+        [units, hospital_id, blood_type],
+        (err2) => {
+          if (err2) return res.status(500).json({ message: err2.message })
+
+          // Record transfusion
+          db.query(
+            'INSERT INTO transfusions (hospital_id, blood_type, units, notes) VALUES (?, ?, ?, ?)',
+            [hospital_id, blood_type, units, notes || ''],
+            (err3) => {
+              if (err3) return res.status(500).json({ message: err3.message })
+              res.json({ message: 'Transfusion recorded and stock updated', remaining: current - units })
+            }
+          )
+        }
+      )
+    }
+  )
+})
+
+// Get transfusion history for a hospital
+router.get('/transfusions/:hospital_id', (req, res) => {
+  db.query(
+    'SELECT * FROM transfusions WHERE hospital_id = ? ORDER BY created_at DESC LIMIT 20',
+    [req.params.hospital_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: err.message })
+      res.json(results)
+    }
+  )
+})
 module.exports = router;

@@ -19,6 +19,9 @@ function HospitalDashboard() {
   const [appointments, setAppointments] = useState([])
   const [bloodStock, setBloodStock] = useState({})
   const [stockMessage, setStockMessage] = useState('')
+  const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
+  const [transfusionMessage, setTransfusionMessage] = useState('')
+  const [transfusions, setTransfusions] = useState([])
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -39,16 +42,18 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [reqRes, apptRes, stockRes] = await Promise.all([
+      const [reqRes, apptRes, stockRes, transfusionRes] = await Promise.all([
         axios.get(`${API}/api/requests/hospital/${hospital.id}`),
         axios.get(`${API}/api/appointments/hospital/${hospital.id}`),
-        axios.get(`${API}/api/hospitals/stock/${hospital.id}`)
+        axios.get(`${API}/api/hospitals/stock/${hospital.id}`),
+        axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`)
       ])
       setRequests(reqRes.data)
       setAppointments(apptRes.data)
       const stockMap = {}
       stockRes.data.forEach(s => { stockMap[s.blood_type] = s.units_available })
       setBloodStock(stockMap)
+      setTransfusions(transfusionRes.data)
     } catch (err) { console.log(err) }
     finally { setLoading(false) }
   }
@@ -113,6 +118,19 @@ function HospitalDashboard() {
     }
   }
 
+  const handleRecordTransfusion = async () => {
+    if (!transfusionForm.blood_type) return
+    setTransfusionMessage('')
+    try {
+      const res = await axios.post(`${API}/api/hospitals/transfusion/${hospital.id}`, transfusionForm)
+      setTransfusionMessage(`✅ Recorded! ${transfusionForm.units} unit(s) of ${transfusionForm.blood_type} used. ${res.data.remaining} remaining.`)
+      setTransfusionForm({ blood_type: '', units: 1 })
+      loadData()
+    } catch (err) {
+      setTransfusionMessage(err.response?.data?.message || 'Failed to record transfusion')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('hospitalToken')
     localStorage.removeItem('hospitalData')
@@ -161,12 +179,13 @@ function HospitalDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['requests', 'appointments', 'stock', 'post'].map(t => (
+          {['requests', 'appointments', 'stock', 'transfusions', 'post'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === t ? 'bg-gray-800 text-white' : 'bg-white text-gray-600'}`}>
               {t === 'post' ? '+ Post Request' :
                t === 'appointments' ? `📅 Appointments${appointments.length > 0 ? ` (${appointments.length})` : ''}` :
                t === 'stock' ? '🩸 Blood Stock' :
+               t === 'transfusions' ? '💉 Blood Used' :
                '🩸 Requests'}
             </button>
           ))}
@@ -340,16 +359,14 @@ function HospitalDashboard() {
             <p className="text-xs text-gray-400 mb-2">Update your current blood inventory. This is visible to donors on the map.</p>
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-5">
               <p className="text-xs text-orange-700 font-medium">
-                ⚠️ Having stock doesn't mean donations aren't needed. Blood expires quickly and reserves must stay topped up. Always encourage donations even when stock is available.
+                ⚠️ Having stock doesn't mean donations aren't needed. Blood expires quickly and reserves must stay topped up.
               </p>
             </div>
-
             {stockMessage && (
               <p className={`mb-4 text-sm font-medium ${stockMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
                 {stockMessage}
               </p>
             )}
-
             <div className="grid grid-cols-2 gap-3 mb-4">
               {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bt => {
                 const units = bloodStock[bt] ?? 0
@@ -362,30 +379,89 @@ function HospitalDashboard() {
                       <span className="text-red-600 font-bold text-lg">{bt}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        value={units}
+                      <input type="number" min="0" value={units}
                         onChange={e => setBloodStock(prev => ({...prev, [bt]: parseInt(e.target.value) || 0}))}
-                        className="border rounded-lg p-2 text-sm w-16 focus:outline-none text-center bg-white"
-                      />
+                        className="border rounded-lg p-2 text-sm w-16 focus:outline-none text-center bg-white" />
                       <span className="text-xs text-gray-400">units</span>
                     </div>
                   </div>
                 )
               })}
             </div>
-
             <button onClick={handleSaveStock}
               className="w-full bg-gray-800 text-white py-3 rounded-xl font-semibold hover:bg-gray-900">
               Save Blood Stock
             </button>
-
             <div className="mt-4 flex gap-4 text-xs text-gray-500">
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500"></div> Empty (0)</div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div> Low (1–5)</div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-500"></div> Available (6+)</div>
             </div>
+          </div>
+        )}
+
+        {/* TRANSFUSIONS TAB */}
+        {activeTab === 'transfusions' && (
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">💉 Record Blood Usage</h2>
+            <p className="text-xs text-gray-400 mb-5">
+              When a patient receives blood, record it here to keep stock accurate.
+            </p>
+
+            {transfusionMessage && (
+              <p className={`mb-4 text-sm font-medium ${transfusionMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                {transfusionMessage}
+              </p>
+            )}
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <p className="text-sm font-semibold text-gray-700 mb-3">Record New Transfusion</p>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 font-medium mb-1 block">Blood Type Used</label>
+                  <select value={transfusionForm.blood_type}
+                    onChange={e => setTransfusionForm({...transfusionForm, blood_type: e.target.value})}
+                    className="w-full border rounded-xl p-3 focus:outline-none text-sm">
+                    <option value="">Select blood type</option>
+                    {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bt => (
+                      <option key={bt} value={bt}>
+                        {bt} — {bloodStock[bt] ?? 0} units available
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 font-medium mb-1 block">Units Used</label>
+                  <input type="number" min="1"
+                    value={transfusionForm.units}
+                    onChange={e => setTransfusionForm({...transfusionForm, units: parseInt(e.target.value) || 1})}
+                    className="w-full border rounded-xl p-3 focus:outline-none text-sm" />
+                </div>
+                <button onClick={handleRecordTransfusion}
+                  disabled={!transfusionForm.blood_type}
+                  className="bg-gray-800 text-white py-3 rounded-xl font-semibold hover:bg-gray-900 disabled:opacity-50">
+                  Record Blood Usage
+                </button>
+              </div>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-700 mb-3">Recent Transfusions</p>
+            {transfusions.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-6">No transfusions recorded yet.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {transfusions.map(t => (
+                  <div key={t.id} className="flex justify-between items-center border border-gray-100 rounded-xl p-3 bg-gray-50">
+                    <div>
+                      <span className="text-red-600 font-bold text-sm">{t.blood_type}</span>
+                      <span className="text-gray-500 text-xs ml-2">{t.units} unit(s) used</span>
+                      {t.notes && <p className="text-xs text-gray-400 mt-0.5">{t.notes}</p>}
+                    </div>
+                    <span className="text-xs text-gray-400">{new Date(t.created_at).toLocaleDateString('en-GB')}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
