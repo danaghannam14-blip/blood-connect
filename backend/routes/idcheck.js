@@ -11,31 +11,14 @@ const fixDate = (dateStr) => {
   if (!dateStr) return dateStr;
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
-  let [year, month, day] = parts;
-  
-  // If year looks like a day and day looks like a year, swap them
-  if (parseInt(year) < 32 && parseInt(day) > 1900) {
-    [year, day] = [day, year];
-  }
-  
-  // If year is in the future
-  if (parseInt(year) > new Date().getFullYear()) {
-    [year, day] = [day, year];
+  let [a, b, c] = parts;
+
+  // If first part is clearly a day (<=31) and last is clearly a year (>1900)
+  if (parseInt(a) <= 31 && parseInt(c) > 1900) {
+    return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
   }
 
-  // Fix specific confusion between digits like 2010 vs 2001, 2005 vs 2050
-  // Lebanese IDs have birth years typically between 1920 and 2008
-  const yearInt = parseInt(year);
-  if (yearInt > 2008 && yearInt <= new Date().getFullYear()) {
-    // Try reversing last two digits
-    const yearStr = year.toString();
-    const reversed = yearStr.slice(0, 2) + yearStr[3] + yearStr[2];
-    if (parseInt(reversed) >= 1920 && parseInt(reversed) <= 2008) {
-      year = reversed;
-    }
-  }
-
-  return `${year}-${month}-${day}`;
+  return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
 }
 router.post('/scan', upload.single('id_photo'), async (req, res) => {
   try {
@@ -54,8 +37,18 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
           content: [
             {
               type: 'text',
-              text: 'This is a Lebanese ID card. Find the date of birth field which is labeled تاريخ الولادة. Extract the date and return it in this exact JSON format only, no extra text: {"date_of_birth": "YYYY-MM-DD"}. The date on the card uses Arabic-Indic numerals like ١٩٩٤/٠٢/٠١ which means 1994-02-01. The format is DD/MM/YYYY so ١٨/٠١/٢٠٠٥ means day=18, month=01, year=2005, return "2005-01-18". Convert to standard numbers carefully. If this is not a Lebanese ID card return exactly: {"error": "not_lebanese_id"}'
-            },
+             text: `This is a Lebanese ID card. Find the date of birth field labeled تاريخ الولادة.
+
+CRITICAL RULES:
+- The date format on Lebanese IDs is: YYYY/MM/DD (year first, then month, then day)
+- So ٢٠١٠/١٠/١٧ means year=2010, month=10, day=17 → return "2010-10-17"
+- Arabic-Indic digits: ٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9
+- The FIRST number group is ALWAYS the 4-digit year
+- The LAST number group is ALWAYS the day
+- NEVER swap or reverse the year digits (2010 stays 2010, never becomes 2001)
+- Return ONLY this JSON: {"date_of_birth": "YYYY-MM-DD"}
+- If not a Lebanese ID return: {"error": "not_lebanese_id"}`
+},
             {
               type: 'image_url',
               image_url: {
