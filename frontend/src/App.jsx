@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import DonorRegister from './pages/DonorRegister'
-import DonorLogin from './pages/DonorLogin'
 import Dashboard from './pages/Dashboard'
 import Chatbot from './pages/Chatbot'
 import Emergency from './pages/Emergency'
@@ -15,15 +14,20 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
 import Inventory from './pages/Inventory'
+
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <Routes>
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/donor/register" element={<DonorRegister />} />
-        <Route path="/donor/login" element={<DonorLogin />} />
         <Route path="/donor/dashboard" element={<Dashboard />} />
         <Route path="/donor/chatbot" element={<Chatbot />} />
         <Route path="/emergency" element={<Emergency />} />
@@ -32,9 +36,9 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/impact" element={<Impact />} />
-     <Route path="*" element={<NotFound />} />
-     <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

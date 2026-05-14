@@ -1,212 +1,217 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 /* ─── Blood type compatibility data ─────────────────────── */
 const BLOOD_DATA = {
-  'A+':  { canReceive: ['A+','A-','O+','O-'], canDonateTo: ['A+','AB+'], reach: '34%' },
-  'A-':  { canReceive: ['A-','O-'],           canDonateTo: ['A+','A-','AB+','AB-'], reach: '6%' },
-  'B+':  { canReceive: ['B+','B-','O+','O-'], canDonateTo: ['B+','AB+'], reach: '9%' },
-  'B-':  { canReceive: ['B-','O-'],           canDonateTo: ['B+','B-','AB+','AB-'], reach: '2%' },
-  'AB+': { canReceive: ['A+','A-','B+','B-','AB+','AB-','O+','O-'], canDonateTo: ['AB+'], reach: '3%' },
-  'AB-': { canReceive: ['A-','B-','AB-','O-'], canDonateTo: ['AB+','AB-'], reach: '1%' },
-  'O+':  { canReceive: ['O+','O-'],           canDonateTo: ['A+','B+','O+','AB+'], reach: '38%' },
-  'O-':  { canReceive: ['O-'],                canDonateTo: ['A+','A-','B+','B-','AB+','AB-','O+','O-'], reach: '7%' },
+  'A+':  { canReceive: ['A+','A-','O+','O-'],                          canDonateTo: ['A+','AB+'],                         reach: '34%' },
+  'A-':  { canReceive: ['A-','O-'],                                    canDonateTo: ['A+','A-','AB+','AB-'],              reach: '6%'  },
+  'B+':  { canReceive: ['B+','B-','O+','O-'],                          canDonateTo: ['B+','AB+'],                         reach: '9%'  },
+  'B-':  { canReceive: ['B-','O-'],                                    canDonateTo: ['B+','B-','AB+','AB-'],              reach: '2%'  },
+  'AB+': { canReceive: ['A+','A-','B+','B-','AB+','AB-','O+','O-'],    canDonateTo: ['AB+'],                              reach: '3%'  },
+  'AB-': { canReceive: ['A-','B-','AB-','O-'],                         canDonateTo: ['AB+','AB-'],                        reach: '1%'  },
+  'O+':  { canReceive: ['O+','O-'],                                    canDonateTo: ['A+','B+','O+','AB+'],               reach: '38%' },
+  'O-':  { canReceive: ['O-'],                                         canDonateTo: ['A+','A-','B+','B-','AB+','AB-','O+','O-'], reach: '7%' },
 }
 const ALL_TYPES = ['A+','A-','B+','B-','AB+','AB-','O+','O-']
 
 /* ─── Injected CSS ───────────────────────────────────────── */
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Lexend:wght@400;600&family=Fraunces:wght@700;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; padding: 0; overflow-x: hidden; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { overflow-x: hidden; }
 
-  @keyframes liquid-shift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes pulse-glow {
-    0%,100% { box-shadow: 0 0 16px rgba(184,29,39,.2), inset 0 0 8px rgba(184,29,39,.1); }
-    50%     { box-shadow: 0 0 32px rgba(184,29,39,.55), inset 0 0 16px rgba(184,29,39,.25); }
-  }
-  @keyframes float-parallax {
-    0%,100% { transform: translateY(0) translateX(0) rotate(0deg); }
-    33%     { transform: translateY(-14px) translateX(8px) rotate(1.5deg); }
-    66%     { transform: translateY(8px) translateX(-11px) rotate(-1.5deg); }
-  }
-  @keyframes heartbeat {
-    0%  { transform: scale(1); }
-    14% { transform: scale(1.1); }
-    28% { transform: scale(1); }
-    42% { transform: scale(1.1); }
-    70% { transform: scale(1); }
-  }
-  @keyframes stream-flow {
-    0%   { stroke-dashoffset: 1000; opacity: 0; }
-    50%  { opacity: 0.8; }
-    100% { stroke-dashoffset: 0; opacity: 0; }
-  }
-  @keyframes dash   { to { stroke-dashoffset: 0; } }
-  @keyframes spin8  { to { transform: rotate(360deg); } }
-  @keyframes spin30 { to { transform: rotate(360deg); } }
-  @keyframes ping   { 75%,100% { transform: scale(2.2); opacity: 0; } }
-  @keyframes pulse  { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
-  @keyframes pop-in {
-    0%   { transform: scale(.85); opacity: 0; }
-    60%  { transform: scale(1.05); }
-    100% { transform: scale(1);  opacity: 1; }
-  }
+  @keyframes bc-ping      { 75%,100% { transform:scale(2.2); opacity:0; } }
+  @keyframes bc-pulse     { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
+  @keyframes bc-float     { 0%,100%  { transform:translateY(0) translateX(0); } 33% { transform:translateY(-18px) translateX(10px); } 66% { transform:translateY(10px) translateX(-12px); } }
+  @keyframes bc-float-b   { 0%,100%  { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+  @keyframes bc-float-c   { 0%,100%  { transform:translateY(0); } 50% { transform:translateY(8px); } }
+  @keyframes bc-spin8     { to { transform:rotate(360deg); } }
+  @keyframes bc-spin30    { to { transform:rotate(360deg); } }
+  @keyframes bc-spin30r   { to { transform:rotate(-360deg); } }
+  @keyframes bc-hb        { 0%,100% { transform:scale(1); } 14% { transform:scale(1.18); } 28% { transform:scale(1); } 42% { transform:scale(1.15); } }
+  @keyframes bc-cell      { 0%,100% { transform:translateY(0) scale(1); opacity:.6; } 50% { transform:translateY(-18px) scale(1.2); opacity:1; } }
+  @keyframes bc-particle  { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.3; } 50% { transform:translateY(-28px) translateX(var(--px,6px)) scale(1.2); opacity:.8; } }
+  @keyframes bc-orb       { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.08); } 66% { transform:translateY(8px) translateX(-10px) scale(.96); } }
+  @keyframes bc-vitfill   { from { width:0; } to { width:92%; } }
+  @keyframes bc-pop       { 0% { transform:scale(.8); opacity:0; } 60% { transform:scale(1.05); } 100% { transform:scale(1); opacity:1; } }
+  @keyframes bc-shimmer   { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+  @keyframes bc-glow-ring { 0%,100% { box-shadow:0 0 16px rgba(211,47,47,.2),inset 0 0 8px rgba(211,47,47,.08); } 50% { box-shadow:0 0 40px rgba(211,47,47,.55),inset 0 0 20px rgba(211,47,47,.22); } }
+  @keyframes bc-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+  @keyframes bc-heartbeat { 0%,100%  { transform:scale(1); } 14% { transform:scale(1.15); } 28% { transform:scale(1); } 42% { transform:scale(1.15); } }
+  @keyframes bc-drop-bob  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
 
   .bc-root {
-    background: linear-gradient(-45deg,#e0f2fe,#f0fdf4,#fdf2f8,#fefce8);
-    background-size: 400% 400%;
-    animation: liquid-shift 12s ease infinite;
-    min-height: 100vh;
-    font-family: 'Lexend', sans-serif;
-    overflow-x: hidden;
-    width: 100%;
+    min-height:100vh;
+    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.35));
+    background-size:400% 400%;
+    animation:bc-gradient 14s ease infinite;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    overflow-x:hidden;
+    position:relative;
   }
+
+  /* glass layers */
   .bc-glass {
-    background: rgba(255,255,255,.42);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255,255,255,.65);
-    box-shadow: 0 8px 32px rgba(31,38,135,.08), inset 0 0 16px rgba(255,255,255,.5);
+    background:rgba(255,255,255,.42);
+    backdrop-filter:blur(28px) saturate(180%);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid rgba(255,255,255,.72);
+    box-shadow:0 8px 32px rgba(211,47,47,.07),inset 0 0 20px rgba(255,255,255,.6);
   }
   .bc-glass-deep {
-    background: rgba(255,255,255,.26);
-    backdrop-filter: blur(36px) contrast(1.08);
-    border: 1px solid rgba(255,255,255,.7);
-    box-shadow: 0 20px 48px -8px rgba(0,0,0,.07), inset 0 0 32px rgba(255,255,255,.55);
+    background:rgba(255,255,255,.35);
+    backdrop-filter:blur(40px) contrast(1.1);
+    -webkit-backdrop-filter:blur(40px) contrast(1.1);
+    border:1px solid rgba(255,255,255,.8);
+    box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
   }
-  .bc-chromatic { box-shadow: -2px -2px 6px rgba(100,180,255,.2), 2px 2px 6px rgba(255,100,100,.18); }
-  .bc-float     { animation: float-parallax 10s ease-in-out infinite; }
-  .bc-hb        { animation: heartbeat 1.5s ease-in-out infinite; }
-  .bc-glow      { animation: pulse-glow 2s infinite; }
-  .bc-spin8     { animation: spin8  8s  linear infinite; }
-  .bc-spin30    { animation: spin30 30s linear infinite; }
-  .bc-fraunces  { font-family: 'Fraunces', serif; }
-  .bc-heartpath { stroke-dasharray:1000; stroke-dashoffset:1000; animation:dash 3s linear infinite; }
-  .bc-stream    { stroke-dasharray:50; animation:stream-flow 10s linear infinite; }
-  .bc-pop       { animation: pop-in .32s cubic-bezier(.34,1.56,.64,1) forwards; }
 
-  .bc-btn { cursor:pointer; transition:transform .16s, box-shadow .16s; border:none; outline:none; }
-  .bc-btn:hover  { transform: translateY(-2px) scale(1.04); }
-  .bc-btn:active { transform: scale(.96); }
-
-  .bc-type-chip {
-    cursor: pointer;
-    transition: all .2s cubic-bezier(.34,1.56,.64,1);
-    border: 1.5px solid rgba(255,255,255,.55);
-    outline: none;
+  /* nav */
+  .bc-nav {
+    position:sticky;top:0;z-index:50;
+    background:rgba(255,255,255,.62);
+    backdrop-filter:blur(40px);
+    -webkit-backdrop-filter:blur(40px);
+    border-bottom:2px solid rgba(211,47,47,.1);
+    box-shadow:0 4px 24px rgba(211,47,47,.06);
+    animation:none;
+    transform:translateY(0);
+    transition:transform .6s cubic-bezier(.22,1,.36,1);
   }
-  .bc-type-chip:hover { transform: scale(1.08); box-shadow: 0 8px 24px rgba(35,101,129,.15); }
-  .bc-type-chip.active-receive { border-color: rgba(29,108,56,.6) !important; background: rgba(29,108,56,.08) !important; color: #1d6c38 !important; transform: scale(1.1); }
-  .bc-type-chip.active-donate  { border-color: rgba(184,29,39,.6) !important; background: rgba(184,29,39,.08) !important; color: #b81d27 !important; transform: scale(1.1); }
-  .bc-type-chip.selected-type  { border-color: rgba(35,101,129,.7) !important; background: rgba(35,101,129,.1) !important; color: #236581 !important; transform: scale(1.14); box-shadow: 0 10px 28px rgba(35,101,129,.2); }
+  .bc-nav-inner {
+    max-width:1360px;margin:0 auto;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:clamp(10px,1.4vw,16px) clamp(16px,3.5vw,44px);
+  }
 
-  .bc-nav-link { background:none; border:none; cursor:pointer; color:#236581; font-weight:700; font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; transition:opacity .2s; font-family:'Lexend',sans-serif; padding:0; }
-  .bc-nav-link:hover { opacity:.6; }
+  /* btn */
+  .bc-btn {
+    position:relative;overflow:hidden;cursor:pointer;
+    border:none;outline:none;
+    transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;
+    font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .bc-btn::after {
+    content:'';position:absolute;top:50%;left:50%;
+    width:0;height:0;background:rgba(255,255,255,.28);border-radius:50%;
+    transform:translate(-50%,-50%);transition:width .4s,height .4s;
+  }
+  .bc-btn:hover::after { width:300px;height:300px; }
+  .bc-btn:hover  { transform:translateY(-3px) scale(1.05); }
+  .bc-btn:active { transform:scale(.97); }
 
-  .mso { font-family:'Material Symbols Outlined'; font-weight:normal; font-style:normal; line-height:1; letter-spacing:normal; text-transform:none; display:inline-block; white-space:nowrap; direction:ltr; -webkit-font-smoothing:antialiased; }
+  .bc-btn-primary {
+    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
+    color:white;
+    box-shadow:0 12px 32px rgba(211,47,47,.32);
+  }
+  .bc-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
 
-  /* ── Responsive ── */
-  .bc-hero-grid    { display:grid; grid-template-columns:1fr 1fr; gap:clamp(20px,3.5vw,56px); align-items:center; min-height:75vh; }
-  .bc-compat-grid  { display:grid; grid-template-columns:1fr 1.1fr; gap:clamp(24px,4vw,64px); align-items:start; }
-  .bc-type-grid    { display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(6px,.8vw,10px); }
+  .bc-btn-secondary {
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(20px);
+    border:2px solid rgba(211,47,47,.2) !important;
+    color:#D32F2F;
+  }
+  .bc-btn-secondary:hover { background:rgba(255,255,255,.72);border-color:rgba(211,47,47,.42) !important; }
 
-  /* ── Map container ── */
+  /* type chip */
+  .bc-chip {
+    cursor:pointer;border:none;outline:none;
+    transition:all .22s cubic-bezier(.34,1.56,.64,1);
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;
+  }
+  .bc-chip:hover { transform:scale(1.08) translateY(-2px);box-shadow:0 10px 28px rgba(211,47,47,.18); }
+  .bc-chip.active {
+    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
+    color:white;
+    box-shadow:0 10px 28px rgba(211,47,47,.3);
+    transform:scale(1.05);
+  }
+
+  /* compat cells */
+  .bc-cell-receive {
+    cursor:pointer;
+    background:#d2e2f7;
+    border:2px solid #405878 ;
+    border-radius:clamp(10px,1.3vw,14px);
+    aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:clamp(12px,1.4vw,17px);color:#405878;
+    position:relative;transition:transform .18s;
+  }
+  .bc-cell-receive:hover { transform:scale(1.1); }
+
+  .bc-cell-donate {
+    cursor:pointer;
+    background:rgba(255,235,238,.5);
+    border:2px solid rgba(211,47,47,.4);
+    border-radius:clamp(10px,1.3vw,14px);
+    aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:clamp(12px,1.4vw,17px);color:#D32F2F;
+    position:relative;transition:transform .18s;
+  }
+  .bc-cell-donate:hover { transform:scale(1.1); }
+
+  .bc-badge {
+    position:absolute;top:-6px;right:-6px;
+    width:20px;height:20px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;font-weight:900;color:white;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+
+  /* map */
   .bc-map-wrap {
-    border-radius: clamp(24px,3.5vw,44px);
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,.7);
-    box-shadow: 0 20px 48px -8px rgba(0,0,0,.07), inset 0 0 32px rgba(255,255,255,.55);
-    background: rgba(255,255,255,.26);
-    backdrop-filter: blur(36px) contrast(1.08);
-    display: flex;
-    flex-direction: column;
+    border-radius:clamp(24px,3.5vw,44px);overflow:hidden;
+    border:2px solid rgba(211,47,47,.15);
+    box-shadow:0 24px 56px -12px rgba(211,47,47,.1),inset 0 0 40px rgba(255,255,255,.6);
+    background:rgba(255,255,255,.4);
+    backdrop-filter:blur(40px) contrast(1.1);
+    display:flex;flex-direction:column;
   }
   .bc-map-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 14px 18px 10px;
-    background: rgba(255,255,255,.25);
-    border-bottom: 1px solid rgba(255,255,255,.5);
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    padding:16px 20px 12px;
+    background:linear-gradient(135deg,rgba(255,235,238,.5),rgba(255,255,255,.3));
+    border-bottom:1px solid rgba(211,47,47,.1);
   }
-  .bc-map-chips { display: flex; gap: 10px; flex-wrap: wrap; }
   .bc-map-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,.55);
-    border: 1px solid rgba(255,255,255,.8);
-    border-radius: 10px;
-    padding: 6px 14px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: #236581;
-    font-family: 'Lexend', sans-serif;
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.7);border:1px solid rgba(211,47,47,.15);
+    border-radius:12px;padding:8px 16px;
+    font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D32F2F;
+    transition:all .2s;
   }
-  .bc-map-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .bc-map-coord {
-    font-family: monospace;
-    font-size: 12px;
-    color: rgba(120,200,255,.9);
-    background: rgba(2,21,34,.5);
-    padding: 4px 10px;
-    border-radius: 8px;
-  }
+  .bc-map-chip:hover { transform:translateY(-2px);box-shadow:0 6px 16px rgba(211,47,47,.12); }
+  .bc-map-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
   .bc-map-svg-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 900 / 820;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 28px;
-  overflow: hidden;
-}
-  .bc-map-svg-wrap svg {
-  width: 92%;
-  height: 92%;
-
-  max-width: 100%;
-  max-height: 100%;
-
-  display: block;
-  margin: auto;
-}
-  .bc-map-bottombar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px 18px 14px;
-    background: rgba(255,255,255,.25);
-    border-top: 1px solid rgba(255,255,255,.5);
+    width:100%;aspect-ratio:900/820;display:flex;align-items:center;justify-content:center;
+    padding:28px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(14,165,233,.05),rgba(255,235,238,.1));
   }
-  .bc-map-legend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
-  .bc-map-legend-item { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: #236581; font-family: 'Lexend', sans-serif; }
-  .bc-map-vitality { display: flex; align-items: center; gap: 12px; }
-  .bc-map-vbar { width: 120px; height: 7px; background: rgba(255,255,255,.4); border-radius: 999px; overflow: hidden; }
-  .bc-map-vfill { height: 100%; width: 92%; background: linear-gradient(to right, #1d6c38, #236581); border-radius: 999px; }
-  .bc-map-vlabel { font-size: 11px; font-weight: 700; color: #236581; font-family: 'Lexend', sans-serif; }
-  .bc-map-vnum { font-size: 16px; font-weight: 900; color: #1d6c38; font-family: 'Lexend', sans-serif; }
+  .bc-map-svg-wrap svg { width:92%;height:92%;display:block;margin:auto;filter:drop-shadow(0 4px 20px rgba(211,47,47,.1)); }
+  .bc-map-bottombar {
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    padding:12px 20px 16px;
+    background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,235,238,.4));
+    border-top:1px solid rgba(211,47,47,.1);
+  }
+  .bc-map-legend { display:flex;gap:20px;flex-wrap:wrap;align-items:center; }
+  .bc-map-legend-item { display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#D32F2F; }
+  .bc-map-vbar { width:130px;height:8px;background:rgba(211,47,47,.1);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05); }
+  .bc-map-vfill { height:100%;background:linear-gradient(90deg,#D32F2F,#405878);border-radius:999px;animation:bc-vitfill 2s ease forwards; }
 
-  /* ── Network grid ── */
-  .bc-network-grid { display:grid; grid-template-columns:2fr 1fr; gap:clamp(12px,1.8vw,20px); }
+  /* layout */
+  .bc-hero-grid    { display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3.5vw,56px);align-items:center;min-height:74vh; }
+  .bc-network-grid { display:grid;grid-template-columns:2fr 1fr;gap:clamp(12px,1.8vw,20px); }
+  .bc-compat-grid  { display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(24px,4vw,64px);align-items:start; }
+  .bc-type-grid    { display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.8vw,10px); }
 
   @media (max-width:960px) {
-    .bc-hero-grid    { grid-template-columns:1fr; min-height:unset; }
+    .bc-hero-grid    { grid-template-columns:1fr;min-height:unset; }
     .bc-network-grid { grid-template-columns:1fr; }
     .bc-compat-grid  { grid-template-columns:1fr; }
     .bc-hero-visual  { display:none !important; }
@@ -214,162 +219,238 @@ const STYLES = `
     .bc-mobile-btn   { display:flex !important; }
   }
   @media (min-width:961px) {
-    .bc-mobile-btn   { display:none !important; }
-    .bc-mobile-menu  { display:none !important; }
+    .bc-mobile-btn  { display:none !important; }
+    .bc-mobile-menu { display:none !important; }
   }
+
+  /* glow orbs */
+  .bc-orb { position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none;animation:bc-orb var(--dur,8s) ease-in-out infinite; }
+
+  /* particles */
+  .bc-particle { position:absolute;border-radius:50%;pointer-events:none;animation:bc-particle var(--dur,5s) ease-in-out infinite; }
+
+  /* floating stat cards */
+  .bc-stat-card-a { animation:bc-float-b 3s ease-in-out infinite; }
+  .bc-stat-card-b { animation:bc-float-c 3.5s ease-in-out infinite; }
+
+  /* blood drop */
+  .bc-drop-wrap { animation:bc-drop-bob 3s ease-in-out infinite; }
+
+  /* nav shimmer on hover */
+  .bc-emergency-btn {
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
+    color:white;border:none;cursor:pointer;
+    box-shadow:0 8px 24px rgba(211,47,47,.35);
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;
+    transition:box-shadow .22s,transform .22s;
+  }
+  .bc-emergency-btn:hover { transform:translateY(-2px) scale(1.04);box-shadow:0 14px 36px rgba(211,47,47,.5); }
+  .bc-emergency-btn::after {
+    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+    transition:left .5s;
+  }
+  .bc-emergency-btn:hover::after { left:100%; }
+
+  /* SOS FAB */
+  .bc-fab-wrap { position:fixed;bottom:clamp(18px,2.5vw,36px);right:clamp(18px,2.5vw,36px);z-index:60; }
+  .bc-fab-ring {
+    position:absolute;inset:0;border-radius:50%;background:#D32F2F;
+    animation:bc-ping 2s cubic-bezier(0,0,.2,1) infinite;
+  }
+  .bc-fab-ring2 {
+    position:absolute;inset:0;border-radius:50%;background:#D32F2F;
+    animation:bc-ping 2s cubic-bezier(0,0,.2,1) infinite;
+    animation-delay:.5s;opacity:.6;
+  }
+  .bc-fab {
+    position:relative;
+    width:clamp(56px,5vw,76px);height:clamp(56px,5vw,76px);
+    border-radius:50%;
+    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
+    color:white;border:4px solid rgba(255,255,255,.6);
+    box-shadow:0 14px 44px rgba(211,47,47,.5);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;outline:none;
+    animation:bc-drop-bob 2s ease-in-out infinite;
+    transition:transform .2s;font-size:clamp(22px,2.8vw,36px);
+  }
+  .bc-fab:hover { transform:scale(1.15);animation:none; }
+
+  /* pop animation */
+  .bc-pop { animation:bc-pop .32s cubic-bezier(.34,1.56,.64,1) both; }
+
+  /* heartpath svg */
+  .bc-heartpath {
+    stroke-dasharray:1000;stroke-dashoffset:1000;
+    animation:bc-heartbeat-path 3s linear infinite;
+  }
+  @keyframes bc-heartbeat-path { to { stroke-dashoffset:0; } }
+
+  /* hover card lift */
+  .bc-card-hover { transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s; }
+  .bc-card-hover:hover { transform:translateY(-4px) scale(1.01);box-shadow:0 20px 50px rgba(211,47,47,.15) !important; }
 `
 
-if (typeof document !== 'undefined' && !document.getElementById('bc-styles')) {
+if (typeof document !== 'undefined' && !document.getElementById('bc-styles-v1')) {
   const s = document.createElement('style')
-  s.id = 'bc-styles'
+  s.id = 'bc-styles-v1'
   s.textContent = STYLES
   document.head.appendChild(s)
 }
 
-const C = { p: '#236581', s: '#1d6c38', r: '#b81d27' }
+/* ─── Particle Field ─────────────────────────────────────── */
+function ParticleField() {
+  const particles = Array.from({ length: 28 }, (_, i) => ({
+    id: i,
+    w: Math.random() * 5 + 2,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    dur: (Math.random() * 4 + 3).toFixed(1),
+    delay: -(Math.random() * 4).toFixed(1),
+    px: ((Math.random() * 20 - 10).toFixed(0)) + 'px',
+    color: i % 3 === 0 ? 'rgba(211,47,47,.35)' : i % 3 === 1 ? 'rgba(14,165,233,.45)' : 'rgba(255,235,238,.7)',
+  }))
 
-/* ── Lebanon Blood Network Map ───────────────────────────── */
+  return (
+    <div style={{ position:'fixed', inset:0, overflow:'hidden', pointerEvents:'none', zIndex:0 }}>
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="bc-particle"
+          style={{
+            '--dur': `${p.dur}s`,
+            '--px': p.px,
+            width: p.w, height: p.w,
+            left: `${p.left}%`, top: `${p.top}%`,
+            background: p.color,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ─── Lebanon Map ────────────────────────────────────────── */
 function LebanonMap() {
   return (
     <div className="bc-map-wrap">
-      {/* Top bar: status chips + coordinates */}
       <div className="bc-map-topbar">
-        <div className="bc-map-chips">
-          <div className="bc-map-chip">
-            <span className="bc-map-dot" style={{ background:'#22c55e', animation:'pulse 2s infinite' }}/>
-            Beirut: Live Matching
-          </div>
-          <div className="bc-map-chip">
-            <span className="bc-map-dot" style={{ background:'#b81d27', animation:'pulse 2s infinite', animationDelay:'.4s' }}/>
-            Tripoli: Urgent Need
-          </div>
+        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+          {[
+            { color:'#22c55e', label:'Beirut: Live Matching', delay:'0s' },
+            { color:'#D32F2F', label:'Tripoli: Urgent Need',  delay:'.4s' },
+          ].map(chip => (
+            <div key={chip.label} className="bc-map-chip">
+              <span className="bc-map-dot" style={{ background: chip.color, boxShadow:`0 0 8px ${chip.color}`, animation:`bc-pulse 1.8s ease-in-out infinite`, animationDelay: chip.delay }} />
+              {chip.label}
+            </div>
+          ))}
         </div>
-        <span className="bc-map-coord">33°N 35°E</span>
+        <span style={{ fontFamily:'monospace', fontSize:12, color:'rgba(211,47,47,.8)', background:'rgba(255,235,238,.6)', padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.15)' }}>
+          33°N 35°E
+        </span>
       </div>
 
-      {/* SVG map fills full width */}
       <div className="bc-map-svg-wrap">
-        <svg
-          viewBox="0 0 900 820"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="xMidYMid meet"
-        >
+        <svg viewBox="0 0 900 820" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <linearGradient id="lbg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#021522"/>
-              <stop offset="100%" stopColor="#042f4b"/>
-            </linearGradient>
+            <linearGradient id="bcLbg" x1="0" y1="0" x2="1" y2="1">
+             <stop offset="0%"   stopColor="#2a2a45"/>
+<stop offset="50%"  stopColor="#243158"/>
+<stop offset="100%" stopColor="#1a4a7a"/>
+</linearGradient>
+            <filter id="bcGlow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
             <style>{`
-              .mgrid{stroke:rgba(255,255,255,.05);stroke-width:1}
-              .msea{fill:rgba(50,120,170,.15)}
-              .gov{stroke:rgba(170,230,255,.55);stroke-width:2.2;stroke-linejoin:round;}
-              .akkar{fill:rgba(140,95,185,.45)} .north{fill:rgba(45,120,75,.45)}
-              .bh{fill:rgba(145,95,30,.48)} .kj{fill:rgba(45,95,145,.5)}
-              .ml{fill:rgba(40,110,70,.45)} .beqaa{fill:rgba(115,80,180,.48)}
-              .nab{fill:rgba(70,120,70,.45)} .south{fill:rgba(145,95,40,.48)}
-              .beirut-gov{fill:rgba(220,40,60,.72)}
-              .mcity{
-  font-family:Lexend,sans-serif;
-  font-size:15px;
-  font-weight:800;
-  fill:white;
-  letter-spacing:1px;
-}
-
-.msub{
-  font-family:Lexend,sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.8px;
-}
-
-.mlabel{
-  font-family:Lexend,sans-serif;
-  font-size:12px;
-  font-weight:700;
-  fill:rgba(255,255,255,.72);
-  letter-spacing:1px;
-}
-              .mfooter{font-family:Lexend,sans-serif;font-size:13px;fill:rgba(120,200,255,.45);letter-spacing:6px;}
-              .dashBlue{stroke:#45bfff;stroke-width:2;stroke-dasharray:8 8;}
-              .dashRed{stroke:#ff6677;stroke-width:2;stroke-dasharray:8 8;}
-              .dashGreen{stroke:#41d27c;stroke-width:2;stroke-dasharray:8 8;}
+              .mgrid{stroke:rgba(64,88,120,.15);stroke-width:1}
+              .msea{fill:rgba(64,88,120,.35)}
+              .gov{stroke:rgba(14,165,233,.6);stroke-width:2.2;stroke-linejoin:round}
+              .akkar{fill:rgba(211,47,47,.25)}.north{fill:rgba(64,88,120,.35)}
+              .bh{fill:rgba(211,47,47,.3)}.kj{fill:rgba(64,88,120,.3)}
+              .ml{fill:rgba(211,47,47,.2)}.beqaa{fill:rgba(64,88,120,.25)}
+              .nab{fill:rgba(211,47,47,.22)}.south{fill:rgba(64,88,120,.2)}
+              .beirut-gov{fill:rgba(211,47,47,.75)}
+              .mcity{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;fill:white;letter-spacing:1px}
+              .msub{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.8px}
+              .mlabel{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;fill:rgba(255,255,255,.72);letter-spacing:1px}
+              .mfooter{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;fill:rgba(211,47,47,.5);letter-spacing:6px}
+              .dashBlue{stroke:#405878;stroke-width:2;stroke-dasharray:8 8}
+              .dashRed{stroke:#D32F2F;stroke-width:2;stroke-dasharray:8 8}
+              .dashGreen{stroke:#4ade80;stroke-width:2;stroke-dasharray:8 8}
             `}</style>
           </defs>
 
-          <rect width="900" height="820" fill="url(#lbg)"/>
+          <rect width="900" height="820" fill="url(#bcLbg)"/>
           <path className="msea" d="M0 0 L260 0 C240 140 240 250 245 380 C250 530 235 680 220 820 L0 820 Z"/>
 
-          {/* Grid */}
           <g>
             {[80,160,240,320,400,480,560,640,720].map(y => <line key={`h${y}`} x1="0" y1={y} x2="900" y2={y} className="mgrid"/>)}
             {[80,160,240,320,400,480,560,640,720,800].map(x => <line key={`v${x}`} x1={x} y1="0" x2={x} y2="820" className="mgrid"/>)}
           </g>
 
           <g transform="translate(120,5) scale(1.15)">
-            {/* Governorates */}
-            <path className="gov akkar"     d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L500 106 L472 110 L448 116 L418 112 L388 105 L370 90 L374 68 Z"/>
-            <path className="gov north"     d="M355 120 L388 105 L418 112 L448 116 L472 110 L495 120 L505 150 L498 182 L485 205 L462 224 L438 235 L410 248 L380 242 L352 238 L330 228 L318 210 L320 180 L335 145 Z"/>
-            <path className="gov bh"        d="M495 120 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L518 388 L492 370 L470 352 L452 328 L438 300 L425 268 L410 248 L438 235 L462 224 L485 205 L498 182 L505 150 Z"/>
-            <path className="gov kj"        d="M300 210 L330 228 L352 238 L380 242 L410 248 L425 268 L420 300 L400 325 L372 338 L340 332 L318 320 L298 295 L286 268 L286 235 Z"/>
+            <path className="gov akkar"      d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L500 106 L472 110 L448 116 L418 112 L388 105 L370 90 L374 68 Z"/>
+            <path className="gov north"      d="M355 120 L388 105 L418 112 L448 116 L472 110 L495 120 L505 150 L498 182 L485 205 L462 224 L438 235 L410 248 L380 242 L352 238 L330 228 L318 210 L320 180 L335 145 Z"/>
+            <path className="gov bh"         d="M495 120 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L518 388 L492 370 L470 352 L452 328 L438 300 L425 268 L410 248 L438 235 L462 224 L485 205 L498 182 L505 150 Z"/>
+            <path className="gov kj"         d="M300 210 L330 228 L352 238 L380 242 L410 248 L425 268 L420 300 L400 325 L372 338 L340 332 L318 320 L298 295 L286 268 L286 235 Z"/>
             <path className="gov beirut-gov" d="M268 328 L282 330 L288 345 L280 358 L265 356 L260 340 Z"/>
-            <path className="gov ml"        d="M286 235 L298 295 L318 320 L340 332 L372 338 L400 325 L420 300 L438 318 L445 350 L438 380 L420 418 L392 450 L362 460 L332 455 L308 442 L286 418 L266 388 L252 352 L260 340 L265 356 L280 358 L288 345 L282 330 L268 328 L258 290 L268 250 Z"/>
-            <path className="gov beqaa"     d="M438 318 L452 328 L470 352 L492 370 L520 390 L540 418 L530 448 L505 470 L492 500 L470 528 L448 520 L425 505 L405 485 L392 450 L420 418 L438 380 L445 350 Z"/>
-            <path className="gov nab"       d="M332 455 L362 460 L392 450 L405 485 L425 505 L418 532 L395 555 L370 570 L338 565 L315 550 L300 522 L298 490 L310 468 Z"/>
-            <path className="gov south"     d="M252 352 L266 388 L286 418 L310 468 L298 490 L300 522 L315 550 L338 565 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 Z"/>
+            <path className="gov ml"         d="M286 235 L298 295 L318 320 L340 332 L372 338 L400 325 L420 300 L438 318 L445 350 L438 380 L420 418 L392 450 L362 460 L332 455 L308 442 L286 418 L266 388 L252 352 L260 340 L265 356 L280 358 L288 345 L282 330 L268 328 L258 290 L268 250 Z"/>
+            <path className="gov beqaa"      d="M438 318 L452 328 L470 352 L492 370 L520 390 L540 418 L530 448 L505 470 L492 500 L470 528 L448 520 L425 505 L405 485 L392 450 L420 418 L438 380 L445 350 Z"/>
+            <path className="gov nab"        d="M332 455 L362 460 L392 450 L405 485 L425 505 L418 532 L395 555 L370 570 L338 565 L315 550 L300 522 L298 490 L310 468 Z"/>
+            <path className="gov south"      d="M252 352 L266 388 L286 418 L310 468 L298 490 L300 522 L315 550 L338 565 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 Z"/>
 
-            {/* Outer border */}
-            <path
-              d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L540 418 L530 448 L505 470 L492 500 L470 528 L418 532 L395 555 L370 570 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 L252 352 L258 290 L268 250 L300 210 L320 180 L335 145 L355 120 L370 90 L374 68 Z"
-              fill="none" stroke="rgba(120,220,255,.75)" strokeWidth="3"
-            />
+            <path d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L540 418 L530 448 L505 470 L492 500 L470 528 L418 532 L395 555 L370 570 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 L252 352 L258 290 L268 250 L300 210 L320 180 L335 145 L355 120 L370 90 L374 68 Z"
+              fill="none" stroke="rgba(211,47,47,.6)" strokeWidth="3" filter="url(#bcGlow)"/>
 
-            {/* Connection lines */}
             <line x1="275" y1="343" x2="355" y2="165" className="dashBlue"/>
             <line x1="275" y1="343" x2="520" y2="270" className="dashRed"/>
             <line x1="275" y1="343" x2="265" y2="500" className="dashGreen"/>
 
             {/* TRIPOLI */}
-            <circle cx="355" cy="165" r="34" fill="rgba(40,200,90,.15)">
+            <circle cx="355" cy="165" r="34" fill="rgba(64,88,120,.2)">
               <animate attributeName="r" values="34;50;34" dur="3s" repeatCount="indefinite"/>
               <animate attributeName="opacity" values=".5;0;.5" dur="3s" repeatCount="indefinite"/>
             </circle>
-            <circle cx="355" cy="165" r="11" fill="#2ac96b" stroke="white" strokeWidth="4"/>
-            <rect x="188" y="137" width="155" height="58" rx="12" fill="rgba(0,0,0,.72)"/>
+            <circle cx="355" cy="165" r="11" fill="#405878" stroke="white" strokeWidth="4"/>
+            <rect x="188" y="137" width="155" height="58" rx="12" fill="rgba(0,0,0,.8)"/>
             <text x="204" y="162" className="mcity">TRIPOLI</text>
-            <text x="204" y="183" className="msub" fill="#ffba57">URGENT NEED</text>
+            <text x="204" y="183" className="msub" fill="#D32F2F">URGENT NEED</text>
 
             {/* BEIRUT */}
-            <circle cx="275" cy="343" r="42" fill="rgba(255,70,90,.16)">
+            <circle cx="275" cy="343" r="42" fill="rgba(211,47,47,.2)">
               <animate attributeName="r" values="42;62;42" dur="2.5s" repeatCount="indefinite"/>
               <animate attributeName="opacity" values=".5;0;.5" dur="2.5s" repeatCount="indefinite"/>
             </circle>
-            <circle cx="275" cy="343" r="14" fill="#ff334f" stroke="white" strokeWidth="4"/>
-            <rect x="82" y="318" width="182" height="58" rx="12" fill="rgba(0,0,0,.72)"/>
+            <circle cx="275" cy="343" r="14" fill="#D32F2F" stroke="white" strokeWidth="4"/>
+            <rect x="82" y="318" width="182" height="58" rx="12" fill="rgba(0,0,0,.8)"/>
             <text x="98" y="343" className="mcity">BEIRUT</text>
-            <text x="98" y="364" className="msub" fill="#49d6ff">LIVE MATCHING</text>
+            <text x="98" y="364" className="msub" fill="#405878">LIVE MATCHING</text>
 
-            {/* BAALBEK — tooltip to the LEFT of dot */}
-            <circle cx="520" cy="270" r="30" fill="rgba(255,80,80,.16)">
+            {/* BAALBEK */}
+            <circle cx="520" cy="270" r="30" fill="rgba(211,47,47,.2)">
               <animate attributeName="r" values="30;46;30" dur="3s" repeatCount="indefinite"/>
               <animate attributeName="opacity" values=".45;0;.45" dur="3s" repeatCount="indefinite"/>
             </circle>
-            <circle cx="520" cy="270" r="10" fill="#ff5a66" stroke="white" strokeWidth="4"/>
-           <rect x="330" y="220" width="150" height="56" rx="12" />
-           <text x="378" y="272" className="mcity">BAALBEK</text>
-            <text x="378" y="292" className="msub" fill="#4ad7ff">MATCHING</text>
+            <circle cx="520" cy="270" r="10" fill="#D32F2F" stroke="white" strokeWidth="4"/>
+            <rect x="330" y="220" width="150" height="56" rx="12" fill="rgba(0,0,0,.8)"/>
+            <text x="348" y="250" className="mcity">BAALBEK</text>
+            <text x="348" y="270" className="msub" fill="#405878">MATCHING</text>
 
             {/* SIDON */}
-            <circle cx="265" cy="500" r="28" fill="rgba(70,170,255,.16)">
+            <circle cx="265" cy="500" r="28" fill="rgba(64,88,120,.2)">
               <animate attributeName="r" values="28;44;28" dur="3.5s" repeatCount="indefinite"/>
               <animate attributeName="opacity" values=".45;0;.45" dur="3.5s" repeatCount="indefinite"/>
             </circle>
-            <circle cx="265" cy="500" r="10" fill="#43b8ff" stroke="white" strokeWidth="4"/>
-            <rect x="290" y="477" width="118" height="54" rx="12" fill="rgba(0,0,0,.72)"/>
+            <circle cx="265" cy="500" r="10" fill="#405878" stroke="white" strokeWidth="4"/>
+            <rect x="290" y="477" width="118" height="54" rx="12" fill="rgba(0,0,0,.8)"/>
             <text x="305" y="500" className="mcity">SIDON</text>
-            <text x="305" y="520" className="msub" fill="#53d9ff">ACTIVE</text>
+            <text x="305" y="520" className="msub" fill="#4ade80">ACTIVE</text>
 
-            {/* Region labels */}
             <text x="455" y="82"  textAnchor="middle" className="mlabel">AKKAR</text>
             <text x="410" y="192" textAnchor="middle" className="mlabel">NORTH</text>
             <text x="555" y="360" textAnchor="middle" className="mlabel">BAALBEK-HERMEL</text>
@@ -384,184 +465,278 @@ function LebanonMap() {
         </svg>
       </div>
 
-      {/* Bottom bar: legend + vitality — no overlap */}
       <div className="bc-map-bottombar">
         <div className="bc-map-legend">
           {[
-            { color:'#ff334f', label:'Live matching' },
-            { color:'#2ac96b', label:'Urgent need' },
-            { color:'#43b8ff', label:'Active' },
-            { color:'#ff6b7f', label:'Matching' },
+            { color:'#D32F2F', label:'Live matching' },
+            { color:'#405878', label:'Urgent need'  },
+            { color:'#4ade80', label:'Active'        },
+            { color:'#ff8a80', label:'Matching'      },
           ].map(({ color, label }) => (
             <div key={label} className="bc-map-legend-item">
-              <span className="bc-map-dot" style={{ background: color, width:10, height:10 }}/>
+              <span className="bc-map-dot" style={{ background: color, width:12, height:12, boxShadow:`0 0 8px ${color}` }}/>
               {label}
             </div>
           ))}
         </div>
-        <div className="bc-map-vitality">
-          <span className="bc-map-vlabel">Network vitality</span>
+        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+          <span style={{ fontSize:11, fontWeight:700, color:'#D32F2F' }}>Network vitality</span>
           <div className="bc-map-vbar"><div className="bc-map-vfill"/></div>
-          <span className="bc-map-vnum">92%</span>
+          <span style={{ fontSize:18, fontWeight:900, color:'#D32F2F' }}>92%</span>
         </div>
       </div>
     </div>
   )
 }
 
-/* ─── Main component ─────────────────────────────────────── */
+/* ─── Blood Drop Visual ──────────────────────────────────── */
+function BloodDropVisual() {
+  const cells = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    left: 20 + Math.random() * 60,
+    top:  20 + Math.random() * 60,
+    dur:  (2 + Math.random() * 2).toFixed(1),
+    delay: -(Math.random() * 2).toFixed(1),
+  }))
+
+  return (
+    <div style={{ position:'relative', width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      {/* Rings */}
+      {[70, 85, 100].map((pct, i) => (
+        <div key={i} style={{
+          position:'absolute', borderRadius:'50%',
+          width:`${pct}%`, height:`${pct}%`,
+          border:'2px solid rgba(211,47,47,.18)',
+          animation:`bc-spin${i % 2 === 0 ? '30' : '8'} ${20 + i * 6}s linear infinite`,
+        }}/>
+      ))}
+
+      {/* Drop */}
+      <div className="bc-drop-wrap" style={{ position:'relative', width:192, height:240 }}>
+        <svg viewBox="0 0 100 130" style={{ width:'100%', height:'100%', filter:'drop-shadow(0 12px 24px rgba(211,47,47,.4))' }}>
+          <defs>
+            <linearGradient id="bcBloodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stopColor="#ff6b6b"/>
+              <stop offset="50%"  stopColor="#D32F2F"/>
+              <stop offset="100%" stopColor="#b71c1c"/>
+            </linearGradient>
+            <linearGradient id="bcHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stopColor="white" stopOpacity=".6"/>
+              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#bcBloodGrad)"/>
+          <ellipse cx="35" cy="70" rx="15" ry="20" fill="url(#bcHighlight)"/>
+          <path d="M50 20 C50 20 80 65 80 85 C80 100 65 115 50 115 C35 115 20 100 20 85 C20 65 50 20 50 20 Z" fill="none" stroke="white" strokeWidth=".5" strokeOpacity=".3"/>
+        </svg>
+        {/* Glow */}
+        <div style={{
+          position:'absolute', inset:0, borderRadius:'50%',
+          background:'rgba(211,47,47,.18)', filter:'blur(48px)',
+          animation:'bc-hb 2s ease-in-out infinite',
+        }}/>
+      </div>
+
+      {/* Floating cells */}
+      {cells.map(c => (
+        <div
+          key={c.id}
+          style={{
+            position:'absolute', width:14, height:14, borderRadius:'50%',
+            background:'linear-gradient(135deg,#ff6b6b,#D32F2F)',
+            left:`${c.left}%`, top:`${c.top}%`,
+            animation:`bc-cell ${c.dur}s ease-in-out infinite`,
+            animationDelay:`${c.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ─── Main Home Component ────────────────────────────────── */
 export default function Home() {
-  const navigate = useNavigate()
-  const [menuOpen, setMenuOpen]   = useState(false)
+  const navigate   = useNavigate()
+  const [menuOpen,  setMenuOpen]  = useState(false)
   const [bloodType, setBloodType] = useState('A+')
-  const [animKey, setAnimKey]     = useState(0)
+  const [animKey,   setAnimKey]   = useState(0)
+  const [sosHover,  setSosHover]  = useState(false)
+  const [visible,   setVisible]   = useState(false)
+
+  useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
 
   const go = (path) => { setMenuOpen(false); navigate(path) }
-
-  const selectType = (t) => {
-    if (t === bloodType) return
-    setBloodType(t)
-    setAnimKey(k => k + 1)
-  }
+  const selectType = (t) => { if (t === bloodType) return; setBloodType(t); setAnimKey(k => k + 1) }
 
   const data = BLOOD_DATA[bloodType]
 
+  const fadeUp = (delay = 0) => ({
+    opacity:   visible ? 1 : 0,
+    transform: visible ? 'translateY(0)' : 'translateY(24px)',
+    transition: `opacity .6s ease ${delay}s, transform .6s ease ${delay}s`,
+  })
+
+  /* floating badge type positions */
+  const floatBadges = [
+    { type:'O-',  style:{ top:0, left:'50%', transform:'translate(-50%,-10%)', animation:'bc-float-b 3s ease-in-out infinite' } },
+    { type:'AB+', style:{ top:'18%', right:0, transform:'translateX(30%)',   animation:'bc-float 6s ease-in-out infinite' } },
+    { type:'B-',  style:{ bottom:0, left:'22%', transform:'translateY(10%)', animation:'bc-float-c 3.5s ease-in-out infinite' } },
+  ]
+
   return (
     <div className="bc-root">
+      <ParticleField />
 
-      {/* ── Orbs ── */}
+      {/* Orbs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
         {[
-          { top:'8%',    left:'8%',   w:'min(420px,36vw)', color:'rgba(186,230,253,.5)', d:'-1s' },
-          { bottom:'18%',right:'8%',  w:'min(480px,40vw)', color:'rgba(254,205,211,.4)', d:'-3s' },
-          { top:'45%',   right:'18%', w:'min(320px,28vw)', color:'rgba(167,243,208,.4)', d:'-5s' },
-          { bottom:'4%', left:'12%',  w:'min(220px,20vw)', color:'rgba(254,249,195,.5)', d:'-2s' },
-        ].map((o,i) => (
-          <div key={i} className="bc-float" style={{ position:'absolute', borderRadius:'50%', width:o.w, height:o.w, background:o.color, filter:'blur(110px)', animationDelay:o.d, top:o.top, bottom:o.bottom, left:o.left, right:o.right }}/>
+          { t:'8%',  l:'8%',  w:'min(420px,36vw)', c:'rgba(211,47,47,.17)',   d:'0s'  },
+          { b:'18%', r:'8%',  w:'min(480px,40vw)', c:'rgba(64,88,120,.22)', d:'-2s' },
+          { t:'45%', r:'18%', w:'min(320px,28vw)', c:'rgba(255,235,238,.45)', d:'-5s' },
+          { b:'4%',  l:'12%', w:'min(220px,20vw)', c:'rgba(64,88,120,.28)', d:'-3s' },
+        ].map((o, i) => (
+          <div key={i} className="bc-orb" style={{ '--dur':'8s', width:o.w, height:o.w, background:o.c, top:o.t, bottom:o.b, left:o.l, right:o.r, animationDelay:o.d }}/>
         ))}
       </div>
 
-      {/* ── SVG streams ── */}
-      <svg style={{ position:'fixed', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0, opacity:.15 }}>
-        <path className="bc-stream" d="M-100,200 Q400,100 900,400 T1800,200" fill="none" stroke={C.p} strokeWidth="1"/>
-        <path className="bc-stream" d="M-100,600 Q500,800 1100,500 T2000,700" fill="none" stroke={C.r} strokeWidth="1" style={{animationDelay:'-4s'}}/>
-      </svg>
-
-      {/* ══ NAV ══════════════════════════════════════════════ */}
-      <header style={{ position:'sticky', top:0, zIndex:50, background:'rgba(255,255,255,.28)', backdropFilter:'blur(36px)', borderBottom:'1px solid rgba(255,255,255,.6)', boxShadow:'0 2px 20px rgba(0,0,0,.04)' }}>
-        <div style={{ maxWidth:1360, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'clamp(10px,1.4vw,16px) clamp(16px,3.5vw,44px)' }}>
-
-          <div style={{ display:'flex', alignItems:'center', gap:9, cursor:'pointer' }} onClick={() => go('/')}>
-            <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:C.p, letterSpacing:'-.04em' }}>BloodConnect</span>
+      {/* ══ NAV ═══════════════════════════════════════════════ */}
+      <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+        <div className="bc-nav-inner">
+          {/* Logo */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }} onClick={() => go('/')}>
+            <span style={{ fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:'#D32F2F', letterSpacing:'-.04em', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+              BloodConnect
+            </span>
           </div>
 
-          <div className="bc-desktop-nav" style={{ display:'flex', alignItems:'center', justifyContent:'center', flex:1 }}>
-            <button className="bc-btn bc-glow" onClick={() => go('/emergency')}
-              style={{ padding:'10px 32px', borderRadius:11, fontWeight:900, color:'white', background:C.r, fontFamily:"'Lexend',sans-serif", fontSize:14, border:'none', boxShadow:`0 6px 20px rgba(184,29,39,.35)`, display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ width:8, height:8, background:'rgba(255,255,255,.7)', borderRadius:'50%', display:'inline-block', animation:'pulse 2s infinite' }}/>
-              Emergency
-              <span style={{ width:8, height:8, background:'rgba(255,255,255,.7)', borderRadius:'50%', display:'inline-block', animation:'pulse 2s infinite', animationDelay:'.3s' }}/>
+          {/* Desktop nav */}
+          <div className="bc-desktop-nav" style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:4, padding:'6px 6px', borderRadius:16 }}>
+              {[
+                { label:'Status',  path:'/inventory' },
+                { label:'Network', path:'/network'   },
+                { label:'Centers', path:'/centers'   },
+              ].map(item => (
+                <button key={item.label} className="bc-btn" onClick={() => go(item.path)}
+                  style={{ padding:'8px 18px', borderRadius:12, background:'none', color:'rgba(211,47,47,.65)', fontWeight:700, fontSize:13, border:'none', display:'flex', alignItems:'center', gap:6 }}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+           <button className="bc-btn bc-btn-secondary" onClick={() => go('/login')}
+            style={{ padding:'10px 24px', borderRadius:14, fontSize:13, display:'flex', alignItems:'center', gap:10 }}>
+              <span style={{ width:8, height:8, background:'rgba(255,255,255,.8)', borderRadius:'50%', display:'inline-block', animation:'bc-pulse 1.5s infinite', boxShadow:'0 0 10px rgba(255,255,255,.5)' }}/>
+              Sign In
             </button>
           </div>
 
-          <button className="bc-mobile-btn bc-btn" onClick={() => setMenuOpen(o=>!o)}
-            style={{ background:'none', border:'none', fontSize:24, color:C.p, padding:4, display:'none' }}>
+          {/* Mobile toggle */}
+          <button className="bc-mobile-btn bc-btn" onClick={() => setMenuOpen(o => !o)}
+            style={{ background:'none', border:'none', color:'#D32F2F', fontSize:22, padding:4, display:'none', cursor:'pointer' }}>
             {menuOpen ? '✕' : '☰'}
           </button>
         </div>
 
+        {/* Mobile menu */}
         {menuOpen && (
-          <div className="bc-mobile-menu bc-glass" style={{ display:'flex', flexDirection:'column', gap:0, borderTop:'1px solid rgba(255,255,255,.5)', padding:'6px 18px 14px' }}>
-            {[['Blood Status','/inventory'],['How It Works','/how-it-works'],['Emergency','/emergency']].map(([l,p])=>(
-              <button key={l} onClick={() => go(p)} style={{ background:'none', border:'none', borderBottom:'1px solid rgba(35,101,129,.07)', padding:'12px 0', textAlign:'left', fontFamily:"'Lexend',sans-serif", fontWeight:700, fontSize:14, color:p==='/emergency'?C.r:C.p, cursor:'pointer' }}>{l}</button>
+          <div className="bc-mobile-menu bc-glass" style={{ borderTop:'1px solid rgba(211,47,47,.1)', padding:'6px 18px 14px', display:'flex', flexDirection:'column', gap:0 }}>
+            {[['Blood Status','/inventory'],['How It Works','/how-it-works'],['Emergency','/emergency']].map(([l,p]) => (
+              <button key={l} onClick={() => go(p)} style={{ background:'none', border:'none', borderBottom:'1px solid rgba(211,47,47,.08)', padding:'12px 0', textAlign:'left', fontWeight:700, fontSize:14, color:'#D32F2F', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>{l}</button>
             ))}
-            <button onClick={() => go('/login')} style={{ margin:'8px 0 3px', padding:11, borderRadius:11, background:C.p, color:'white', fontWeight:900, fontFamily:"'Lexend',sans-serif", fontSize:13, border:'none', cursor:'pointer' }}>Sign In</button>
-            <button onClick={() => go('/donor/register')} style={{ padding:11, borderRadius:11, background:'none', color:C.r, fontWeight:700, fontFamily:"'Lexend',sans-serif", fontSize:12, border:`1px solid ${C.r}`, cursor:'pointer' }}>Register as Donor →</button>
+            <button onClick={() => go('/login')} style={{ margin:'8px 0 4px', padding:11, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', fontWeight:900, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>Sign In</button>
+            <button onClick={() => go('/donor/register')} style={{ padding:11, borderRadius:12, background:'none', color:'#D32F2F', fontWeight:700, fontSize:12, border:'2px solid #D32F2F', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>Register as Donor →</button>
           </div>
         )}
       </header>
 
-      {/* ══ MAIN ═════════════════════════════════════════════ */}
+      {/* ══ MAIN ══════════════════════════════════════════════ */}
       <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(20px,3.5vw,44px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(52px,7vw,100px)' }}>
 
         {/* ── HERO ── */}
         <section className="bc-hero-grid">
-          <div style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,26px)' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,24px)' }}>
 
-            <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'7px 18px', borderRadius:9999, width:'fit-content' }}>
-              <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
-                <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:C.r, opacity:.75, animation:'ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
-                <span style={{ position:'relative', display:'inline-flex', width:12, height:12, borderRadius:'50%', background:C.r }}/>
-              </span>
-              <span style={{ color:C.p, fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>AI-POWERED ROUTING ACTIVE</span>
+            {/* Badge */}
+            <div style={fadeUp(0)}>
+              <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 20px', borderRadius:9999, width:'fit-content', border:'1px solid rgba(211,47,47,.15)' }}>
+                <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
+                  <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#D32F2F', opacity:.75, animation:'bc-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
+                  <span style={{ position:'relative', display:'inline-flex', width:12, height:12, borderRadius:'50%', background:'#D32F2F', boxShadow:'0 0 12px #D32F2F' }}/>
+                </span>
+                <span style={{ color:'#D32F2F', fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>AI-POWERED ROUTING ACTIVE</span>
+              </div>
             </div>
 
-            <h1 className="bc-fraunces" style={{ fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:C.p, margin:0 }}>
-              Your <span style={{ color:C.r }}>Blood</span> Can<br/>
-              <span style={{ fontStyle:'italic', color:C.s }}>Save Three Lives</span>
-            </h1>
+            {/* Headline */}
+            <div style={fadeUp(.1)}>
+              <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:'#D32F2F', margin:0 }}>
+                Your <span style={{ color:'#D32F2F', textShadow:'0 4px 20px rgba(211,47,47,.35)' }}>Blood</span> Can<br/>
+                <em style={{ color:'#405878', fontStyle:'italic' }}>Save Three Lives</em>
+              </h1>
+            </div>
 
-            <p style={{ fontSize:'clamp(13px,1.3vw,17px)', color:'rgba(35,101,129,.8)', fontWeight:600, maxWidth:480, lineHeight:1.65, margin:0 }}>
-              Life-Saving Precision meets Human Connection. Lebanon's premier intelligent network bridging heroes to urgent needs.
-            </p>
+            <div style={fadeUp(.2)}>
+              <p style={{ fontSize:'clamp(13px,1.3vw,17px)', color:'rgba(211,47,47,.7)', fontWeight:600, maxWidth:480, lineHeight:1.65, margin:0 }}>
+                Life-Saving Precision meets Human Connection. Lebanon's premier intelligent network bridging heroes to urgent needs.
+              </p>
+            </div>
 
-            <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(10px,1.2vw,16px)', paddingTop:2 }}>
-              <button className="bc-btn" onClick={() => go('/donor/register')}
-                style={{ padding:'clamp(12px,1.4vw,17px) clamp(22px,3vw,36px)', borderRadius:22, background:C.p, color:'white', fontWeight:900, fontSize:'clamp(13px,1.2vw,15px)', border:'none', boxShadow:'0 12px 30px rgba(35,101,129,.28)', fontFamily:"'Lexend',sans-serif" }}>
-                Register as Donor
+            <div style={{ ...fadeUp(.3), display:'flex', flexWrap:'wrap', gap:'clamp(10px,1.2vw,16px)', paddingTop:2 }}>
+              <button className="bc-btn bc-btn-primary" onClick={() => go('/donor/register')}
+                style={{ padding:'clamp(12px,1.4vw,17px) clamp(22px,3vw,36px)', borderRadius:22, fontSize:'clamp(13px,1.2vw,15px)' }}>
+                Register as Donor →
               </button>
-              <button className="bc-btn bc-glass" onClick={() => go('/login')}
-                style={{ padding:'clamp(12px,1.4vw,17px) clamp(22px,3vw,36px)', borderRadius:22, color:C.p, fontWeight:900, fontSize:'clamp(13px,1.2vw,15px)', border:'1px solid white', fontFamily:"'Lexend',sans-serif" }}>
+              <button className="bc-btn bc-btn-secondary" onClick={() => go('/login')}
+                style={{ padding:'clamp(12px,1.4vw,17px) clamp(22px,3vw,36px)', borderRadius:22, fontSize:'clamp(13px,1.2vw,15px)' }}>
                 Sign In
               </button>
             </div>
 
-            <div style={{ display:'flex', alignItems:'center', gap:16, paddingTop:2 }}>
+            {/* Avatar stack */}
+            <div style={{ ...fadeUp(.4), display:'flex', alignItems:'center', gap:16, paddingTop:2 }}>
               <div style={{ display:'flex' }}>
-                {['A+','O-','B+'].map((t,i)=>(
-                  <div key={t} className="bc-glass" style={{ width:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid white', fontWeight:900, fontSize:11, color:C.p, marginLeft:i===0?0:-11, zIndex:3-i, boxShadow:'0 3px 10px rgba(0,0,0,.1)' }}>{t}</div>
+                {['A+','O-','B+'].map((t, i) => (
+                  <div key={t} className="bc-glass" style={{ width:40, height:40, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#D32F2F', marginLeft: i === 0 ? 0 : -11, zIndex:3 - i, boxShadow:'0 4px 12px rgba(211,47,47,.1)' }}>{t}</div>
                 ))}
               </div>
-              <span style={{ fontSize:9, fontWeight:900, color:'rgba(35,101,129,.5)', textTransform:'uppercase', letterSpacing:'.18em' }}>Network Match Active</span>
+              <span style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em' }}>Network Match Active</span>
             </div>
           </div>
 
-          {/* Right visual */}
+          {/* Hero visual */}
           <div className="bc-hero-visual" style={{ position:'relative', height:'clamp(360px,46vw,560px)' }}>
-            <div className="bc-glass-deep bc-chromatic" style={{ position:'absolute', inset:0, borderRadius:'clamp(32px,4.5vw,60px)', overflow:'hidden' }}>
-              <img alt="Medical Visualization" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.9 }}
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWMYxQyxGQrtJlyvVak0G8r0JmRyXM_1uZw1yyQZas0TmV6YHxKAmW9rNIiZWw98ZSRkQ-GKLzjfm3Uh4imjDQewhPAXwMt3aRxssQQESFlGSk48H5Hc_NBUvRiC3D_uZFGzfmtW0BEQaaP8TBwvx330kCjEZ7DSFvbMXXHhuNlDGMhemF-YrbfcjgOsHnf2RBU3-R_nQYwOgjkc_YkJZTduDpN9nKUbKeUx-xkhfRnKE47aOBzmgIdC_pZ_5VVi-IpZw3VdHRh9U"/>
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top right,rgba(56,189,248,.15),transparent,rgba(251,113,133,.15))' }}/>
+            <div className="bc-glass-deep bc-card-hover" style={{ position:'absolute', inset:0, borderRadius:'clamp(32px,4.5vw,60px)', overflow:'hidden', border:'2px solid rgba(211,47,47,.12)' }}>
+              <BloodDropVisual />
             </div>
-            <div className="bc-glass bc-float" style={{ position:'absolute', top:'-8%', right:'-6%', width:'min(210px,23vw)', borderRadius:26, padding:4, zIndex:20, animationDelay:'-1.5s', overflow:'hidden' }}>
-              <img alt="Live Data" style={{ width:'100%', borderRadius:22, opacity:.9, mixBlendMode:'multiply', filter:'brightness(1.1)' }}
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZY_zuhD5wQhuXrTvYAuM_dsbFRABpenJK0xtyA4mC5EXbmAI_zUJqbzD76z5Jj30ocYwESmdJABZ-8oCkTZgw__nJWJnC9UXZ1xju8i_ywXeXe_3KoMX8z51cTVEDdqVfcDN5tjFVrHnkyHb2bxzdg2vFJ4pfuPMY2PWUED_c_r1076rumqmBnckFceCx8V1hzeHD-ilOTFQ5NCrFfm-TqXlMBM5TmMLQm1EF9RDw_KLwb3OKWiRKAnjaq_KvqsRYBXiZyiU89Xg"/>
-              <div style={{ position:'absolute', top:10, right:14, display:'flex', alignItems:'center', gap:5 }}>
-                <span style={{ width:6, height:6, background:'#22c55e', borderRadius:'50%', display:'inline-block', animation:'pulse 2s infinite' }}/>
-                <span style={{ fontSize:8, fontWeight:900, color:'rgba(35,101,129,.6)' }}>LIVE</span>
-              </div>
-            </div>
-            <div className="bc-glass bc-float" style={{ position:'absolute', bottom:'-7%', left:'-8%', width:'min(150px,15vw)', height:'min(150px,15vw)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex:20, animationDelay:'-3s' }}>
-              <img alt="3D Heart" style={{ width:'80%', height:'80%', objectFit:'contain', filter:'drop-shadow(0 8px 14px rgba(0,0,0,.14))' }}
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtpq2ExpTjlwR-OJSgKCMGq5fFr85gFbUQ4cTxaynuYxm9CUfDXBYKXFgNi2fUkmynY7UZRwV-Kl6YXbJhoSSo9wtQggnkK-uCxFIIy0YXcDX7TTPsuqjz8hXt2R2gYA1Kgq7sNR82Med5tvYizwkIBs34mI7hZcvR6H961JYv6zI2rS4NKzLLAqakhn4shrlR5UugKD4hGvBd2mPB6I18_LMcdp7iIQ3TjqiCYTftVnewYmn2nOelgyklFA8Quz34T79vQ-k1QIY"/>
-            </div>
-            <div className="bc-glass" style={{ position:'absolute', top:'24%', left:'5%', padding:'clamp(12px,1.6vw,22px)', borderRadius:30, width:'min(220px,24vw)', zIndex:20, border:'1px solid rgba(255,255,255,.9)' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                <div className="bc-hb" style={{ width:40, height:40, background:'rgba(239,68,68,.1)', borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <span className="mso" style={{ color:C.r, fontSize:22, fontVariationSettings:"'FILL' 1" }}>favorite</span>
+
+            {/* Top-right stat card */}
+            <div className="bc-stat-card-a bc-glass bc-card-hover" style={{ position:'absolute', top:'-4%', right:'-4%', zIndex:20, borderRadius:26, padding:'clamp(14px,1.8vw,22px)', minWidth:'min(200px,22vw)', border:'2px solid #405878' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{ width:44, height:44, background:'rgba(211,47,47,.1)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', animation:'bc-hb 1.5s ease-in-out infinite', flexShrink:0 }}>
+                  <svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#D32F2F' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
                 </div>
                 <div>
-                  <p style={{ fontSize:8, fontWeight:900, color:'rgba(35,101,129,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:0 }}>SYSTEM STATUS</p>
-                  <p style={{ fontSize:20, fontWeight:900, color:C.p, margin:0 }}>Stable</p>
+                  <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:0 }}>SYSTEM STATUS</p>
+                  <p style={{ fontSize:22, fontWeight:900, color:'#D32F2F', margin:0 }}>Stable</p>
                 </div>
               </div>
-              <svg style={{ width:'100%', height:38 }} viewBox="0 0 200 40">
-                <path className="bc-heartpath" d="M0,20 L40,20 L50,5 L60,35 L70,20 L100,20 L110,10 L120,30 L130,20 L200,20" fill="none" stroke={C.p} strokeLinecap="round" strokeWidth="3"/>
-              </svg>
-              <div style={{ marginTop:8, display:'flex', justifyContent:'space-between' }}>
-                <span style={{ fontSize:8, fontWeight:900, color:'rgba(35,101,129,.6)' }}>ACTIVE SYNC: 100%</span>
-                <span style={{ fontSize:8, fontWeight:900, color:C.s }}>72 BPM</span>
+              <div style={{ marginTop:12 }}>
+                <svg style={{ width:'100%', height:38 }} viewBox="0 0 200 40">
+                  <path className="bc-heartpath" d="M0,20 L40,20 L50,5 L60,35 L70,20 L100,20 L110,10 L120,30 L130,20 L200,20" fill="none" stroke="#D32F2F" strokeLinecap="round" strokeWidth="3"/>
+                </svg>
               </div>
+              <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:7 }}>
+                <span style={{ width:8, height:8, background:'#22c55e', borderRadius:'50%', animation:'bc-pulse 2s infinite' }}/>
+                <span style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.6)' }}>72 BPM · ACTIVE SYNC</span>
+              </div>
+            </div>
+
+            {/* Bottom-left circular card */}
+            <div className="bc-stat-card-b bc-glass" style={{ position:'absolute', bottom:'-4%', left:'-6%', width:'clamp(100px,12vw,150px)', height:'clamp(100px,12vw,150px)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex:20, border:'2px solid #405878' }}>
+              <svg viewBox="0 0 24 24" style={{ width:'44%', height:'44%', stroke:'#D32F2F', fill:'none', strokeWidth:2, animation:'bc-spin8 8s linear infinite' }}>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
             </div>
           </div>
         </section>
@@ -570,46 +745,48 @@ export default function Home() {
         <section style={{ display:'flex', flexDirection:'column', gap:'clamp(22px,3vw,44px)' }}>
           <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'flex-end', gap:18 }}>
             <div>
-              <h2 className="bc-fraunces" style={{ fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:C.p, lineHeight:1.1, margin:0 }}>Lebanon's Smart Network</h2>
-              <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(35,101,129,.7)', fontWeight:600, marginTop:8, marginBottom:0 }}>Real-time matching active across 4,200+ centers nationwide.</p>
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:'#D32F2F', lineHeight:1.1, margin:0 }}>Lebanon's Smart Network</h2>
+              <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, marginTop:8, marginBottom:0 }}>Real-time matching active across 4,200+ centers nationwide.</p>
             </div>
-            <div className="bc-glass" style={{ display:'flex', gap:'clamp(18px,2.5vw,38px)', padding:'clamp(12px,1.5vw,22px) clamp(20px,3vw,38px)', borderRadius:28, border:'1px solid white', position:'relative', overflow:'hidden' }}>
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(224,242,254,.3),transparent)', pointerEvents:'none' }}/>
-              {[{val:'24k+',label:'Active Heroes',color:C.p},{val:'142',label:'Urgent Calls',color:C.r}].map(({val,label,color},i)=>(
+            <div className="bc-glass bc-card-hover" style={{ display:'flex', gap:'clamp(18px,2.5vw,38px)', padding:'clamp(12px,1.5vw,22px) clamp(20px,3vw,38px)', borderRadius:28, border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden' }}>
+              <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(255,235,238,.4),transparent)', pointerEvents:'none' }}/>
+              {[{val:'24k+',label:'Active Heroes'},{val:'142',label:'Urgent Calls'}].map(({val,label},i) => (
                 <div key={label} style={{ textAlign:'center', position:'relative', zIndex:1 }}>
-                  {i===1 && <div style={{ position:'absolute', left:-10, top:'50%', transform:'translateY(-50%)', width:1, height:36, background:'rgba(35,101,129,.1)' }}/>}
-                  <p style={{ fontSize:'clamp(24px,3vw,38px)', fontWeight:900, color, margin:0 }}>{val}</p>
-                  <p style={{ fontSize:8, fontWeight:900, color:'rgba(35,101,129,.4)', textTransform:'uppercase', letterSpacing:'.18em', marginTop:4, marginBottom:0 }}>{label}</p>
+                  {i === 1 && <div style={{ position:'absolute', left:-10, top:'50%', transform:'translateY(-50%)', width:2, height:40, background:'linear-gradient(180deg,transparent,#D32F2F,transparent)' }}/>}
+                  <p style={{ fontSize:'clamp(24px,3vw,38px)', fontWeight:900, color:'#D32F2F', margin:0, textShadow:'0 2px 12px rgba(211,47,47,.2)' }}>{val}</p>
+                  <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.18em', marginTop:4, marginBottom:0 }}>{label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── Map + sidebar ── */}
           <div className="bc-network-grid">
-
-            {/* Map — fills the left column entirely, no inner overlaps */}
             <LebanonMap />
 
             {/* Sidebar */}
             <div style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,1.6vw,18px)' }}>
-              <div className="bc-glass-deep" style={{ flex:1, borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', border:'1px solid white', position:'relative', overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-                <div style={{ position:'absolute', right:-40, top:-40, width:100, height:100, background:'rgba(253,242,248,.5)', borderRadius:'50%', filter:'blur(32px)', pointerEvents:'none' }}/>
-                <h3 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'clamp(15px,1.8vw,21px)', fontWeight:900, color:C.p, marginBottom:12, marginTop:0 }}>Medical Ecosystem</h3>
-                <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(35,101,129,.7)', fontWeight:600, lineHeight:1.6, marginBottom:18, marginTop:0 }}>Unified tracking for donors, hospitals, and emergency units.</p>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:11 }}>
-                  {[{icon:'local_hospital',c:C.p},{icon:'verified',c:C.s},{icon:'emergency_share',c:C.r}].map(({icon,c})=>(
-                    <div key={icon} className="bc-glass bc-btn" style={{ width:44, height:44, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid white', cursor:'pointer' }}>
-                      <span className="mso" style={{ color:c, fontSize:20, fontVariationSettings:"'FILL' 1" }}>{icon}</span>
-                    </div>
+              <div className="bc-glass-deep bc-card-hover" style={{ flex:1, borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+                <div style={{ position:'absolute', right:-40, top:-40, width:120, height:120, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
+                <h3 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'clamp(15px,1.8vw,21px)', fontWeight:900, color:'#D32F2F', marginBottom:10, marginTop:0 }}>Medical Ecosystem</h3>
+                <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.6, marginBottom:16, marginTop:0 }}>Unified tracking for donors, hospitals, and emergency units.</p>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:12 }}>
+                  {[{svg:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z',c:'#D32F2F'},
+                    {svg:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',c:'#405878'},
+                    {svg:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',c:'#D32F2F'},
+                  ].map(({svg,c},i) => (
+                    <button key={i} className="bc-glass bc-btn" style={{ width:48, height:48, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.1)', cursor:'pointer' }}>
+                      <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:c }}><path d={svg}/></svg>
+                    </button>
                   ))}
                 </div>
               </div>
-              <div style={{ background:C.p, color:'white', borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', boxShadow:`0 14px 40px rgba(35,101,129,.28)`, display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
-                <div style={{ position:'absolute', right:-22, bottom:-22, width:100, height:100, background:'rgba(255,255,255,.1)', borderRadius:'50%', filter:'blur(18px)', pointerEvents:'none' }}/>
+
+              <div style={{ background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', boxShadow:'0 16px 48px rgba(211,47,47,.35)', display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
+                <div style={{ position:'absolute', right:-22, bottom:-22, width:120, height:120, background:'rgba(255,255,255,.15)', borderRadius:'50%', filter:'blur(24px)', pointerEvents:'none' }}/>
+                <div style={{ position:'absolute', left:20, top:20, width:60, height:60, background:'rgba(255,255,255,.1)', borderRadius:'50%', filter:'blur(20px)', pointerEvents:'none' }}/>
                 <div>
-                  <p style={{ fontSize:'clamp(28px,3.8vw,44px)', fontWeight:900, margin:0 }}>8.4<span style={{ fontSize:'clamp(12px,1.4vw,17px)', fontWeight:400, opacity:.6, marginLeft:4 }}>min</span></p>
-                  <p style={{ fontWeight:900, fontSize:8, letterSpacing:'.28em', textTransform:'uppercase', opacity:.6, marginTop:8, marginBottom:0 }}>Avg Response Time</p>
+                  <p style={{ fontSize:'clamp(28px,3.8vw,44px)', fontWeight:900, margin:0 }}>8.4<span style={{ fontSize:'clamp(12px,1.4vw,17px)', fontWeight:400, opacity:.7, marginLeft:4 }}>min</span></p>
+                  <p style={{ fontWeight:900, fontSize:8, letterSpacing:'.28em', textTransform:'uppercase', opacity:.7, marginTop:8, marginBottom:0 }}>Avg Response Time</p>
                 </div>
                 <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, marginTop:18, lineHeight:1.6, opacity:.9, marginBottom:0 }}>Our decentralized intelligence optimizes matching speed daily.</p>
               </div>
@@ -618,20 +795,21 @@ export default function Home() {
         </section>
 
         {/* ── COMPATIBILITY MATRIX ── */}
-        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(24px,4vw,56px)', position:'relative', overflow:'hidden', border:'1px solid white' }}>
-          <div style={{ position:'absolute', right:'-18%', top:'-18%', width:'55%', height:'55%', background:'rgba(224,242,254,.4)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
-          <div style={{ position:'absolute', left:'-18%', bottom:'-18%', width:'55%', height:'55%', background:'rgba(255,241,242,.4)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
+        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(24px,4vw,56px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.1)' }}>
+          <div style={{ position:'absolute', right:'-18%', top:'-18%', width:'55%', height:'55%', background:'rgba(64,88,120,.18)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', left:'-18%', bottom:'-18%', width:'55%', height:'55%', background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
 
-          <div style={{ textAlign:'center', maxWidth:580, margin:'0 auto', marginBottom:'clamp(28px,4vw,56px)', position:'relative', zIndex:1 }}>
-            <h2 className="bc-fraunces" style={{ fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:C.p, marginBottom:12, marginTop:0 }}>The Compatibility Matrix</h2>
-            <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(35,101,129,.7)', fontWeight:600, margin:0 }}>Click any blood type to unlock donor and recipient pathways with visual precision.</p>
+          <div style={{ textAlign:'center', maxWidth:580, margin:'0 auto', marginBottom:'clamp(28px,4vw,52px)', position:'relative', zIndex:1 }}>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:'#D32F2F', marginBottom:12, marginTop:0 }}>The Compatibility Matrix</h2>
+            <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:0 }}>Click any blood type to unlock donor and recipient pathways with visual precision.</p>
           </div>
 
+          {/* Type selector */}
           <div style={{ display:'flex', justifyContent:'center', gap:'clamp(7px,.9vw,12px)', marginBottom:'clamp(24px,3.5vw,44px)', flexWrap:'wrap', position:'relative', zIndex:1 }}>
             {ALL_TYPES.map(t => (
               <button key={t} onClick={() => selectType(t)}
-                className={`bc-btn bc-glass${t === bloodType ? ' selected-type' : ''}`}
-                style={{ padding:'clamp(8px,1vw,12px) clamp(14px,1.8vw,22px)', borderRadius:'clamp(10px,1.4vw,16px)', fontWeight:900, fontSize:'clamp(13px,1.4vw,17px)', color: t === bloodType ? C.p : 'rgba(35,101,129,.45)', border: t === bloodType ? `2px solid rgba(35,101,129,.6)` : '1.5px solid rgba(255,255,255,.55)', fontFamily:"'Lexend',sans-serif", background: t === bloodType ? 'rgba(35,101,129,.1)' : undefined, transform: t === bloodType ? 'scale(1.1)' : undefined, boxShadow: t === bloodType ? `0 8px 22px rgba(35,101,129,.18)` : undefined, transition:'all .2s cubic-bezier(.34,1.56,.64,1)' }}>
+                className={`bc-btn bc-glass bc-chip${t === bloodType ? ' active' : ''}`}
+                style={{ padding:'clamp(8px,1vw,12px) clamp(14px,1.8vw,22px)', borderRadius:'clamp(10px,1.4vw,16px)', fontSize:'clamp(13px,1.4vw,17px)', color: t === bloodType ? 'white' : 'rgba(211,47,47,.45)' }}>
                 {t}
               </button>
             ))}
@@ -641,143 +819,151 @@ export default function Home() {
 
             {/* Circle visualiser */}
             <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:'clamp(40px,6vw,80px)', paddingBottom:'clamp(30px,5vw,60px)' }}>
-              <div className="bc-glass" style={{ width:'min(340px,34vw)', height:'min(340px,34vw)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'clamp(6px,1.2vw,14px) solid rgba(255,255,255,.4)', position:'relative', boxShadow:'0 16px 44px rgba(0,0,0,.07)' }}>
-                <div className="bc-spin8"  style={{ position:'absolute', inset:0, borderRadius:'50%', border:'clamp(3px,.6vw,8px) solid', borderColor:`${C.r} transparent transparent transparent`, opacity:.22 }}/>
-                <div className="bc-spin30" style={{ position:'absolute', inset:'4%', borderRadius:'50%', border:'1.5px dashed rgba(35,101,129,.15)' }}/>
+              <div className="bc-glass" style={{ width:'min(340px,34vw)', height:'min(340px,34vw)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'clamp(6px,1.2vw,14px) solid rgba(211,47,47,.15)', position:'relative', boxShadow:'0 20px 56px rgba(211,47,47,.1)' }}>
+                {/* Spinning accents */}
+                <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'clamp(3px,.6vw,8px) solid', borderColor:'#D32F2F transparent transparent transparent', opacity:.3, animation:'bc-spin8 8s linear infinite' }}/>
+                <div style={{ position:'absolute', inset:'4%', borderRadius:'50%', border:'2px dashed rgba(211,47,47,.15)', animation:'bc-spin30r 20s linear infinite' }}/>
+
+                {/* Center */}
                 <div key={animKey} className="bc-pop" style={{ textAlign:'center', padding:'0 16px' }}>
-                  <span style={{ fontSize:'clamp(48px,7.5vw,88px)', fontWeight:900, color:C.p, display:'block', lineHeight:1 }}>{bloodType}</span>
+                  <span style={{ fontSize:'clamp(48px,7.5vw,88px)', fontWeight:900, color:'#D32F2F', display:'block', lineHeight:1, textShadow:'0 4px 24px rgba(211,47,47,.2)', fontFamily:"'Fraunces',serif" }}>{bloodType}</span>
                   <div style={{ marginTop:8, display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                    <span style={{ padding:'4px 14px', borderRadius:9999, background:'rgba(29,108,56,.1)', fontSize:8, fontWeight:900, color:C.s, letterSpacing:'.18em', border:'1px solid rgba(29,108,56,.2)' }}>MATCH ACTIVE</span>
-                    <span style={{ fontSize:8, fontWeight:900, color:'rgba(35,101,129,.5)', textTransform:'uppercase', letterSpacing:'.22em' }}>GENETIC REACH: {data.reach}</span>
+                    <span style={{ padding:'5px 16px', borderRadius:9999, background:'rgba(14,165,233,.15)', fontSize:8, fontWeight:900, color:'#405878', letterSpacing:'.18em', border:'1px solid rgba(64,88,120,.3)' }}>MATCH ACTIVE</span>
+                    <span style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.22em' }}>GENETIC REACH: {data.reach}</span>
                   </div>
                 </div>
               </div>
 
-              {[
-                { type:'O-',  icon:'sync_alt',  iconC:C.s,  pos:{ top:0, left:'50%', transform:'translate(-50%,-10%)' } },
-                { type:'AB+', icon:'lock',       iconC:'rgba(35,101,129,.4)', pos:{ top:'18%', right:0, transform:'translateX(30%)' } },
-                { type:'B-',  icon:'emergency',  iconC:C.r,  pos:{ bottom:0, left:'22%', transform:'translateY(10%)' } },
-              ].map(({type:nt,icon,iconC,pos})=>{
-                const isSelected = nt === bloodType
-                const isRec = data.canReceive.includes(nt)
-                const isDon = data.canDonateTo.includes(nt)
-                const border = isSelected ? `2px solid ${C.p}` : isRec ? `2px solid rgba(29,108,56,.5)` : isDon ? `2px solid rgba(184,29,39,.4)` : '1.5px solid white'
-                const bg = isSelected ? 'rgba(35,101,129,.12)' : isRec ? 'rgba(29,108,56,.06)' : isDon ? 'rgba(184,29,39,.06)' : undefined
-                return (
-                  <div key={nt} onClick={() => selectType(nt)} className="bc-glass bc-float bc-btn" style={{ position:'absolute', ...pos, width:'min(76px,7.8vw)', height:'min(76px,7.8vw)', minWidth:58, minHeight:58, borderRadius:'clamp(12px,1.8vw,20px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', border, background:bg, cursor:'pointer', transition:'all .22s' }}>
-                    <span style={{ fontSize:'clamp(12px,1.4vw,16px)', fontWeight:900, color:C.p }}>{nt}</span>
-                    <span className="mso" style={{ color:iconC, fontSize:11 }}>{icon}</span>
-                  </div>
-                )
-              })}
+              {/* Floating badges */}
+              {floatBadges.map(({ type: nt, style }) => (
+                <div key={nt} onClick={() => selectType(nt)} className="bc-glass bc-card-hover"
+                  style={{ position:'absolute', ...style, width:'min(76px,7.8vw)', height:'min(76px,7.8vw)', minWidth:60, minHeight:60, borderRadius:'clamp(12px,1.8vw,20px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', border: nt === bloodType ? '2px solid rgba(211,47,47,.5)' : '2px solid rgba(211,47,47,.15)', background: nt === bloodType ? 'rgba(255,235,238,.5)' : undefined, transition:'all .22s', zIndex:20 }}>
+                  <span style={{ fontSize:'clamp(12px,1.4vw,16px)', fontWeight:900, color:'#D32F2F' }}>{nt}</span>
+                  <svg viewBox="0 0 24 24" style={{ width:12, height:12, fill:'#405878', marginTop:2 }}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+              ))}
             </div>
 
-            {/* Compatibility details */}
+            {/* Details column */}
             <div style={{ display:'flex', flexDirection:'column', gap:'clamp(18px,2.2vw,30px)' }}>
 
+              {/* Receive */}
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div className="bc-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid white', flexShrink:0 }}>
-                    <span className="mso" style={{ color:C.s, fontSize:18 }}>download</span>
+                  <div className="bc-glass" style={{ width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(64,88,120,.2)', flexShrink:0 }}>
+                    <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'none', stroke:'#405878', strokeWidth:2.5 }}><path d="M8 17l4 4 4-4m-4-5v9M3 5h18M3 5l2-2m-2 2l2 2m13-2l-2-2m2 2l-2 2"/></svg>
                   </div>
-                  <h4 style={{ fontSize:9, fontWeight:900, color:C.p, letterSpacing:'.32em', textTransform:'uppercase', margin:0 }}>You can receive from</h4>
+                  <h4 style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.32em', textTransform:'uppercase', margin:0 }}>You can receive from</h4>
                 </div>
                 <div className="bc-type-grid">
-                  {data.canReceive.map((t,i) => (
-                    <div key={t+i} onClick={() => selectType(t)} className="bc-glass bc-type-chip active-receive"
-                      style={{ aspectRatio:'1', borderRadius:'clamp(10px,1.3vw,14px)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'clamp(12px,1.4vw,17px)', position:'relative', cursor:'pointer' }}>
-                      {t === bloodType && <span style={{ position:'absolute', top:-5, right:-5, width:16, height:16, background:C.s, color:'white', fontSize:7, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900 }}>✓</span>}
+                  {data.canReceive.map((t, i) => (
+                    <div key={t + i} onClick={() => selectType(t)} className="bc-cell-receive">
+                      {t === bloodType && <span className="bc-badge" style={{ background:'#405878' }}>✓</span>}
                       {t}
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* Donate */}
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div className="bc-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid white', flexShrink:0 }}>
-                    <span className="mso" style={{ color:C.r, fontSize:18 }}>upload</span>
+                  <div className="bc-glass" style={{ width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', flexShrink:0 }}>
+                    <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'none', stroke:'#D32F2F', strokeWidth:2.5 }}><path d="M16 7l-4-4-4 4m4-4v9M3 19h18M3 19l2 2m-2-2l2-2m13 2l-2 2m2-2l-2-2"/></svg>
                   </div>
-                  <h4 style={{ fontSize:9, fontWeight:900, color:C.r, letterSpacing:'.32em', textTransform:'uppercase', margin:0 }}>You can donate to</h4>
+                  <h4 style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.32em', textTransform:'uppercase', margin:0 }}>You can donate to</h4>
                 </div>
                 <div className="bc-type-grid">
-                  {data.canDonateTo.map((t,i) => (
-                    <div key={t+i} onClick={() => selectType(t)} className="bc-glass bc-type-chip active-donate"
-                      style={{ aspectRatio:'1', borderRadius:'clamp(10px,1.3vw,14px)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'clamp(12px,1.4vw,17px)', position:'relative', cursor:'pointer' }}>
-                      {t === bloodType && <span style={{ position:'absolute', top:-5, right:-5, width:16, height:16, background:C.r, color:'white', fontSize:7, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900 }}>!</span>}
+                  {data.canDonateTo.map((t, i) => (
+                    <div key={t + i} onClick={() => selectType(t)} className="bc-cell-donate">
+                      {t === bloodType && <span className="bc-badge" style={{ background:'#D32F2F' }}>!</span>}
                       {t}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div style={{ paddingTop:'clamp(12px,1.5vw,22px)', borderTop:'1px solid rgba(255,255,255,.3)' }}>
-                <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:14, padding:'clamp(10px,1.5vw,18px)', borderRadius:16, border:'1px solid white', background:'rgba(255,255,255,.1)' }}>
-                  <span className="mso" style={{ fontSize:28, color:'rgba(35,101,129,.5)', flexShrink:0 }}>help_center</span>
-                  <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, lineHeight:1.6, margin:0, color:C.p }}>
-                    <span style={{ fontWeight:900 }}>Did you know?</span> O- is the universal hero — it can be given to any blood type during critical emergencies.
-                  </p>
-                </div>
+              {/* Info box */}
+              <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:14, padding:'clamp(10px,1.5vw,18px)', borderRadius:18, border:'2px solid rgba(211,47,47,.1)', background:'rgba(255,235,238,.3)' }}>
+                <svg viewBox="0 0 24 24" style={{ width:32, height:32, fill:'rgba(211,47,47,.45)', flexShrink:0 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, lineHeight:1.6, margin:0, color:'#D32F2F' }}>
+                  <span style={{ fontWeight:900 }}>Did you know?</span> O- is the universal hero — it can be given to any blood type during critical emergencies.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── FINAL CTA ── */}
+        {/* ── CTA ── */}
         <section>
-          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(36px,5.5vw,80px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'1px solid white', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', left:-40, top:0, width:150, height:150, background:'rgba(254,252,232,.6)', borderRadius:'50%', filter:'blur(40px)', opacity:.5, pointerEvents:'none' }}/>
-            <h2 className="bc-fraunces" style={{ fontSize:'clamp(26px,5.5vw,62px)', fontWeight:900, color:C.p, position:'relative', zIndex:1, lineHeight:1.1, letterSpacing:'-.04em', margin:0 }}>Ready to save lives?</h2>
-            <p style={{ fontSize:'clamp(12px,1.4vw,16px)', color:'rgba(35,101,129,.7)', fontWeight:600, margin:'clamp(12px,1.8vw,24px) auto 0', maxWidth:520, position:'relative', zIndex:1, lineHeight:1.65 }}>
+          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(36px,5.5vw,80px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', left:-40, top:0, width:180, height:180, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(50px)', opacity:.6, pointerEvents:'none' }}/>
+            <div style={{ position:'absolute', right:-40, bottom:-20, width:150, height:150, background:'rgba(64,88,120,.3)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(26px,5.5vw,62px)', fontWeight:900, color:'#D32F2F', position:'relative', zIndex:1, lineHeight:1.1, letterSpacing:'-.04em', margin:0 }}>Ready to save lives?</h2>
+            <p style={{ fontSize:'clamp(12px,1.4vw,16px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:'clamp(12px,1.8vw,24px) auto 0', maxWidth:520, position:'relative', zIndex:1, lineHeight:1.65 }}>
               Join Lebanon's most innovative network of heroes. Your contribution is vital, and with our intelligent logistics, your impact is immediate.
             </p>
+            <div style={{ marginTop:'clamp(20px,2.5vw,36px)', position:'relative', zIndex:1 }}>
+              <button className="bc-btn bc-btn-primary" onClick={() => go('/donor/register')}
+                style={{ padding:'clamp(14px,1.8vw,20px) clamp(28px,4vw,52px)', borderRadius:28, fontSize:'clamp(14px,1.4vw,18px)', display:'inline-flex', alignItems:'center', gap:10 }}>
+                Become a Donor Today
+                <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:'white' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+              </button>
+            </div>
           </div>
         </section>
       </main>
 
-      {/* ══ FOOTER ═══════════════════════════════════════════ */}
-      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'1px solid rgba(255,255,255,.6)', background:'rgba(255,255,255,.2)' }}>
+      {/* ══ FOOTER ════════════════════════════════════════════ */}
+      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
         <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
             <div>
-              <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:C.p, fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
-              <p style={{ color:'rgba(35,101,129,.7)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
+              <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
+              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
                 "Pioneering the future of hematological logistics through empathy and code."
               </p>
             </div>
             <div>
-              <h4 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:900, color:'rgba(35,101,129,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Navigation</h4>
+              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Navigation</h4>
               <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:11 }}>
-                {[['How It Works','/how-it-works'],['Impact Stories','/impact'],['Emergency Portal','/emergency'],['Blood Status','/inventory']].map(([l,p])=>(
-                  <li key={l}><button onClick={() => go(p)} style={{ color:C.p, fontWeight:700, background:'none', border:'none', cursor:'pointer', padding:0, fontSize:'clamp(11px,1vw,13px)', fontFamily:"'Lexend',sans-serif" }}>{l}</button></li>
+                {[['How It Works','/how-it-works'],['Impact Stories','/impact'],['Emergency Portal','/emergency'],['Blood Status','/inventory']].map(([l,p]) => (
+                  <li key={l}><button onClick={() => go(p)} style={{ color:'#D32F2F', fontWeight:700, background:'none', border:'none', cursor:'pointer', padding:0, fontSize:'clamp(11px,1vw,13px)', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>{l}</button></li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:900, color:'rgba(35,101,129,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Ecosystem</h4>
+              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Ecosystem</h4>
               <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:11 }}>
-                {['Medical Standards','Logistics API','Partner Hospitals','Advisory Board'].map(l=>(
-                  <li key={l}><a href="#" style={{ color:C.p, fontWeight:700, textDecoration:'none', fontSize:'clamp(11px,1vw,13px)' }}>{l}</a></li>
+                {['Medical Standards','Logistics API','Partner Hospitals','Advisory Board'].map(l => (
+                  <li key={l}><a href="#" style={{ color:'#D32F2F', fontWeight:700, textDecoration:'none', fontSize:'clamp(11px,1vw,13px)' }}>{l}</a></li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:900, color:'rgba(35,101,129,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Updates</h4>
-              <p style={{ color:'rgba(35,101,129,.7)', fontWeight:600, lineHeight:1.6, marginTop:0, marginBottom:12, fontSize:'clamp(10px,1vw,12px)' }}>Stay connected to live alerts for blood shortages in Lebanon.</p>
+              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Updates</h4>
+              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.6, marginTop:0, marginBottom:12, fontSize:'clamp(10px,1vw,12px)' }}>Stay connected to live alerts for blood shortages in Lebanon.</p>
               <div style={{ display:'flex', gap:8 }}>
-                <input type="email" placeholder="Email Address" style={{ background:'rgba(255,255,255,.4)', border:'1px solid rgba(255,255,255,.6)', borderRadius:11, padding:'9px 14px', width:'100%', fontSize:11, fontWeight:700, color:C.p, outline:'none', fontFamily:"'Lexend',sans-serif" }}/>
-                <button className="bc-btn" style={{ background:C.p, color:'white', padding:'9px 12px', borderRadius:11, border:'none', cursor:'pointer', flexShrink:0 }}>
-                  <span className="mso" style={{ fontSize:17 }}>send</span>
+                <input type="email" placeholder="Email Address"
+                  style={{ background:'rgba(255,255,255,.6)', border:'2px solid rgba(211,47,47,.15)', borderRadius:12, padding:'10px 14px', width:'100%', fontSize:11, fontWeight:700, color:'#D32F2F', outline:'none', fontFamily:"'Plus Jakarta Sans',sans-serif" }}/>
+                <button className="bc-btn bc-btn-primary" style={{ padding:'10px 14px', borderRadius:12, flexShrink:0 }}>
+                  <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'white' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                 </button>
               </div>
             </div>
           </div>
-          <div style={{ paddingTop:22, borderTop:'1px solid rgba(255,255,255,.3)', display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center', gap:14 }}>
-            <p style={{ color:'rgba(35,101,129,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>© 2024 BloodConnect · Dana Ghannam &amp; Lynn Anani · Lebanon.</p>
-            <div style={{ display:'flex', gap:11 }}>
-              {['public','share'].map(icon=>(
-                <a key={icon} href="#" className="bc-glass" style={{ width:38, height:38, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', color:C.p, border:'1px solid white', textDecoration:'none' }}>
-                  <span className="mso" style={{ fontSize:17 }}>{icon}</span>
+
+          <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)', display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center', gap:14 }}>
+            <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
+              © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
+            </p>
+            <div style={{ display:'flex', gap:12 }}>
+              {[
+                'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+                'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z',
+              ].map((d, i) => (
+                <a key={i} href="#" className="bc-glass bc-btn" style={{ width:42, height:42, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', color:'#D32F2F', border:'2px solid rgba(211,47,47,.1)', textDecoration:'none' }}>
+                  <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#D32F2F' }}><path d={d}/></svg>
                 </a>
               ))}
             </div>
@@ -785,17 +971,38 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ══ SOS FAB ══════════════════════════════════════════ */}
-      <button onClick={() => go('/emergency')} className="bc-glow"
-        style={{ position:'fixed', bottom:'clamp(18px,2.2vw,36px)', right:'clamp(18px,2.2vw,36px)', width:'clamp(52px,5vw,72px)', height:'clamp(52px,5vw,72px)', background:C.r, color:'white', borderRadius:'50%', boxShadow:'0 12px 36px rgba(184,29,39,.42)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:60, border:'4px solid rgba(255,255,255,.5)', outline:'none', transition:'transform .2s' }}
-        onMouseEnter={e => { e.currentTarget.style.transform='scale(1.12)'; const lbl=e.currentTarget.querySelector('.sos-lbl'); if(lbl){lbl.style.opacity='1';lbl.style.transform='translateX(0)';} }}
-        onMouseLeave={e => { e.currentTarget.style.transform='scale(1)';   const lbl=e.currentTarget.querySelector('.sos-lbl'); if(lbl){lbl.style.opacity='0';lbl.style.transform='translateX(24px)';} }}>
-        <span className="mso" style={{ fontSize:'clamp(22px,3vw,36px)', animation:'pulse 2s infinite', fontVariationSettings:"'FILL' 1" }}>emergency_record</span>
-        <div className="sos-lbl" style={{ position:'absolute', right:'110%', background:'rgba(255,255,255,.96)', backdropFilter:'blur(16px)', color:C.r, padding:'9px 18px', borderRadius:14, fontSize:9, fontWeight:900, letterSpacing:'.2em', whiteSpace:'nowrap', opacity:0, transition:'all .28s', transform:'translateX(24px)', boxShadow:'0 10px 28px rgba(0,0,0,.1)', border:`1px solid rgba(184,29,39,.1)`, fontFamily:"'Lexend',sans-serif" }}>
-          SOS EMERGENCY REQUEST
-        </div>
-      </button>
+      {/* ══ SOS FAB ═══════════════════════════════════════════ */}
+      <div className="bc-fab-wrap">
+        <div className="bc-fab-ring"  style={{ opacity:.45 }}/>
+        <div className="bc-fab-ring2" style={{ opacity:.25 }}/>
 
+        <button className="bc-fab" onClick={() => go('/emergency')}
+          onMouseEnter={() => setSosHover(true)}
+          onMouseLeave={() => setSosHover(false)}>
+          🚨
+
+          {/* Expanded hover menu */}
+          {sosHover && (
+            <div className="bc-glass" style={{ position:'absolute', bottom:'115%', right:0, minWidth:220, borderRadius:22, padding:'14px 12px', border:'2px solid rgba(211,47,47,.12)', boxShadow:'0 20px 48px rgba(211,47,47,.18)', zIndex:70 }}>
+              <p style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px 4px' }}>EMERGENCY ACTIONS</p>
+              {[
+                { emoji:'📞', label:'Call Hotline',    path:'/emergency/call'   },
+                { emoji:'💬', label:'Live Chat',       path:'/emergency/chat'   },
+                { emoji:'📍', label:'Nearest Center',  path:'/emergency/locate' },
+              ].map((a, i) => (
+                <button key={i} onClick={(e) => { e.stopPropagation(); go(a.path) }}
+                  className="bc-btn"
+                  style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'10px 12px', borderRadius:14, background:'none', border:'none', cursor:'pointer', textAlign:'left', transition:'background .18s', fontFamily:"'Plus Jakarta Sans',sans-serif", animationDelay:`${i * .1}s` }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,235,238,.5)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                  <span style={{ fontSize:20 }}>{a.emoji}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:'#D32F2F' }}>{a.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </button>
+      </div>
     </div>
   )
 }
