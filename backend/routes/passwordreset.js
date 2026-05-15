@@ -22,11 +22,9 @@ router.post('/forgot', (req, res) => {
           if (err) return res.status(500).json({ message: err.message });
 
           const resetLink = `${API}/reset-password/${token}`;
-          const timestamp = new Date().toISOString();
 
           console.log(`📧 Sending password reset email to: ${email}`);
           console.log(`🔗 Reset link: ${resetLink}`);
-          console.log(`⏰ Timestamp: ${timestamp}`);
 
           try {
             const result = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -150,7 +148,7 @@ router.post('/forgot', (req, res) => {
             });
 
             const data = await result.json();
-            console.log('✅ Email sent successfully:', JSON.stringify(data));
+            console.log('✅ Email sent successfully');
             res.json({ message: 'Password reset link sent to your email.' });
           } catch (err) {
             console.error('❌ Email send error:', err.message);
