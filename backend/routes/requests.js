@@ -55,7 +55,7 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, ur
               htmlContent: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background-color: ${urgencyColor}; padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
+                    <h1 style="color: white; margin: 0;">BloodConnect</h1>
                   </div>
                   <div style="padding: 30px; background: #fff;">
                     <h2 style="color: ${urgencyColor};">${urgencyLabel} Blood Request</h2>

@@ -533,9 +533,6 @@ router.post('/forgot', (req, res) => {
 
         <!-- SECURITY NOTICE -->
         <div class="section">
-          <div class="alert">
-            <span class="alert-icon">🔒</span>
-            <div class="alert-text">
               <h3>Didn't Request This?</h3>
               <p>If you did not initiate this password reset, ignore this email or contact our support team immediately. Your security is our top priority.</p>
             </div>
