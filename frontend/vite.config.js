@@ -5,13 +5,16 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      external: ['react-leaflet', 'leaflet'],
+      external: [],
       output: {
-        globals: {
-          'react-leaflet': 'ReactLeaflet',
-          'leaflet': 'L'
-        }
+        globals: {}
       }
+    },
+    commonjsOptions: {
+      transformMixedEsModules: true
     }
+  },
+  ssr: {
+    noExternal: ['leaflet', 'react-leaflet']
   }
 })
