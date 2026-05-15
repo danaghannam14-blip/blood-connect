@@ -21,7 +21,6 @@ const STYLES = `
   @keyframes bc-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes bc-heartbeat-path { to { stroke-dashoffset:0; } }
   @keyframes bc-drop-bob  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
-  @keyframes bc-pulse-ring { 0% { r:0; opacity:1; } 100% { r:80; opacity:0; } }
   @keyframes bc-orbit { 0% { transform:rotate(0deg) translateX(60px) rotate(0deg); } 100% { transform:rotate(360deg) translateX(60px) rotate(-360deg); } }
 
   .bc-login-root {
@@ -185,14 +184,7 @@ function ParticleField() {
 function BloodDropMini() {
   return (
     <div style={{ position:'relative', width:140, height:160, display:'flex', alignItems:'center', justifyContent:'center' }}>
-      {/* Orbiting pulse rings */}
       <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}>
-        <defs>
-          <filter id="bcDropShadow">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
-          </filter>
-        </defs>
-        {/* Animated pulse rings */}
         <circle cx="50%" cy="50%" r="20" fill="none" stroke="rgba(211,47,47,.25)" strokeWidth="2" opacity="0.8">
           <animate attributeName="r" values="20;55;20" dur="3s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values="1;0;1" dur="3s" repeatCount="indefinite"/>
@@ -203,7 +195,6 @@ function BloodDropMini() {
         </circle>
       </svg>
 
-      {/* Main blood drop */}
       <div style={{ position:'relative', zIndex:2, animation:'bc-drop-bob 3s ease-in-out infinite' }}>
         <svg viewBox="0 0 100 130" style={{ width:80, height:100, filter:'drop-shadow(0 12px 28px rgba(211,47,47,.4))' }}>
           <defs>
@@ -221,52 +212,14 @@ function BloodDropMini() {
               <stop offset="100%" stopColor="white" stopOpacity="0"/>
             </radialGradient>
           </defs>
-          
-          {/* Main drop shape */}
           <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#bcBloodGradLogin)"/>
-          
-          {/* Highlight shine */}
           <ellipse cx="32" cy="65" rx="18" ry="25" fill="url(#bcHighlightLogin)"/>
-          
-          {/* Inner glow */}
           <ellipse cx="50" cy="50" rx="28" ry="35" fill="url(#bcDropGlow)"/>
-          
-          {/* Subtle outline */}
           <path d="M50 15 C50 15 85 65 85 85 C85 105 70 120 50 120 C30 120 15 105 15 85 C15 65 50 15 50 15 Z" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="1.5"/>
         </svg>
       </div>
 
-      {/* Floating particle orbs around drop */}
-      {[0, 120, 240].map((angle, i) => (
-        <div
-          key={i}
-          style={{
-            position:'absolute',
-            width:12,
-            height:12,
-            borderRadius:'50%',
-            background:'linear-gradient(135deg,#ff6b6b,#D32F2F)',
-            animation:`bc-orbit 6s linear infinite`,
-            animationDelay:`${i * 2}s`,
-            transformOrigin:'0 0',
-            top:'50%',
-            left:'50%',
-            marginTop:-6,
-            marginLeft:-6,
-          }}
-        />
-      ))}
-
-      {/* Core heartbeat glow */}
-      <div style={{
-        position:'absolute',
-        inset:'30%',
-        borderRadius:'50%',
-        background:'radial-gradient(circle, rgba(211,47,47,.3), transparent)',
-        filter:'blur(20px)',
-        animation:'bc-hb 2s ease-in-out infinite',
-        zIndex:1,
-      }}/>
+      <div style={{ position:'absolute', inset:'30%', borderRadius:'50%', background:'radial-gradient(circle, rgba(211,47,47,.3), transparent)', filter:'blur(20px)', animation:'bc-hb 2s ease-in-out infinite', zIndex:1 }}/>
     </div>
   )
 }
@@ -279,26 +232,11 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay, duration: 0.5, type: 'spring' }}
       className="bc-glass bc-card-hover"
-      style={{
-        borderRadius:'clamp(18px,2.5vw,28px)',
-        padding:'clamp(16px,2vw,24px)',
-        border:'2px solid rgba(211,47,47,.1)',
-        position:'relative',
-        overflow:'hidden',
-      }}
+      style={{ borderRadius:'clamp(18px,2.5vw,28px)', padding:'clamp(16px,2vw,24px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
     >
       <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>
       <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative', zIndex:1 }}>
-        <div style={{
-          width:48,
-          height:48,
-          background:`rgba(${color === '#D32F2F' ? '211,47,47' : '64,88,120'},.1)`,
-          borderRadius:14,
-          display:'flex',
-          alignItems:'center',
-          justifyContent:'center',
-          flexShrink:0,
-        }}>
+        <div style={{ width:48, height:48, background:`rgba(${color === '#D32F2F' ? '211,47,47' : '64,88,120'},.1)`, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           {icon}
         </div>
         <div>
@@ -368,15 +306,20 @@ function Login() {
       }
     }
 
-    // Donor login
+    // Donor login — redirect to chatbot for health screening every session
     try {
       const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/donors/login', {
         email: form.email,
         password: form.password
       })
       localStorage.setItem('donorToken', res.data.token)
-      localStorage.setItem('donorData', JSON.stringify(res.data.donor))
-      navigate('/donor/dashboard')
+      // is_eligible is always false from the server after login reset,
+      // but set it explicitly so the chatbot guard works correctly
+      const donorData = { ...res.data.donor, is_eligible: false }
+      localStorage.setItem('donorData', JSON.stringify(donorData))
+
+      // Always route donors through health screening before dashboard
+      navigate('/donor/chatbot')
       setIsLoading(false)
       return
     } catch {
@@ -436,6 +379,16 @@ function Login() {
               <p style={{ fontSize:'clamp(13px,1.3vw,16px)', color:'rgba(211,47,47,.7)', fontWeight:600, maxWidth:480, lineHeight:1.65, margin:0 }}>
                 Access your dashboard to track donations, schedule appointments, and see your life-saving impact in real-time.
               </p>
+            </div>
+
+            {/* Health screening notice */}
+            <div style={fadeUp(.25)}>
+              <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'10px 18px', borderRadius:14, border:'1.5px solid rgba(211,47,47,.18)', width:'fit-content' }}>
+                <span style={{ fontSize:16 }}>🩺</span>
+                <span style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:700, color:'rgba(211,47,47,.7)', lineHeight:1.4 }}>
+                  A quick health screening is required<br/>each login before you can donate.
+                </span>
+              </div>
             </div>
 
             {/* Stats Grid */}
@@ -531,19 +484,19 @@ function Login() {
                     className="bc-input"
                     style={{ paddingRight:50 }}
                   />
-                 <button
-  type="button"
-  onClick={() => setShowPassword(!showPassword)}
-  style={{ position:'absolute', right:16, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:4 }}
->
-  <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:'rgba(211,47,47,.5)' }}>
-    {showPassword ? (
-      <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
-    ) : (
-      <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
-    )}
-  </svg>
-</button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position:'absolute', right:16, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:4 }}
+                  >
+                    <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:'rgba(211,47,47,.5)' }}>
+                      {showPassword ? (
+                        <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+                      ) : (
+                        <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
+                      )}
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Forgot password */}
@@ -612,7 +565,7 @@ function Login() {
         </div>
       </div>
 
-      {/* Mobile responsive - hide left column on small screens */}
+      {/* Mobile responsive */}
       <style>{`
         @media (max-width: 960px) {
           .bc-login-root > div > div > div:first-child {
