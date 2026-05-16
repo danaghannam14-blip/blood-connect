@@ -45,17 +45,9 @@ router.post('/login', (req, res) => {
   });
 });
 
-// ✅ FIXED - Added phone field
 router.get('/all', (req, res) => {
-  console.log('📍 [hospitals/all] Request received');
-  
-  db.query('SELECT id, name, address, phone, latitude, longitude FROM hospitals', (err, results) => {
-    if (err) {
-      console.error('❌ [hospitals/all] Database error:', err.message);
-      return res.status(500).json({ message: 'Failed to get hospitals', error: err.message });
-    }
-    
-    console.log(`✅ [hospitals/all] Returning ${results.length} hospitals`);
+  db.query('SELECT id, name, address, latitude, longitude FROM hospitals', (err, results) => {
+    if (err) return res.status(500).json({ message: 'Failed to get hospitals', error: err.message });
     res.json(results);
   });
 });
@@ -133,7 +125,6 @@ router.get('/with-stock', (req, res) => {
     res.json(Object.values(hospitalMap));
   });
 });
-
 // Record blood transfusion (decrease stock)
 router.post('/transfusion/:hospital_id', (req, res) => {
   const { blood_type, units, notes } = req.body
@@ -185,5 +176,4 @@ router.get('/transfusions/:hospital_id', (req, res) => {
     }
   )
 })
-
 module.exports = router;
