@@ -13,13 +13,18 @@ import Emergency from './pages/Emergency'
 import Inventory from './pages/Inventory'
 import NotFound from './pages/NotFound'
 import HospitalPartners from './pages/HospitalPartners'
+import HowItWorks from './pages/HowItWorks'
+import Impact from './pages/Impact'
+
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/hospital-partners" element={<HospitalPartners />} />
         <Route path="/" element={<Home />} />
+        <Route path="/hospital-partners" element={<HospitalPartners />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/impact" element={<Impact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/donor/register" element={<DonorRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

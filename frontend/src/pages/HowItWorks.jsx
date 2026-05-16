@@ -1,289 +1,305 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
 import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
 
 function HowItWorks() {
   const navigate = useNavigate()
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
 
   const STYLES = `
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
     
-    @keyframes hw-gradient { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-    @keyframes hw-pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+    @keyframes gradient { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
 
-    .hw-root {
+    .hiw-root {
       min-height:100vh;
-      background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.25));
+      background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.35));
       background-size:400% 400%;
-      animation:hw-gradient 14s ease infinite;
+      animation:gradient 14s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
       overflow-x:hidden;
     }
 
-    .hw-nav {
+    .hiw-nav {
       position:sticky;top:0;z-index:50;
       background:rgba(255,255,255,.85);
       backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(211,47,47,.08);
-      box-shadow:0 2px 12px rgba(211,47,47,.04);
-    }
-
-    .hw-nav-inner {
-      max-width:1360px;margin:0 auto;
-      display:flex;justify-content:space-between;align-items:center;
       padding:16px 44px;
-      gap:32px;
+      display:flex;justify-content:space-between;align-items:center;
     }
 
-    .hw-logo {
+    .hiw-logo {
       display:flex;flex-direction:column;gap:2px;cursor:pointer;
     }
 
-    .hw-logo-main {
-      font-size:16px;font-weight:900;color:#D32F2F;font-family:'Plus Jakarta Sans',sans-serif;line-height:1.1;
+    .hiw-logo-main {
+      font-size:16px;font-weight:900;color:#D32F2F;
     }
 
-    .hw-logo-sub {
+    .hiw-logo-sub {
       font-size:10px;font-weight:700;color:rgba(211,47,47,.6);font-style:italic;
     }
 
-    .hw-emergency-btn {
-      background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-      color:white;
-      border:none;
-      cursor:pointer;
-      padding:12px 28px;
-      border-radius:20px;
+    .hiw-hero {
+      padding:100px 44px;
+      text-align:center;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .hiw-hero h1 {
+      font-family:'Fraunces',serif;
+      font-size:56px;
       font-weight:900;
-      font-size:13px;
-      font-family:'Plus Jakarta Sans',sans-serif;
-      box-shadow:0 8px 24px rgba(211,47,47,.25);
-      transition:all .22s cubic-bezier(.34,1.56,.64,1);
-      display:flex;align-items:center;gap:6px;
+      color:#D32F2F;
+      margin:0 0 24px;
+      line-height:1.1;
     }
 
-    .hw-emergency-btn:hover {
-      transform:translateY(-2px);
-      box-shadow:0 12px 32px rgba(211,47,47,.35);
+    .hiw-hero p {
+      font-size:16px;
+      color:rgba(211,47,47,.65);
+      font-weight:600;
+      margin:0 0 40px;
+      line-height:1.7;
     }
 
-    .hw-step {
-      display:flex;gap:24px;align-items:flex-start;
-      padding:32px;
-      border-radius:24px;
+    .hiw-steps {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:32px;
+      max-width:1200px;
+      margin:60px auto;
+      padding:0 44px;
+    }
+
+    .hiw-step-card {
       background:rgba(255,255,255,.5);
       backdrop-filter:blur(12px);
       border:1px solid rgba(255,255,255,.8);
-      transition:all .28s cubic-bezier(.22,1,.36,1);
+      border-radius:24px;
+      padding:32px;
+      text-align:center;
+      transition:all .3s ease;
     }
 
-    .hw-step:hover {
-      transform:translateY(-4px);
-      box-shadow:0 16px 40px rgba(211,47,47,.08);
+    .hiw-step-card:hover {
+      transform:translateY(-8px);
+      box-shadow:0 20px 40px rgba(211,47,47,.1);
     }
 
-    .hw-number {
-      width:56px;
-      height:56px;
-      border-radius:50%;
+    .hiw-step-number {
+      width:60px;height:60px;
       background:linear-gradient(135deg,#D32F2F,#ff6b6b);
       color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:24px;
-      font-weight:900;
-      flex-shrink:0;
-      box-shadow:0 8px 20px rgba(211,47,47,.25);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;font-weight:900;
+      margin:0 auto 16px;
     }
 
-    .hw-title {
+    .hiw-step-card h3 {
       font-family:'Fraunces',serif;
       font-size:20px;
       font-weight:900;
       color:#D32F2F;
-      margin:0 0 8px;
+      margin:0 0 12px;
     }
 
-    .hw-desc {
+    .hiw-step-card p {
       font-size:14px;
       color:rgba(211,47,47,.65);
-      font-weight:500;
-      line-height:1.7;
       margin:0;
+      line-height:1.6;
     }
 
-    .hw-cta {
+    .hiw-cta {
+      text-align:center;
+      padding:60px 44px;
+      background:rgba(211,47,47,.05);
+      margin-top:80px;
+    }
+
+    .hiw-cta h2 {
+      font-family:'Fraunces',serif;
+      font-size:36px;
+      font-weight:900;
+      color:#D32F2F;
+      margin:0 0 20px;
+    }
+
+    .hiw-cta-btn {
       background:linear-gradient(135deg,#D32F2F,#ff6b6b);
       color:white;
       border:none;
-      cursor:pointer;
       padding:16px 48px;
       border-radius:24px;
       font-weight:900;
+      cursor:pointer;
+      transition:all .3s ease;
       font-size:15px;
-      font-family:'Plus Jakarta Sans',sans-serif;
-      box-shadow:0 10px 28px rgba(211,47,47,.25);
-      transition:all .22s cubic-bezier(.34,1.56,.64,1);
     }
 
-    .hw-cta:hover {
+    .hiw-cta-btn:hover {
       transform:translateY(-3px);
-      box-shadow:0 14px 36px rgba(211,47,47,.35);
-    }
-
-    .hw-footer {
-      background:rgba(255,255,255,.4);
-      backdrop-filter:blur(12px);
-      border-top:1px solid rgba(211,47,47,.08);
-      padding:24px 44px;
-      text-align:center;
-      font-size:12px;
-      color:rgba(211,47,47,.5);
-      font-weight:500;
+      box-shadow:0 12px 24px rgba(211,47,47,.3);
     }
 
     @media (max-width:960px) {
-      .hw-nav-inner { padding:12px 20px;gap:12px; }
-      .hw-logo-main { font-size:13px; }
-      .hw-step { gap:16px;padding:20px; }
-      .hw-number { width:44px;height:44px;font-size:18px; }
-      .hw-title { font-size:16px; }
-      .hw-desc { font-size:13px; }
+      .hiw-nav { padding:12px 20px; }
+      .hiw-hero { padding:60px 20px; }
+      .hiw-hero h1 { font-size:36px; }
+      .hiw-steps { padding:0 20px; }
     }
   `
 
-  if (typeof document !== 'undefined' && !document.getElementById('hw-styles')) {
+  if (typeof document !== 'undefined' && !document.getElementById('hiw-styles')) {
     const s = document.createElement('style')
-    s.id = 'hw-styles'
+    s.id = 'hiw-styles'
     s.textContent = STYLES
     document.head.appendChild(s)
   }
 
-  const steps = [
-    {
-      number: '1',
-      title: 'Register as a Donor',
-      desc: 'Create your account by providing your personal information, blood type, and contact details. Registration takes less than 2 minutes.',
-    },
-    {
-      number: '2',
-      title: 'Complete Health Screening',
-      desc: 'Answer a few health questions through our intelligent system. The system instantly determines your eligibility to donate blood safely.',
-    },
-    {
-      number: '3',
-      title: 'Get Matched with Nearby Hospitals',
-      desc: 'Our smart matching system finds hospitals near you that urgently need your blood type. View them on an interactive map.',
-    },
-    {
-      number: '4',
-      title: 'Donate and Save Lives',
-      desc: 'Visit the matched hospital and donate. One pint of blood can save up to 3 lives. Track your donation history through your dashboard.',
-    },
-    {
-      number: 'S',
-      title: 'Emergency Blood Search',
-      desc: 'No login needed. Anyone in an emergency can instantly find the nearest hospital with available blood using our emergency map.',
-    },
-  ]
-
   return (
-    <div className="hw-root">
+    <div className="hiw-root">
       {/* NAV */}
-      <header className="hw-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
-        <div className="hw-nav-inner">
-          {/* Left: Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="hw-logo"
-            onClick={() => navigate('/')}
-          >
-            <div className="hw-logo-main">BloodConnect</div>
-            <div className="hw-logo-sub">Smart Donor Matching System</div>
-          </motion.div>
-
-          {/* Center: Emergency Button */}
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            onClick={() => navigate('/emergency')}
-            className="hw-emergency-btn"
-          >
-            <span style={{ animation: 'hw-pulse 1.2s cubic-bezier(0,0,.2,1) infinite', display: 'inline-block', fontWeight:900 }}>!</span>
-            Emergency
-          </motion.button>
-
-          {/* Right: Hamburger Menu */}
-          <PremiumHamburgerMenu />
+      <nav className="hiw-nav">
+        <div className="hiw-logo" onClick={() => navigate('/')}>
+          <div className="hiw-logo-main">BloodConnect</div>
+          <div className="hiw-logo-sub">Smart Donor Matching System</div>
         </div>
-      </header>
+        <PremiumHamburgerMenu />
+      </nav>
 
       {/* HERO */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ padding:'60px 44px 80px', textAlign:'center' }}
+        className="hiw-hero"
       >
-        <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'56px', fontWeight:900, color:'#D32F2F', lineHeight:1.1, margin:'0 0 16px' }}>
-          How BloodConnect Works
-        </h1>
-        <p style={{ fontSize:'15px', color:'rgba(211,47,47,.65)', fontWeight:600, maxWidth:540, margin:'0 auto', lineHeight:1.7 }}>
-          A simple, smart, and life-saving process connecting donors with hospitals in real-time.
+        <h1>How It Works</h1>
+        <p>
+          BloodConnect makes blood donation and distribution simple, transparent, 
+          and life-saving. Here's how we're transforming Lebanon's blood banking system.
         </p>
       </motion.section>
 
       {/* STEPS */}
-      <section style={{ maxWidth:900, margin:'0 auto', padding:'0 44px 100px', display:'flex', flexDirection:'column', gap:'24px' }}>
-        {steps.map((step, idx) => (
-          <motion.div
-            key={idx}
-            className="hw-step"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1, duration: 0.5 }}
-          >
-            <div className="hw-number">{step.number}</div>
-            <div>
-              <h3 className="hw-title">{step.title}</h3>
-              <p className="hw-desc">{step.desc}</p>
-            </div>
-          </motion.div>
-        ))}
-      </section>
+      <div className="hiw-steps">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">1</div>
+          <h3>Register as Donor</h3>
+          <p>
+            Create your profile and provide basic health information. 
+            Takes less than 5 minutes.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">2</div>
+          <h3>Find Hospital Partner</h3>
+          <p>
+            Browse our network of 189+ trusted hospitals across Lebanon. 
+            Find the one nearest to you.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">3</div>
+          <h3>Schedule Donation</h3>
+          <p>
+            Book an appointment at your preferred hospital. 
+            Flexible scheduling around your calendar.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">4</div>
+          <h3>Donate Blood</h3>
+          <p>
+            Complete your donation with our medical professionals. 
+            Takes 30-45 minutes total.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">5</div>
+          <h3>Track Impact</h3>
+          <p>
+            See your donation in action. Track who your blood helps 
+            and the lives you've saved.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="hiw-step-card"
+        >
+          <div className="hiw-step-number">6</div>
+          <h3>Earn Recognition</h3>
+          <p>
+            Build your donor profile and receive recognition for 
+            your contribution to saving lives.
+          </p>
+        </motion.div>
+      </div>
 
       {/* CTA */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-        style={{ padding:'60px 44px', textAlign:'center', margin:'40px 0 0' }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="hiw-cta"
       >
-        <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'48px', fontWeight:900, color:'#D32F2F', margin:'0 0 16px', lineHeight:1.1 }}>
-          Ready to Save a Life?
-        </h2>
-        <p style={{ fontSize:'14px', color:'rgba(211,47,47,.65)', fontWeight:600, margin:'0 0 24px' }}>
-          Join thousands of donors making a difference every day.
+        <h2>Ready to Save Lives?</h2>
+        <p style={{ fontSize: '16px', color: 'rgba(211,47,47,.65)', marginBottom: '24px' }}>
+          Join thousands of donors making a difference in Lebanon
         </p>
-        <button
-          onClick={() => navigate('/donor/register')}
-          className="hw-cta"
-        >
-          Register as Donor
+        <button className="hiw-cta-btn" onClick={() => navigate('/donor/register')}>
+          Start Your Donation Journey
         </button>
       </motion.section>
 
-      {/* FOOTER - Clean and minimal */}
-      <footer className="hw-footer">
-        © 2024 BloodConnect. Smart Donor Matching System. All rights reserved.
+      {/* FOOTER */}
+      <footer style={{ 
+        background: 'rgba(255,255,255,.4)', 
+        backdropFilter: 'blur(12px)', 
+        borderTop: '1px solid rgba(211,47,47,.08)', 
+        padding: '24px 44px', 
+        textAlign: 'center', 
+        fontSize: '12px', 
+        color: 'rgba(211,47,47,.5)', 
+        fontWeight: '500' 
+      }}>
+        © 2026 BloodConnect. Smart Donor Matching System. All rights reserved.
       </footer>
     </div>
   )
