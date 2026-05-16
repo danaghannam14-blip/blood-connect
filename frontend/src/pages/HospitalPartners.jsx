@@ -707,8 +707,8 @@ function HospitalPartners() {
                   {/* Hospital Name */}
                   <h3 className="hp-hospital-name">{hospital.name}</h3>
 
-                  {/* Phone Number */}
-                  {hospital.phone && (
+                  {/* Phone Number - Only show if exists */}
+                  {hospital.phone && hospital.phone.trim() !== '' && (
                     <p className="hp-hospital-phone">
                       <span className="hp-phone-icon">
                         <svg viewBox="0 0 24 24" style={{ width: '100%', height: '100%', fill: 'currentColor' }}>
