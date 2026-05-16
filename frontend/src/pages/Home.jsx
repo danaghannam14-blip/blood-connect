@@ -868,8 +868,7 @@ export default function Home() {
         <button className="bc-fab" onClick={() => go('/emergency')}
           onMouseEnter={() => setSosHover(true)}
           onMouseLeave={() => setSosHover(false)}>
-          🚨
-
+        
           {sosHover && (
             <div className="bc-glass" style={{ position:'absolute', bottom:'115%', right:0, minWidth:220, borderRadius:22, padding:'14px 12px', border:'2px solid rgba(211,47,47,.12)', boxShadow:'0 20px 48px rgba(211,47,47,.18)', zIndex:70 }}>
               <p style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px 4px' }}>EMERGENCY ACTIONS</p>
