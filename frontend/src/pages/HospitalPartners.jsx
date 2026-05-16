@@ -3,36 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
 
-// Backend API URL
-const API_BASE_URL = 'http://localhost:5000'
-
-// Hospital phone numbers database - Add your numbers here
-const HOSPITAL_PHONE_DATABASE = {
-  // Beirut Hospitals
-  'American University Hospital': '+961 1 350000',
-  'Trad Hospital': '+961 1 369494',
-  'Clemenceau Medical Center': '+961 1 361291',
-  'Fouad Khoury Hospital': '+961 1 348811',
-  'Najjar Hospital': '+961 1 340626',
-  'Beirut Eye & ENT Specialist Hospital': '+961 1 423111',
-  'Oasis De Vie Hospital': '+961 1 425262',
-  'St. Georges Hospital': '+961 1 441000',
-  'Hotel Dieu De France': '+961 1 604000',
-  'University Medical Center - Rizk Hospital': '+961 1 200800',
-  'Lebanese Hospital': '+961 1 590000',
-  
-  // Mount Lebanon
-  'Mount Lebanon Hospital': '+961 5 957000',
-  'Bahman Hospital': '+961 1 544000',
-  'Al Jabal Hospital': '+961 5 360555',
-  
-  // North Lebanon
-  'Hammoud Hospital': '+961 6 208888',
-  
-  // South Lebanon
-  'Marjeyoun Hospital': '+961 7 780406',
-  'Sidon Government Hospital': '+961 7 722222',
-}
+// Backend API URL - Smart detection
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000'
+  : 'https://blood-bank-egyr.onrender.com'
 
 function HospitalPartners() {
   const navigate = useNavigate()
@@ -94,7 +68,7 @@ function HospitalPartners() {
         city: extractCityFromAddress(hospital.address),
         governorate: normalizeGovernorate(hospital.address),
         active: true,
-        phone: HOSPITAL_PHONE_DATABASE[hospital.name] || hospital.phone || '',
+        phone: hospital.phone || '', // Now comes directly from database
         address: abbreviateAddress(hospital.address || ''),
         fullAddress: hospital.address || '',
         latitude: hospital.latitude,
