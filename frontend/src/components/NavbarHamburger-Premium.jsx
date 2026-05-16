@@ -12,12 +12,9 @@ export function PremiumHamburgerMenu() {
     @keyframes nm-slideIn { from { transform: translateX(-320px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes nm-slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-320px); opacity: 0; } }
     @keyframes nm-itemSlide { from { transform: translateX(-40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes nm-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
     @keyframes nm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     @keyframes nm-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes nm-glow { 0%, 100% { box-shadow: 0 0 20px rgba(211,47,47,0.2); } 50% { box-shadow: 0 0 40px rgba(211,47,47,0.4); } }
     @keyframes nm-orb { 0%, 100% { transform: translateY(0) translateX(0) scale(1); } 33% { transform: translateY(-20px) translateX(15px) scale(1.1); } 66% { transform: translateY(8px) translateX(-10px) scale(0.95); } }
-    @keyframes nm-particle { 0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-20px) translateX(var(--px,4px)) scale(1.1); opacity: 0.8; } }
 
     .nm-hamburger {
       display: flex;
@@ -84,11 +81,6 @@ export function PremiumHamburgerMenu() {
       animation: nm-slideIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .nm-menu.close {
-      animation: nm-slideOut 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* Orbs in menu */
     .nm-menu::before {
       content: '';
       position: absolute;
@@ -151,6 +143,7 @@ export function PremiumHamburgerMenu() {
       background: rgba(211,47,47,0.1);
       border-radius: 999px;
       border: 1px solid rgba(211,47,47,0.2);
+      margin-top: 12px;
     }
 
     .nm-logo-dot {
@@ -203,22 +196,7 @@ export function PremiumHamburgerMenu() {
       border-radius: 16px;
     }
 
-    .nm-item::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      border: 2px solid transparent;
-      background: linear-gradient(135deg, rgba(211,47,47,0.2), rgba(64,88,120,0.1)) border-box;
-      opacity: 0;
-      transition: opacity 0.22s;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-    }
-
     .nm-item:hover::before { opacity: 1; }
-    .nm-item:hover::after { opacity: 1; }
     .nm-item:hover { transform: translateX(6px); }
 
     .nm-item-icon {
@@ -305,33 +283,6 @@ export function PremiumHamburgerMenu() {
     .nm-cta:hover::before { width: 300px; height: 300px; }
     .nm-cta:hover { transform: translateY(-3px); box-shadow: 0 18px 44px rgba(211,47,47,0.4); }
 
-    .nm-social {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-      justify-content: center;
-    }
-
-    .nm-social-link {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: rgba(211,47,47,0.1);
-      border: 1px solid rgba(211,47,47,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.22s;
-      color: #D32F2F;
-      font-size: 14px;
-    }
-
-    .nm-social-link:hover { 
-      background: rgba(211,47,47,0.2);
-      transform: translateY(-3px);
-    }
-
     @media (max-width: 768px) {
       .nm-menu { width: 100vw; }
     }
@@ -363,46 +314,22 @@ export function PremiumHamburgerMenu() {
 
   const menuItems = [
     {
-      icon: '🔄',
       label: 'How It Works',
       desc: 'Smart matching system',
-      action: () => { navigate('/#how-it-works'); setIsOpen(false) },
+      action: () => { navigate('/how-it-works'); setIsOpen(false) },
       delay: 0,
     },
     {
-      icon: '💚',
       label: 'Our Impact',
       desc: 'Lives saved, stories told',
-      action: () => { navigate('/#impact'); setIsOpen(false) },
+      action: () => { navigate('/impact'); setIsOpen(false) },
       delay: 0.08,
     },
     {
-      icon: '⚡',
-      label: 'Live Network',
-      desc: 'Real-time blood tracking',
-      action: () => { navigate('/inventory'); setIsOpen(false) },
-      delay: 0.16,
-    },
-    {
-      icon: '🏥',
       label: 'Hospital Partners',
       desc: 'Trusted centers nationwide',
-      action: () => { navigate('/#hospitals'); setIsOpen(false) },
-      delay: 0.24,
-    },
-    {
-      icon: '📊',
-      label: 'Analytics',
-      desc: 'Donor insights & trends',
-      action: () => { navigate('/#analytics'); setIsOpen(false) },
-      delay: 0.32,
-    },
-    {
-      icon: '🌍',
-      label: 'Community',
-      desc: 'Join Lebanon\'s network',
-      action: () => { navigate('/#community'); setIsOpen(false) },
-      delay: 0.4,
+      action: () => { navigate('/hospital-partners'); setIsOpen(false) },
+      delay: 0.16,
     },
   ]
 
@@ -447,9 +374,7 @@ export function PremiumHamburgerMenu() {
             <div className="nm-menu-inner">
               {/* Header */}
               <div className="nm-header">
-                <h1 className="nm-logo">
-                  🩸 BloodConnect
-                </h1>
+                <h1 className="nm-logo">BloodConnect</h1>
                 <div style={{ marginTop: 12 }}>
                   <div className="nm-logo-badge">
                     <div className="nm-logo-dot" />
@@ -471,48 +396,12 @@ export function PremiumHamburgerMenu() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <span className="nm-item-icon">{item.icon}</span>
                     <div className="nm-item-content">
                       <p className="nm-item-label">{item.label}</p>
                       <p className="nm-item-desc">{item.desc}</p>
                     </div>
                   </motion.button>
                 ))}
-
-                <div className="nm-divider" />
-
-                {/* Secondary Items */}
-                <motion.button
-                  className="nm-item"
-                  onClick={() => { navigate('/login'); setIsOpen(false) }}
-                  initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.48, duration: 0.4 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <span className="nm-item-icon">🔐</span>
-                  <div className="nm-item-content">
-                    <p className="nm-item-label">Sign In</p>
-                    <p className="nm-item-desc">Access your account</p>
-                  </div>
-                </motion.button>
-
-                <motion.button
-                  className="nm-item"
-                  onClick={() => { navigate('/donor/register'); setIsOpen(false) }}
-                  initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.56, duration: 0.4 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <span className="nm-item-icon">✨</span>
-                  <div className="nm-item-content">
-                    <p className="nm-item-label">Join Network</p>
-                    <p className="nm-item-desc">Become a hero donor</p>
-                  </div>
-                </motion.button>
               </div>
 
               {/* Footer */}
@@ -521,16 +410,8 @@ export function PremiumHamburgerMenu() {
                   className="nm-cta"
                   onClick={() => { navigate('/emergency'); setIsOpen(false) }}
                 >
-                  <span>🚨</span>
                   Emergency
                 </button>
-
-                <div className="nm-social">
-                  <a href="#" className="nm-social-link" title="Facebook">f</a>
-                  <a href="#" className="nm-social-link" title="Twitter">𝕏</a>
-                  <a href="#" className="nm-social-link" title="LinkedIn">in</a>
-                  <a href="#" className="nm-social-link" title="Instagram">📷</a>
-                </div>
               </div>
             </div>
           </motion.div>

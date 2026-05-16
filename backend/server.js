@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 
 // Routes
 const donorRoutes = require('./routes/donors');
-const hospitalRoutes = require('./routes/hospitals');
+const hospitalsRoutes = require('./routes/hospitals');
 const inventoryRoutes = require('./routes/inventory');
 const requestRoutes = require('./routes/requests');
 const chatbotRoutes = require('./routes/chatbot');
@@ -55,7 +55,7 @@ app.use('/api/password', passwordResetRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/idcheck', idcheckRoutes);
 app.use('/api/donors', donorRoutes);
-app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/chatbot', chatbotRoutes);

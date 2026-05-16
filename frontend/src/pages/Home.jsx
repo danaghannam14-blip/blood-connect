@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
+import { motion, AnimatePresence } from 'framer-motion'
+import { PremiumHamburgerMenu } from "../components/NavbarHamburger-Premium"
 /* ─── Blood type compatibility data ─────────────────────── */
 const BLOOD_DATA = {
   'A+':  { canReceive: ['A+','A-','O+','O-'],                          canDonateTo: ['A+','AB+'],                         reach: '34%' },
@@ -51,7 +52,6 @@ const STYLES = `
     position:relative;
   }
 
-  /* glass layers */
   .bc-glass {
     background:rgba(255,255,255,.42);
     backdrop-filter:blur(28px) saturate(180%);
@@ -67,7 +67,6 @@ const STYLES = `
     box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
   }
 
-  /* nav */
   .bc-nav {
     position:sticky;top:0;z-index:50;
     background:rgba(255,255,255,.62);
@@ -75,17 +74,14 @@ const STYLES = `
     -webkit-backdrop-filter:blur(40px);
     border-bottom:2px solid rgba(211,47,47,.1);
     box-shadow:0 4px 24px rgba(211,47,47,.06);
-    animation:none;
-    transform:translateY(0);
-    transition:transform .6s cubic-bezier(.22,1,.36,1);
   }
   .bc-nav-inner {
     max-width:1360px;margin:0 auto;
     display:flex;justify-content:space-between;align-items:center;
     padding:clamp(10px,1.4vw,16px) clamp(16px,3.5vw,44px);
+    gap:clamp(16px,2.5vw,32px);
   }
 
-  /* btn */
   .bc-btn {
     position:relative;overflow:hidden;cursor:pointer;
     border:none;outline:none;
@@ -116,7 +112,6 @@ const STYLES = `
   }
   .bc-btn-secondary:hover { background:rgba(255,255,255,.72);border-color:rgba(211,47,47,.42) !important; }
 
-  /* type chip */
   .bc-chip {
     cursor:pointer;border:none;outline:none;
     transition:all .22s cubic-bezier(.34,1.56,.64,1);
@@ -130,11 +125,10 @@ const STYLES = `
     transform:scale(1.05);
   }
 
-  /* compat cells */
   .bc-cell-receive {
     cursor:pointer;
     background:#d2e2f7;
-    border:2px solid #405878 ;
+    border:2px solid #405878;
     border-radius:clamp(10px,1.3vw,14px);
     aspect-ratio:1;
     display:flex;align-items:center;justify-content:center;
@@ -163,7 +157,6 @@ const STYLES = `
     box-shadow:0 2px 8px rgba(0,0,0,.2);
   }
 
-  /* map */
   .bc-map-wrap {
     border-radius:clamp(24px,3.5vw,44px);overflow:hidden;
     border:2px solid rgba(211,47,47,.15);
@@ -204,7 +197,6 @@ const STYLES = `
   .bc-map-vbar { width:130px;height:8px;background:rgba(211,47,47,.1);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05); }
   .bc-map-vfill { height:100%;background:linear-gradient(90deg,#D32F2F,#405878);border-radius:999px;animation:bc-vitfill 2s ease forwards; }
 
-  /* layout */
   .bc-hero-grid    { display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3.5vw,56px);align-items:center;min-height:74vh; }
   .bc-network-grid { display:grid;grid-template-columns:2fr 1fr;gap:clamp(12px,1.8vw,20px); }
   .bc-compat-grid  { display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(24px,4vw,64px);align-items:start; }
@@ -215,45 +207,16 @@ const STYLES = `
     .bc-network-grid { grid-template-columns:1fr; }
     .bc-compat-grid  { grid-template-columns:1fr; }
     .bc-hero-visual  { display:none !important; }
-    .bc-desktop-nav  { display:none !important; }
-    .bc-mobile-btn   { display:flex !important; }
-  }
-  @media (min-width:961px) {
-    .bc-mobile-btn  { display:none !important; }
-    .bc-mobile-menu { display:none !important; }
+    .bc-nav-desktop  { display:none !important; }
   }
 
-  /* glow orbs */
   .bc-orb { position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none;animation:bc-orb var(--dur,8s) ease-in-out infinite; }
-
-  /* particles */
   .bc-particle { position:absolute;border-radius:50%;pointer-events:none;animation:bc-particle var(--dur,5s) ease-in-out infinite; }
 
-  /* floating stat cards */
   .bc-stat-card-a { animation:bc-float-b 3s ease-in-out infinite; }
   .bc-stat-card-b { animation:bc-float-c 3.5s ease-in-out infinite; }
-
-  /* blood drop */
   .bc-drop-wrap { animation:bc-drop-bob 3s ease-in-out infinite; }
 
-  /* nav shimmer on hover */
-  .bc-emergency-btn {
-    position:relative;overflow:hidden;
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;border:none;cursor:pointer;
-    box-shadow:0 8px 24px rgba(211,47,47,.35);
-    font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;
-    transition:box-shadow .22s,transform .22s;
-  }
-  .bc-emergency-btn:hover { transform:translateY(-2px) scale(1.04);box-shadow:0 14px 36px rgba(211,47,47,.5); }
-  .bc-emergency-btn::after {
-    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
-    transition:left .5s;
-  }
-  .bc-emergency-btn:hover::after { left:100%; }
-
-  /* SOS FAB */
   .bc-fab-wrap { position:fixed;bottom:clamp(18px,2.5vw,36px);right:clamp(18px,2.5vw,36px);z-index:60; }
   .bc-fab-ring {
     position:absolute;inset:0;border-radius:50%;background:#D32F2F;
@@ -278,17 +241,14 @@ const STYLES = `
   }
   .bc-fab:hover { transform:scale(1.15);animation:none; }
 
-  /* pop animation */
   .bc-pop { animation:bc-pop .32s cubic-bezier(.34,1.56,.64,1) both; }
 
-  /* heartpath svg */
   .bc-heartpath {
     stroke-dasharray:1000;stroke-dashoffset:1000;
     animation:bc-heartbeat-path 3s linear infinite;
   }
   @keyframes bc-heartbeat-path { to { stroke-dashoffset:0; } }
 
-  /* hover card lift */
   .bc-card-hover { transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s; }
   .bc-card-hover:hover { transform:translateY(-4px) scale(1.01);box-shadow:0 20px 50px rgba(211,47,47,.15) !important; }
 `
@@ -358,10 +318,10 @@ function LebanonMap() {
         <svg viewBox="0 0 900 820" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="bcLbg" x1="0" y1="0" x2="1" y2="1">
-             <stop offset="0%"   stopColor="#2a2a45"/>
-<stop offset="50%"  stopColor="#243158"/>
-<stop offset="100%" stopColor="#1a4a7a"/>
-</linearGradient>
+              <stop offset="0%" stopColor="#2a2a45"/>
+              <stop offset="50%" stopColor="#243158"/>
+              <stop offset="100%" stopColor="#1a4a7a"/>
+            </linearGradient>
             <filter id="bcGlow">
               <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
               <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -394,15 +354,15 @@ function LebanonMap() {
           </g>
 
           <g transform="translate(120,5) scale(1.15)">
-            <path className="gov akkar"      d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L500 106 L472 110 L448 116 L418 112 L388 105 L370 90 L374 68 Z"/>
-            <path className="gov north"      d="M355 120 L388 105 L418 112 L448 116 L472 110 L495 120 L505 150 L498 182 L485 205 L462 224 L438 235 L410 248 L380 242 L352 238 L330 228 L318 210 L320 180 L335 145 Z"/>
-            <path className="gov bh"         d="M495 120 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L518 388 L492 370 L470 352 L452 328 L438 300 L425 268 L410 248 L438 235 L462 224 L485 205 L498 182 L505 150 Z"/>
-            <path className="gov kj"         d="M300 210 L330 228 L352 238 L380 242 L410 248 L425 268 L420 300 L400 325 L372 338 L340 332 L318 320 L298 295 L286 268 L286 235 Z"/>
+            <path className="gov akkar" d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L500 106 L472 110 L448 116 L418 112 L388 105 L370 90 L374 68 Z"/>
+            <path className="gov north" d="M355 120 L388 105 L418 112 L448 116 L472 110 L495 120 L505 150 L498 182 L485 205 L462 224 L438 235 L410 248 L380 242 L352 238 L330 228 L318 210 L320 180 L335 145 Z"/>
+            <path className="gov bh" d="M495 120 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L518 388 L492 370 L470 352 L452 328 L438 300 L425 268 L410 248 L438 235 L462 224 L485 205 L498 182 L505 150 Z"/>
+            <path className="gov kj" d="M300 210 L330 228 L352 238 L380 242 L410 248 L425 268 L420 300 L400 325 L372 338 L340 332 L318 320 L298 295 L286 268 L286 235 Z"/>
             <path className="gov beirut-gov" d="M268 328 L282 330 L288 345 L280 358 L265 356 L260 340 Z"/>
-            <path className="gov ml"         d="M286 235 L298 295 L318 320 L340 332 L372 338 L400 325 L420 300 L438 318 L445 350 L438 380 L420 418 L392 450 L362 460 L332 455 L308 442 L286 418 L266 388 L252 352 L260 340 L265 356 L280 358 L288 345 L282 330 L268 328 L258 290 L268 250 Z"/>
-            <path className="gov beqaa"      d="M438 318 L452 328 L470 352 L492 370 L520 390 L540 418 L530 448 L505 470 L492 500 L470 528 L448 520 L425 505 L405 485 L392 450 L420 418 L438 380 L445 350 Z"/>
-            <path className="gov nab"        d="M332 455 L362 460 L392 450 L405 485 L425 505 L418 532 L395 555 L370 570 L338 565 L315 550 L300 522 L298 490 L310 468 Z"/>
-            <path className="gov south"      d="M252 352 L266 388 L286 418 L310 468 L298 490 L300 522 L315 550 L338 565 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 Z"/>
+            <path className="gov ml" d="M286 235 L298 295 L318 320 L340 332 L372 338 L400 325 L420 300 L438 318 L445 350 L438 380 L420 418 L392 450 L362 460 L332 455 L308 442 L286 418 L266 388 L252 352 L260 340 L265 356 L280 358 L288 345 L282 330 L268 328 L258 290 L268 250 Z"/>
+            <path className="gov beqaa" d="M438 318 L452 328 L470 352 L492 370 L520 390 L540 418 L530 448 L505 470 L492 500 L470 528 L448 520 L425 505 L405 485 L392 450 L420 418 L438 380 L445 350 Z"/>
+            <path className="gov nab" d="M332 455 L362 460 L392 450 L405 485 L425 505 L418 532 L395 555 L370 570 L338 565 L315 550 L300 522 L298 490 L310 468 Z"/>
+            <path className="gov south" d="M252 352 L266 388 L286 418 L310 468 L298 490 L300 522 L315 550 L338 565 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 Z"/>
 
             <path d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L540 418 L530 448 L505 470 L492 500 L470 528 L418 532 L395 555 L370 570 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 L252 352 L258 290 L268 250 L300 210 L320 180 L335 145 L355 120 L370 90 L374 68 Z"
               fill="none" stroke="rgba(211,47,47,.6)" strokeWidth="3" filter="url(#bcGlow)"/>
@@ -451,7 +411,7 @@ function LebanonMap() {
             <text x="305" y="500" className="mcity">SIDON</text>
             <text x="305" y="520" className="msub" fill="#4ade80">ACTIVE</text>
 
-            <text x="455" y="82"  textAnchor="middle" className="mlabel">AKKAR</text>
+            <text x="455" y="82" textAnchor="middle" className="mlabel">AKKAR</text>
             <text x="410" y="192" textAnchor="middle" className="mlabel">NORTH</text>
             <text x="555" y="360" textAnchor="middle" className="mlabel">BAALBEK-HERMEL</text>
             <text x="350" y="285" textAnchor="middle" className="mlabel">KESERWAN-JBEIL</text>
@@ -469,9 +429,9 @@ function LebanonMap() {
         <div className="bc-map-legend">
           {[
             { color:'#D32F2F', label:'Live matching' },
-            { color:'#405878', label:'Urgent need'  },
-            { color:'#4ade80', label:'Active'        },
-            { color:'#ff8a80', label:'Matching'      },
+            { color:'#405878', label:'Urgent need' },
+            { color:'#4ade80', label:'Active' },
+            { color:'#ff8a80', label:'Matching' },
           ].map(({ color, label }) => (
             <div key={label} className="bc-map-legend-item">
               <span className="bc-map-dot" style={{ background: color, width:12, height:12, boxShadow:`0 0 8px ${color}` }}/>
@@ -494,14 +454,13 @@ function BloodDropVisual() {
   const cells = Array.from({ length: 8 }, (_, i) => ({
     id: i,
     left: 20 + Math.random() * 60,
-    top:  20 + Math.random() * 60,
-    dur:  (2 + Math.random() * 2).toFixed(1),
+    top: 20 + Math.random() * 60,
+    dur: (2 + Math.random() * 2).toFixed(1),
     delay: -(Math.random() * 2).toFixed(1),
   }))
 
   return (
     <div style={{ position:'relative', width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      {/* Rings */}
       {[70, 85, 100].map((pct, i) => (
         <div key={i} style={{
           position:'absolute', borderRadius:'50%',
@@ -511,17 +470,16 @@ function BloodDropVisual() {
         }}/>
       ))}
 
-      {/* Drop */}
       <div className="bc-drop-wrap" style={{ position:'relative', width:192, height:240 }}>
         <svg viewBox="0 0 100 130" style={{ width:'100%', height:'100%', filter:'drop-shadow(0 12px 24px rgba(211,47,47,.4))' }}>
           <defs>
             <linearGradient id="bcBloodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#ff6b6b"/>
-              <stop offset="50%"  stopColor="#D32F2F"/>
+              <stop offset="0%" stopColor="#ff6b6b"/>
+              <stop offset="50%" stopColor="#D32F2F"/>
               <stop offset="100%" stopColor="#b71c1c"/>
             </linearGradient>
             <linearGradient id="bcHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="white" stopOpacity=".6"/>
+              <stop offset="0%" stopColor="white" stopOpacity=".6"/>
               <stop offset="100%" stopColor="white" stopOpacity="0"/>
             </linearGradient>
           </defs>
@@ -529,7 +487,6 @@ function BloodDropVisual() {
           <ellipse cx="35" cy="70" rx="15" ry="20" fill="url(#bcHighlight)"/>
           <path d="M50 20 C50 20 80 65 80 85 C80 100 65 115 50 115 C35 115 20 100 20 85 C20 65 50 20 50 20 Z" fill="none" stroke="white" strokeWidth=".5" strokeOpacity=".3"/>
         </svg>
-        {/* Glow */}
         <div style={{
           position:'absolute', inset:0, borderRadius:'50%',
           background:'rgba(211,47,47,.18)', filter:'blur(48px)',
@@ -537,7 +494,6 @@ function BloodDropVisual() {
         }}/>
       </div>
 
-      {/* Floating cells */}
       {cells.map(c => (
         <div
           key={c.id}
@@ -556,31 +512,29 @@ function BloodDropVisual() {
 
 /* ─── Main Home Component ────────────────────────────────── */
 export default function Home() {
-  const navigate   = useNavigate()
-  const [menuOpen,  setMenuOpen]  = useState(false)
+  const navigate = useNavigate()
   const [bloodType, setBloodType] = useState('A+')
-  const [animKey,   setAnimKey]   = useState(0)
-  const [sosHover,  setSosHover]  = useState(false)
-  const [visible,   setVisible]   = useState(false)
+  const [animKey, setAnimKey] = useState(0)
+  const [sosHover, setSosHover] = useState(false)
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
 
-  const go = (path) => { setMenuOpen(false); navigate(path) }
+  const go = (path) => { navigate(path) }
   const selectType = (t) => { if (t === bloodType) return; setBloodType(t); setAnimKey(k => k + 1) }
 
   const data = BLOOD_DATA[bloodType]
 
   const fadeUp = (delay = 0) => ({
-    opacity:   visible ? 1 : 0,
+    opacity: visible ? 1 : 0,
     transform: visible ? 'translateY(0)' : 'translateY(24px)',
     transition: `opacity .6s ease ${delay}s, transform .6s ease ${delay}s`,
   })
 
-  /* floating badge type positions */
   const floatBadges = [
-    { type:'O-',  style:{ top:0, left:'50%', transform:'translate(-50%,-10%)', animation:'bc-float-b 3s ease-in-out infinite' } },
-    { type:'AB+', style:{ top:'18%', right:0, transform:'translateX(30%)',   animation:'bc-float 6s ease-in-out infinite' } },
-    { type:'B-',  style:{ bottom:0, left:'22%', transform:'translateY(10%)', animation:'bc-float-c 3.5s ease-in-out infinite' } },
+    { type:'O-', style:{ top:0, left:'50%', transform:'translate(-50%,-10%)', animation:'bc-float-b 3s ease-in-out infinite' } },
+    { type:'AB+', style:{ top:'18%', right:0, transform:'translateX(30%)', animation:'bc-float 6s ease-in-out infinite' } },
+    { type:'B-', style:{ bottom:0, left:'22%', transform:'translateY(10%)', animation:'bc-float-c 3.5s ease-in-out infinite' } },
   ]
 
   return (
@@ -590,32 +544,42 @@ export default function Home() {
       {/* Orbs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
         {[
-          { t:'8%',  l:'8%',  w:'min(420px,36vw)', c:'rgba(211,47,47,.17)',   d:'0s'  },
-          { b:'18%', r:'8%',  w:'min(480px,40vw)', c:'rgba(64,88,120,.22)', d:'-2s' },
+          { t:'8%', l:'8%', w:'min(420px,36vw)', c:'rgba(211,47,47,.17)', d:'0s' },
+          { b:'18%', r:'8%', w:'min(480px,40vw)', c:'rgba(64,88,120,.22)', d:'-2s' },
           { t:'45%', r:'18%', w:'min(320px,28vw)', c:'rgba(255,235,238,.45)', d:'-5s' },
-          { b:'4%',  l:'12%', w:'min(220px,20vw)', c:'rgba(64,88,120,.28)', d:'-3s' },
+          { b:'4%', l:'12%', w:'min(220px,20vw)', c:'rgba(64,88,120,.28)', d:'-3s' },
         ].map((o, i) => (
           <div key={i} className="bc-orb" style={{ '--dur':'8s', width:o.w, height:o.w, background:o.c, top:o.t, bottom:o.b, left:o.l, right:o.r, animationDelay:o.d }}/>
         ))}
       </div>
 
-      {/* ══ NAV ═══════════════════════════════════════════════ */}
+      {/* ══ NAVBAR WITH HAMBURGER MENU ════════════════════════ */}
       <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
         <div className="bc-nav-inner">
           {/* Logo */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }} onClick={() => go('/')}>
-            <span style={{ fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:'#D32F2F', letterSpacing:'-.04em', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
+            onClick={() => go('/')}
+          >
+            <span style={{ fontSize:'clamp(20px,2.5vw,28px)' }}>🩸</span>
+            <span style={{ fontSize:'clamp(14px,1.8vw,20px)', fontWeight:900, color:'#D32F2F', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
               BloodConnect
             </span>
-          </div>
+          </motion.div>
 
-          {/* Desktop nav */}
-          <div className="bc-desktop-nav" style={{ display:'flex', alignItems:'center', gap:12 }}>
+          {/* HAMBURGER MENU - INTEGRATED HERE */}
+          <PremiumHamburgerMenu />
+
+          {/* Desktop Nav Items - Hidden on mobile */}
+          <div className="bc-nav-desktop" style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:4, padding:'6px 6px', borderRadius:16 }}>
               {[
-                { label:'Status',  path:'/inventory' },
-                { label:'Network', path:'/network'   },
-                { label:'Centers', path:'/centers'   },
+                { label:'Status', path:'/inventory' },
+                { label:'Network', path:'/network' },
+                { label:'Centers', path:'/centers' },
               ].map(item => (
                 <button key={item.label} className="bc-btn" onClick={() => go(item.path)}
                   style={{ padding:'8px 18px', borderRadius:12, background:'none', color:'rgba(211,47,47,.65)', fontWeight:700, fontSize:13, border:'none', display:'flex', alignItems:'center', gap:6 }}>
@@ -624,40 +588,27 @@ export default function Home() {
               ))}
             </div>
 
-           <button className="bc-btn bc-btn-secondary" onClick={() => go('/login')}
-            style={{ padding:'10px 24px', borderRadius:14, fontSize:13, display:'flex', alignItems:'center', gap:10 }}>
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bc-btn bc-btn-secondary"
+              onClick={() => go('/login')}
+              style={{ padding:'10px 24px', borderRadius:14, fontSize:13, display:'flex', alignItems:'center', gap:10 }}
+            >
               <span style={{ width:8, height:8, background:'rgba(255,255,255,.8)', borderRadius:'50%', display:'inline-block', animation:'bc-pulse 1.5s infinite', boxShadow:'0 0 10px rgba(255,255,255,.5)' }}/>
               Sign In
-            </button>
+            </motion.button>
           </div>
-
-          {/* Mobile toggle */}
-          <button className="bc-mobile-btn bc-btn" onClick={() => setMenuOpen(o => !o)}
-            style={{ background:'none', border:'none', color:'#D32F2F', fontSize:22, padding:4, display:'none', cursor:'pointer' }}>
-            {menuOpen ? '✕' : '☰'}
-          </button>
         </div>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="bc-mobile-menu bc-glass" style={{ borderTop:'1px solid rgba(211,47,47,.1)', padding:'6px 18px 14px', display:'flex', flexDirection:'column', gap:0 }}>
-            {[['Blood Status','/inventory'],['How It Works','/how-it-works'],['Emergency','/emergency']].map(([l,p]) => (
-              <button key={l} onClick={() => go(p)} style={{ background:'none', border:'none', borderBottom:'1px solid rgba(211,47,47,.08)', padding:'12px 0', textAlign:'left', fontWeight:700, fontSize:14, color:'#D32F2F', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>{l}</button>
-            ))}
-            <button onClick={() => go('/login')} style={{ margin:'8px 0 4px', padding:11, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', fontWeight:900, fontSize:13, border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>Sign In</button>
-            <button onClick={() => go('/donor/register')} style={{ padding:11, borderRadius:12, background:'none', color:'#D32F2F', fontWeight:700, fontSize:12, border:'2px solid #D32F2F', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>Register as Donor →</button>
-          </div>
-        )}
       </header>
 
-      {/* ══ MAIN ══════════════════════════════════════════════ */}
+      {/* ══ MAIN CONTENT ═══════════════════════════════════════ */}
       <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(20px,3.5vw,44px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(52px,7vw,100px)' }}>
 
-        {/* ── HERO ── */}
+        {/* HERO SECTION */}
         <section className="bc-hero-grid">
           <div style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,24px)' }}>
-
-            {/* Badge */}
             <div style={fadeUp(0)}>
               <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 20px', borderRadius:9999, width:'fit-content', border:'1px solid rgba(211,47,47,.15)' }}>
                 <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
@@ -668,7 +619,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Headline */}
             <div style={fadeUp(.1)}>
               <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:'#D32F2F', margin:0 }}>
                 Your <span style={{ color:'#D32F2F', textShadow:'0 4px 20px rgba(211,47,47,.35)' }}>Blood</span> Can<br/>
@@ -693,7 +643,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Avatar stack */}
             <div style={{ ...fadeUp(.4), display:'flex', alignItems:'center', gap:16, paddingTop:2 }}>
               <div style={{ display:'flex' }}>
                 {['A+','O-','B+'].map((t, i) => (
@@ -704,13 +653,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero visual */}
           <div className="bc-hero-visual" style={{ position:'relative', height:'clamp(360px,46vw,560px)' }}>
             <div className="bc-glass-deep bc-card-hover" style={{ position:'absolute', inset:0, borderRadius:'clamp(32px,4.5vw,60px)', overflow:'hidden', border:'2px solid rgba(211,47,47,.12)' }}>
               <BloodDropVisual />
             </div>
 
-            {/* Top-right stat card */}
             <div className="bc-stat-card-a bc-glass bc-card-hover" style={{ position:'absolute', top:'-4%', right:'-4%', zIndex:20, borderRadius:26, padding:'clamp(14px,1.8vw,22px)', minWidth:'min(200px,22vw)', border:'2px solid #405878' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                 <div style={{ width:44, height:44, background:'rgba(211,47,47,.1)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', animation:'bc-hb 1.5s ease-in-out infinite', flexShrink:0 }}>
@@ -732,7 +679,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Bottom-left circular card */}
             <div className="bc-stat-card-b bc-glass" style={{ position:'absolute', bottom:'-4%', left:'-6%', width:'clamp(100px,12vw,150px)', height:'clamp(100px,12vw,150px)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex:20, border:'2px solid #405878' }}>
               <svg viewBox="0 0 24 24" style={{ width:'44%', height:'44%', stroke:'#D32F2F', fill:'none', strokeWidth:2, animation:'bc-spin8 8s linear infinite' }}>
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -741,7 +687,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── NETWORK ── */}
+        {/* NETWORK SECTION */}
         <section style={{ display:'flex', flexDirection:'column', gap:'clamp(22px,3vw,44px)' }}>
           <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'flex-end', gap:18 }}>
             <div>
@@ -763,7 +709,6 @@ export default function Home() {
           <div className="bc-network-grid">
             <LebanonMap />
 
-            {/* Sidebar */}
             <div style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,1.6vw,18px)' }}>
               <div className="bc-glass-deep bc-card-hover" style={{ flex:1, borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center' }}>
                 <div style={{ position:'absolute', right:-40, top:-40, width:120, height:120, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
@@ -794,7 +739,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── COMPATIBILITY MATRIX ── */}
+        {/* COMPATIBILITY MATRIX SECTION */}
         <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(24px,4vw,56px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.1)' }}>
           <div style={{ position:'absolute', right:'-18%', top:'-18%', width:'55%', height:'55%', background:'rgba(64,88,120,.18)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
           <div style={{ position:'absolute', left:'-18%', bottom:'-18%', width:'55%', height:'55%', background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
@@ -804,7 +749,6 @@ export default function Home() {
             <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:0 }}>Click any blood type to unlock donor and recipient pathways with visual precision.</p>
           </div>
 
-          {/* Type selector */}
           <div style={{ display:'flex', justifyContent:'center', gap:'clamp(7px,.9vw,12px)', marginBottom:'clamp(24px,3.5vw,44px)', flexWrap:'wrap', position:'relative', zIndex:1 }}>
             {ALL_TYPES.map(t => (
               <button key={t} onClick={() => selectType(t)}
@@ -816,15 +760,11 @@ export default function Home() {
           </div>
 
           <div className="bc-compat-grid" style={{ position:'relative', zIndex:1 }}>
-
-            {/* Circle visualiser */}
             <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:'clamp(40px,6vw,80px)', paddingBottom:'clamp(30px,5vw,60px)' }}>
               <div className="bc-glass" style={{ width:'min(340px,34vw)', height:'min(340px,34vw)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'clamp(6px,1.2vw,14px) solid rgba(211,47,47,.15)', position:'relative', boxShadow:'0 20px 56px rgba(211,47,47,.1)' }}>
-                {/* Spinning accents */}
                 <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'clamp(3px,.6vw,8px) solid', borderColor:'#D32F2F transparent transparent transparent', opacity:.3, animation:'bc-spin8 8s linear infinite' }}/>
                 <div style={{ position:'absolute', inset:'4%', borderRadius:'50%', border:'2px dashed rgba(211,47,47,.15)', animation:'bc-spin30r 20s linear infinite' }}/>
 
-                {/* Center */}
                 <div key={animKey} className="bc-pop" style={{ textAlign:'center', padding:'0 16px' }}>
                   <span style={{ fontSize:'clamp(48px,7.5vw,88px)', fontWeight:900, color:'#D32F2F', display:'block', lineHeight:1, textShadow:'0 4px 24px rgba(211,47,47,.2)', fontFamily:"'Fraunces',serif" }}>{bloodType}</span>
                   <div style={{ marginTop:8, display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
@@ -834,7 +774,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating badges */}
               {floatBadges.map(({ type: nt, style }) => (
                 <div key={nt} onClick={() => selectType(nt)} className="bc-glass bc-card-hover"
                   style={{ position:'absolute', ...style, width:'min(76px,7.8vw)', height:'min(76px,7.8vw)', minWidth:60, minHeight:60, borderRadius:'clamp(12px,1.8vw,20px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', border: nt === bloodType ? '2px solid rgba(211,47,47,.5)' : '2px solid rgba(211,47,47,.15)', background: nt === bloodType ? 'rgba(255,235,238,.5)' : undefined, transition:'all .22s', zIndex:20 }}>
@@ -844,10 +783,7 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Details column */}
             <div style={{ display:'flex', flexDirection:'column', gap:'clamp(18px,2.2vw,30px)' }}>
-
-              {/* Receive */}
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div className="bc-glass" style={{ width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(64,88,120,.2)', flexShrink:0 }}>
@@ -865,7 +801,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Donate */}
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div className="bc-glass" style={{ width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', flexShrink:0 }}>
@@ -883,7 +818,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Info box */}
               <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:14, padding:'clamp(10px,1.5vw,18px)', borderRadius:18, border:'2px solid rgba(211,47,47,.1)', background:'rgba(255,235,238,.3)' }}>
                 <svg viewBox="0 0 24 24" style={{ width:32, height:32, fill:'rgba(211,47,47,.45)', flexShrink:0 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                 <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, lineHeight:1.6, margin:0, color:'#D32F2F' }}>
@@ -894,7 +828,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── CTA ── */}
+        {/* CTA SECTION */}
         <section>
           <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(36px,5.5vw,80px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', left:-40, top:0, width:180, height:180, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(50px)', opacity:.6, pointerEvents:'none' }}/>
@@ -914,7 +848,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* ══ FOOTER ════════════════════════════════════════════ */}
+      {/* FOOTER */}
       <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
         <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
@@ -958,10 +892,7 @@ export default function Home() {
               © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
             </p>
             <div style={{ display:'flex', gap:12 }}>
-              {[
-                'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
-                'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z',
-              ].map((d, i) => (
+              {['M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z','M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z'].map((d, i) => (
                 <a key={i} href="#" className="bc-glass bc-btn" style={{ width:42, height:42, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', color:'#D32F2F', border:'2px solid rgba(211,47,47,.1)', textDecoration:'none' }}>
                   <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#D32F2F' }}><path d={d}/></svg>
                 </a>
@@ -971,9 +902,9 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ══ SOS FAB ═══════════════════════════════════════════ */}
+      {/* EMERGENCY FAB */}
       <div className="bc-fab-wrap">
-        <div className="bc-fab-ring"  style={{ opacity:.45 }}/>
+        <div className="bc-fab-ring" style={{ opacity:.45 }}/>
         <div className="bc-fab-ring2" style={{ opacity:.25 }}/>
 
         <button className="bc-fab" onClick={() => go('/emergency')}
@@ -981,18 +912,17 @@ export default function Home() {
           onMouseLeave={() => setSosHover(false)}>
           🚨
 
-          {/* Expanded hover menu */}
           {sosHover && (
             <div className="bc-glass" style={{ position:'absolute', bottom:'115%', right:0, minWidth:220, borderRadius:22, padding:'14px 12px', border:'2px solid rgba(211,47,47,.12)', boxShadow:'0 20px 48px rgba(211,47,47,.18)', zIndex:70 }}>
               <p style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px 4px' }}>EMERGENCY ACTIONS</p>
               {[
-                { emoji:'📞', label:'Call Hotline',    path:'/emergency/call'   },
-                { emoji:'💬', label:'Live Chat',       path:'/emergency/chat'   },
-                { emoji:'📍', label:'Nearest Center',  path:'/emergency/locate' },
+                { emoji:'📞', label:'Call Hotline', path:'/emergency/call' },
+                { emoji:'💬', label:'Live Chat', path:'/emergency/chat' },
+                { emoji:'📍', label:'Nearest Center', path:'/emergency/locate' },
               ].map((a, i) => (
                 <button key={i} onClick={(e) => { e.stopPropagation(); go(a.path) }}
                   className="bc-btn"
-                  style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'10px 12px', borderRadius:14, background:'none', border:'none', cursor:'pointer', textAlign:'left', transition:'background .18s', fontFamily:"'Plus Jakarta Sans',sans-serif", animationDelay:`${i * .1}s` }}
+                  style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'10px 12px', borderRadius:14, background:'none', border:'none', cursor:'pointer', textAlign:'left', transition:'background .18s', fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,235,238,.5)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                   <span style={{ fontSize:20 }}>{a.emoji}</span>
