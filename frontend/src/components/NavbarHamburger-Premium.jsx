@@ -9,12 +9,10 @@ export function PremiumHamburgerMenu() {
   const STYLES = `
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
-    @keyframes nm-slideIn { from { transform: translateX(-320px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes nm-slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-320px); opacity: 0; } }
-    @keyframes nm-itemSlide { from { transform: translateX(-40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes nm-slideInRight { from { transform: translateX(320px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes nm-itemSlide { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes nm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    @keyframes nm-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes nm-orb { 0%, 100% { transform: translateY(0) translateX(0) scale(1); } 33% { transform: translateY(-20px) translateX(15px) scale(1.1); } 66% { transform: translateY(8px) translateX(-10px) scale(0.95); } }
+    @keyframes nm-orb { 0%, 100% { transform: translateY(0) translateX(0) scale(1); } 33% { transform: translateY(-20px) translateX(-15px) scale(1.1); } 66% { transform: translateY(8px) translateX(10px) scale(0.95); } }
 
     .nm-hamburger {
       display: flex;
@@ -40,16 +38,16 @@ export function PremiumHamburgerMenu() {
     }
 
     .nm-hamburger.active span:nth-child(1) {
-      transform: rotate(45deg) translateY(12px);
+      transform: rotate(-45deg) translateY(-12px);
     }
 
     .nm-hamburger.active span:nth-child(2) {
       opacity: 0;
-      transform: translateX(-10px);
+      transform: translateX(10px);
     }
 
     .nm-hamburger.active span:nth-child(3) {
-      transform: rotate(-45deg) translateY(-12px);
+      transform: rotate(45deg) translateY(12px);
     }
 
     .nm-overlay {
@@ -67,25 +65,25 @@ export function PremiumHamburgerMenu() {
     .nm-menu {
       position: fixed;
       top: 0;
-      left: 0;
+      right: 0;
       width: 320px;
       height: 100vh;
       background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,245,247,0.98) 100%);
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
-      border-right: 2px solid rgba(211,47,47,0.12);
+      border-left: 2px solid rgba(211,47,47,0.12);
       z-index: 50;
       padding: 32px 0;
       overflow-y: auto;
-      box-shadow: -24px 0 64px rgba(211,47,47,0.08);
-      animation: nm-slideIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 24px 0 64px rgba(211,47,47,0.08);
+      animation: nm-slideInRight 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .nm-menu::before {
       content: '';
       position: absolute;
       top: -50%;
-      right: -20%;
+      left: -20%;
       width: 300px;
       height: 300px;
       background: rgba(211,47,47,0.15);
@@ -99,7 +97,7 @@ export function PremiumHamburgerMenu() {
       content: '';
       position: absolute;
       bottom: 10%;
-      left: -30%;
+      right: -30%;
       width: 250px;
       height: 250px;
       background: rgba(64,88,120,0.12);
@@ -179,11 +177,14 @@ export function PremiumHamburgerMenu() {
       border: none;
       background: transparent;
       display: flex;
-      align-items: center;
-      gap: 14px;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 3px;
       font-family: 'Plus Jakarta Sans', sans-serif;
       transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
       overflow: hidden;
+      width: 100%;
     }
 
     .nm-item::before {
@@ -197,16 +198,7 @@ export function PremiumHamburgerMenu() {
     }
 
     .nm-item:hover::before { opacity: 1; }
-    .nm-item:hover { transform: translateX(6px); }
-
-    .nm-item-icon {
-      font-size: 20px;
-      flex-shrink: 0;
-      animation: nm-float 2s ease-in-out infinite;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .nm-item:hover { transform: translateX(-6px); }
 
     .nm-item-content {
       display: flex;
@@ -214,6 +206,7 @@ export function PremiumHamburgerMenu() {
       gap: 3px;
       position: relative;
       z-index: 1;
+      width: 100%;
     }
 
     .nm-item-label {
@@ -366,9 +359,9 @@ export function PremiumHamburgerMenu() {
         {isOpen && (
           <motion.div
             className="nm-menu"
-            initial={{ x: -320, opacity: 0 }}
+            initial={{ x: 320, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
+            exit={{ x: 320, opacity: 0 }}
             transition={{ duration: 0.28, type: 'spring', stiffness: 300, damping: 30 }}
           >
             <div className="nm-menu-inner">
@@ -390,7 +383,7 @@ export function PremiumHamburgerMenu() {
                     key={idx}
                     className="nm-item"
                     onClick={item.action}
-                    initial={{ opacity: 0, x: -40 }}
+                    initial={{ opacity: 0, x: 40 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: item.delay, duration: 0.4 }}
                     whileHover={{ scale: 1.02 }}
@@ -408,9 +401,9 @@ export function PremiumHamburgerMenu() {
               <div className="nm-footer">
                 <button
                   className="nm-cta"
-                  onClick={() => { navigate('/emergency'); setIsOpen(false) }}
+                  onClick={() => { navigate('/donor/register'); setIsOpen(false) }}
                 >
-                  Emergency
+                  Register Donor
                 </button>
               </div>
             </div>

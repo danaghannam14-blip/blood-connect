@@ -554,54 +554,40 @@ export default function Home() {
       </div>
 
       {/* ══ NAVBAR WITH HAMBURGER MENU ════════════════════════ */}
-      <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
-        <div className="bc-nav-inner">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
-            onClick={() => go('/')}
-          >
-            <span style={{ fontSize:'clamp(20px,2.5vw,28px)' }}>🩸</span>
-            <span style={{ fontSize:'clamp(14px,1.8vw,20px)', fontWeight:900, color:'#D32F2F', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
-              BloodConnect
-            </span>
-          </motion.div>
-
-          {/* HAMBURGER MENU - INTEGRATED HERE */}
-          <PremiumHamburgerMenu />
-
-          {/* Desktop Nav Items - Hidden on mobile */}
-          <div className="bc-nav-desktop" style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:4, padding:'6px 6px', borderRadius:16 }}>
-              {[
-                { label:'Status', path:'/inventory' },
-                { label:'Network', path:'/network' },
-                { label:'Centers', path:'/centers' },
-              ].map(item => (
-                <button key={item.label} className="bc-btn" onClick={() => go(item.path)}
-                  style={{ padding:'8px 18px', borderRadius:12, background:'none', color:'rgba(211,47,47,.65)', fontWeight:700, fontSize:13, border:'none', display:'flex', alignItems:'center', gap:6 }}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bc-btn bc-btn-secondary"
-              onClick={() => go('/login')}
-              style={{ padding:'10px 24px', borderRadius:14, fontSize:13, display:'flex', alignItems:'center', gap:10 }}
-            >
-              <span style={{ width:8, height:8, background:'rgba(255,255,255,.8)', borderRadius:'50%', display:'inline-block', animation:'bc-pulse 1.5s infinite', boxShadow:'0 0 10px rgba(255,255,255,.5)' }}/>
-              Sign In
-            </motion.button>
-          </div>
-        </div>
-      </header>
+     <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+  <div className="bc-nav-inner">
+    {/* Logo - Updated Title */}
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 }}
+      style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
+      onClick={() => go('/')}
+    >
+      <span style={{ fontSize:'clamp(13px,1.6vw,16px)', fontWeight:900, color:'#D32F2F', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+        BloodConnect: Smart Donor Matching System
+      </span>
+    </motion.div>
+ 
+    {/* Emergency Button - CENTER */}
+    <div style={{ flex:1, display:'flex', justifyContent:'center' }}>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        onClick={() => go('/emergency')}
+        className="bc-btn bc-btn-primary"
+        style={{ padding:'10px 24px', borderRadius:20, fontSize:13, display:'flex', alignItems:'center', gap:8 }}
+      >
+        <span style={{ animation: 'bc-pulse 1.2s cubic-bezier(0,0,.2,1) infinite', display: 'inline-block', fontWeight:900 }}>!</span>
+        Emergency
+      </motion.button>
+    </div>
+ 
+    {/* HAMBURGER MENU - RIGHT SIDE */}
+    <PremiumHamburgerMenu />
+  </div>
+</header>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════ */}
       <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(20px,3.5vw,44px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(52px,7vw,100px)' }}>
@@ -849,58 +835,30 @@ export default function Home() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
-        <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
-            <div>
-              <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
-              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
-                "Pioneering the future of hematological logistics through empathy and code."
-              </p>
-            </div>
-            <div>
-              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Navigation</h4>
-              <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:11 }}>
-                {[['How It Works','/how-it-works'],['Impact Stories','/impact'],['Emergency Portal','/emergency'],['Blood Status','/inventory']].map(([l,p]) => (
-                  <li key={l}><button onClick={() => go(p)} style={{ color:'#D32F2F', fontWeight:700, background:'none', border:'none', cursor:'pointer', padding:0, fontSize:'clamp(11px,1vw,13px)', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>{l}</button></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Ecosystem</h4>
-              <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:11 }}>
-                {['Medical Standards','Logistics API','Partner Hospitals','Advisory Board'].map(l => (
-                  <li key={l}><a href="#" style={{ color:'#D32F2F', fontWeight:700, textDecoration:'none', fontSize:'clamp(11px,1vw,13px)' }}>{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 style={{ fontWeight:900, color:'rgba(211,47,47,.3)', textTransform:'uppercase', letterSpacing:'.24em', fontSize:8, marginBottom:16, marginTop:0 }}>Updates</h4>
-              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.6, marginTop:0, marginBottom:12, fontSize:'clamp(10px,1vw,12px)' }}>Stay connected to live alerts for blood shortages in Lebanon.</p>
-              <div style={{ display:'flex', gap:8 }}>
-                <input type="email" placeholder="Email Address"
-                  style={{ background:'rgba(255,255,255,.6)', border:'2px solid rgba(211,47,47,.15)', borderRadius:12, padding:'10px 14px', width:'100%', fontSize:11, fontWeight:700, color:'#D32F2F', outline:'none', fontFamily:"'Plus Jakarta Sans',sans-serif" }}/>
-                <button className="bc-btn bc-btn-primary" style={{ padding:'10px 14px', borderRadius:12, flexShrink:0 }}>
-                  <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'white' }}><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)', display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'center', gap:14 }}>
-            <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
-              © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
-            </p>
-            <div style={{ display:'flex', gap:12 }}>
-              {['M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z','M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z'].map((d, i) => (
-                <a key={i} href="#" className="bc-glass bc-btn" style={{ width:42, height:42, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', color:'#D32F2F', border:'2px solid rgba(211,47,47,.1)', textDecoration:'none' }}>
-                  <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#D32F2F' }}><path d={d}/></svg>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+     <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
+  <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
+      
+      {/* Column 1: BloodConnect Info */}
+      <div>
+        <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
+        <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
+          "Pioneering the future of hematological logistics through empathy and code."
+        </p>
+      </div>
+ 
+      
+      
+    </div>
+ 
+    {/* Simple copyright at bottom - REMOVED social icons */}
+    <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)' }}>
+      <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
+        © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
+      </p>
+    </div>
+  </div>
+</footer>
 
       {/* EMERGENCY FAB */}
       <div className="bc-fab-wrap">
