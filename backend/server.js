@@ -6,8 +6,8 @@ dotenv.config();
 const db = require('./db');
 const app = express();
 
-// Middleware - CORS with localhost support
-app.use(cors({
+// Middleware - CORS configuration
+const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'http://localhost:5173',
@@ -15,16 +15,28 @@ app.use(cors({
       'https://bloodconnect-lb.vercel.app',
       process.env.FRONTEND_URL
     ];
-    if (!origin || allowedOrigins.includes(origin)) {
+    
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log(`❌ Blocked by CORS: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+app.use(cors(corsOptions));
+
+// ❌ REMOVE THIS LINE - it causes the error:
+// app.options('*', cors());
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
