@@ -6,7 +6,7 @@ import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
 // Backend API URL - Smart detection
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000'
-  : 'https://blood-bank-egyr.onrender.com'
+  : 'https://blood-bank-eqyr.onrender.com'
 
 function HospitalPartners() {
   const navigate = useNavigate()
