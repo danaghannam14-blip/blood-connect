@@ -6,7 +6,6 @@ dotenv.config();
 
 const db = require('./db');
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
 
 // Simple CORS middleware
 app.use((req, res, next) => {
@@ -20,18 +19,18 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add these BEFORE multer
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(upload.single('id_photo'));
 
+// Trust proxy for Render
 app.set('trust proxy', 1);
 
+// Request logging middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
-
-// ... rest of routes
 
 // Routes
 const donorRoutes = require('./routes/donors');
