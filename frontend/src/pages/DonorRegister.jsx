@@ -433,29 +433,7 @@ function DonorRegister() {
     setForm({ ...form, phone: formatted })
   }
 
-  const compressImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const maxWidth = 1200
-          const scale = Math.min(1, maxWidth / img.width)
-          canvas.width = img.width * scale
-          canvas.height = img.height * scale
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8)
-        }
-        img.src = e.target.result
-      }
-      reader.readAsDataURL(file)
-    })
-  }
-
-
-const handleScanId = async () => {
+  const handleScanId = async () => {
   if (!idFile) { 
     setIdMessage('Please select your ID photo first.') 
     setIdStatus('failed')
@@ -464,9 +442,8 @@ const handleScanId = async () => {
   setIdStatus('scanning')
   setIdMessage('')
   try {
-    const compressed = await compressImage(idFile)
     const formData = new FormData()
-    formData.append('id_photo', compressed, 'id.jpg')
+    formData.append('id_photo', idFile) // Send original file
     
     const res = await axios.post(`${API}/api/idcheck/scan`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
