@@ -500,6 +500,18 @@ function DonorRegister() {
     try {
       const res = await axios.post(`${API}/api/donors/register`, form)
       setMessage(res.data.message || 'Registration successful! Redirecting to login...')
+      
+      // Track donor registration for analytics
+      try {
+        await axios.post(`${API}/api/analytics/event`, {
+          eventType: 'donor_login' // Using same event as login to increment donor count
+        })
+        console.log('✅ Donor registration tracked for analytics')
+      } catch (analyticsErr) {
+        console.error('Analytics tracking failed:', analyticsErr)
+        // Don't block registration if analytics fails
+      }
+      
       setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.')

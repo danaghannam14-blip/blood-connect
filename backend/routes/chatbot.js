@@ -9,6 +9,11 @@ router.post('/screen', async (req, res) => {
   const { donor_id, answers } = req.body;
 
   try {
+    // Validate input
+    if (!donor_id || !answers) {
+      return res.status(400).json({ message: 'Missing donor_id or answers' });
+    }
+
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
@@ -35,7 +40,7 @@ router.post('/screen', async (req, res) => {
     } catch {
       // If still can't parse, create a default response
       const isEligible = !answers.chronic_illness?.includes('yes') && 
-                         !answers.recent_surgery?.includes('yes')
+                         !answers.recent_surgery?.includes('yes');
       result = { 
         eligible: isEligible, 
         reason: text 
@@ -44,27 +49,32 @@ router.post('/screen', async (req, res) => {
 
     const sql = `INSERT INTO health_screenings (donor_id, feeling_healthy, chronic_illness, recent_surgery, medications, recent_travel, is_eligible) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-db.query(sql, [
-  donor_id,
-  answers.feeling_healthy || 'no',
-  answers.chronic_illness || 'no',
-  answers.recent_surgery || 'no',
-  answers.medications || 'no',
-  answers.recent_travel || 'no',
-  result.eligible
-], (err) => {
-   if (err) {
+    db.query(sql, [
+      donor_id,
+      answers.feeling_healthy || 'no',
+      answers.chronic_illness || 'no',
+      answers.recent_surgery || 'no',
+      answers.medications || 'no',
+      answers.recent_travel || 'no',
+      result.eligible
+    ], (err) => {
+      if (err) {
+        console.error('Database error:', err);
         return res.status(500).json({ message: 'Failed to save screening', error: err.message });
       }
       const updateSql = `UPDATE donors SET is_eligible = ? WHERE id = ?`;
-      db.query(updateSql, [result.eligible, donor_id], () => {
+      db.query(updateSql, [result.eligible, donor_id], (updateErr) => {
+        if (updateErr) {
+          console.error('Update error:', updateErr);
+          return res.status(500).json({ message: 'Failed to update donor', error: updateErr.message });
+        }
         res.json({ eligible: result.eligible, reason: result.reason });
       });
     });
 
- } catch (error) {
-    console.error('Groq full error:', JSON.stringify(error));
-    res.status(500).json({ message: 'Chatbot error', error: error.message, full: JSON.stringify(error) });
+  } catch (error) {
+    console.error('Chatbot error:', error);
+    res.status(500).json({ message: 'Chatbot error', error: error.message });
   }
 });
 

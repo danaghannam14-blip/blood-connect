@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+
 dotenv.config();
 
 const db = require('./db');
@@ -51,6 +52,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+
 const donorRoutes = require('./routes/donors');
 const hospitalsRoutes = require('./routes/hospitals');
 const inventoryRoutes = require('./routes/inventory');
@@ -60,8 +62,11 @@ const idcheckRoutes = require('./routes/idcheck');
 const adminRoutes = require('./routes/admin');
 const passwordResetRoutes = require('./routes/passwordreset');
 const appointmentRoutes = require('./routes/appointments');
+const analyticsRoutes = require('./routes/analytics');
+//API Routes
 
-// API Routes
+//API Routes
+app.use('/api/analytics', analyticsRoutes);  // ← BEFORE 404 handler
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/password', passwordResetRoutes);
 app.use('/api/admin', adminRoutes);
@@ -81,7 +86,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler
+// 404 handler - THIS MUST BE AFTER ALL ROUTES
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found', path: req.path });
 });

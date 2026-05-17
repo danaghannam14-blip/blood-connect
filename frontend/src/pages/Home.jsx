@@ -197,10 +197,10 @@ const STYLES = `
   .bc-map-vbar { width:130px;height:8px;background:rgba(211,47,47,.1);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05); }
   .bc-map-vfill { height:100%;background:linear-gradient(90deg,#D32F2F,#405878);border-radius:999px;animation:bc-vitfill 2s ease forwards; }
 
-  .bc-hero-grid    { display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3.5vw,56px);align-items:center;min-height:74vh; }
-  .bc-network-grid { display:grid;grid-template-columns:2fr 1fr;gap:clamp(12px,1.8vw,20px); }
-  .bc-compat-grid  { display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(24px,4vw,64px);align-items:start; }
-  .bc-type-grid    { display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.8vw,10px); }
+  .bc-hero-grid    { display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,2vw,32px);align-items:center;min-height:74vh; }
+  .bc-network-grid { display:grid;grid-template-columns:1.4fr 1.4fr;gap:clamp(16px,1.8vw,24px);align-items:start; }
+  .bc-compat-grid  { display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(20px,2.5vw,40px);align-items:start; }
+  .bc-type-grid    { display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.6vw,8px); }
 
   @media (max-width:960px) {
     .bc-hero-grid    { grid-template-columns:1fr;min-height:unset; }
@@ -466,7 +466,10 @@ function BloodDropVisual() {
           position:'absolute', borderRadius:'50%',
           width:`${pct}%`, height:`${pct}%`,
           border:'2px solid rgba(211,47,47,.18)',
-          animation:`bc-spin${i % 2 === 0 ? '30' : '8'} ${20 + i * 6}s linear infinite`,
+          animationName:`bc-spin${i % 2 === 0 ? '30' : '8'}`,
+          animationDuration:`${20 + i * 6}s`,
+          animationTimingFunction:'linear',
+          animationIterationCount:'infinite',
         }}/>
       ))}
 
@@ -501,7 +504,10 @@ function BloodDropVisual() {
             position:'absolute', width:14, height:14, borderRadius:'50%',
             background:'linear-gradient(135deg,#ff6b6b,#D32F2F)',
             left:`${c.left}%`, top:`${c.top}%`,
-            animation:`bc-cell ${c.dur}s ease-in-out infinite`,
+            animationName:'bc-cell',
+            animationDuration:`${c.dur}s`,
+            animationTimingFunction:'ease-in-out',
+            animationIterationCount:'infinite',
             animationDelay:`${c.delay}s`,
           }}
         />
@@ -517,10 +523,94 @@ export default function Home() {
   const [animKey, setAnimKey] = useState(0)
   const [sosHover, setSosHover] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [analytics, setAnalytics] = useState({
+    admins: 0,
+    hospitals: 0,
+    donors: 0,
+    emergencies: 0,
+    maxValue: 100
+  })
 
+  // Fetch analytics every 5 seconds
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const baseURL = import.meta.env.VITE_API_URL || 'https://blood-bank-eqyr.onrender.com/api'
+        const res = await fetch(`${baseURL}/analytics/dashboard`)
+        if (res.ok) {
+          const data = await res.json()
+          const max = Math.max(data.admins || 0, data.hospitals || 0, data.donors || 0, data.emergencies || 0, 100)
+          setAnalytics({
+            admins: data.admins || 0,
+            hospitals: data.hospitals || 0,
+            donors: data.donors || 0,
+            emergencies: data.emergencies || 0,
+            maxValue: max
+          })
+        }
+      } catch (err) {
+        console.log('Analytics fetch failed')
+      }
+    }
+
+    fetchAnalytics()
+    const interval = setInterval(fetchAnalytics, 5000)
+    return () => clearInterval(interval)
+  }, [])
+  
   useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
+const go = (path) => { 
+  // Track emergency clicks ONLY
+  if (path === '/emergency') {
+    const baseURL = import.meta.env.VITE_API_URL || 'https://blood-bank-eqyr.onrender.com/api'
+    
+    console.log('🚨 EMERGENCY BUTTON CLICKED')
+    console.log('📍 Sending to:', `${baseURL}/analytics/event`)
+    
+    // POST to track emergency event
+    fetch(`${baseURL}/analytics/event`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        eventType: 'emergency' 
+      })
+    })
+    .then(res => {
+      console.log('📊 Server response status:', res.status)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    })
+    .then(data => {
+      console.log('✅ SUCCESS - Event recorded:', data)
+      
+      // Wait 300ms then refetch analytics to update bar
+      setTimeout(() => {
+        console.log('🔄 Refreshing analytics...')
+        fetch(`${baseURL}/analytics/dashboard`)
+          .then(res => res.json())
+          .then(data => {
+            console.log('📊 New analytics:', data)
+            // Update state with new data
+            setAnalytics({
+              donors: data.donors || 0,
+              emergencies: data.emergencies || 0,
+            })
+            console.log('✅ UI Updated!')
+          })
+          .catch(err => console.error('Refresh failed:', err))
+      }, 300)
+    })
+    .catch(err => {
+      console.error('❌ TRACKING FAILED:', err.message)
+    })
+  }
+  
+  // Navigate after tracking
+  navigate(path)
+}
 
-  const go = (path) => { navigate(path) }
   const selectType = (t) => { if (t === bloodType) return; setBloodType(t); setAnimKey(k => k + 1) }
 
   const data = BLOOD_DATA[bloodType]
@@ -554,68 +644,67 @@ export default function Home() {
       </div>
 
       {/* ══ NAVBAR WITH HAMBURGER MENU ════════════════════════ */}
-     <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
-  <div className="bc-nav-inner">
-    {/* Logo - Updated Title */}
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
-      onClick={() => go('/')}
-    >
-      <span style={{ fontSize:'clamp(13px,1.6vw,16px)', fontWeight:900, color:'#D32F2F', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
-        BloodConnect: Smart Donor Matching System
-      </span>
-    </motion.div>
- 
-    {/* Emergency Button - CENTER */}
-    <div style={{ flex:1, display:'flex', justifyContent:'center' }}>
-      <motion.button
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        onClick={() => go('/emergency')}
-        className="bc-btn bc-btn-primary"
-        style={{ padding:'10px 24px', borderRadius:20, fontSize:13, display:'flex', alignItems:'center', gap:8 }}
-      >
-        <span style={{ animation: 'bc-pulse 1.2s cubic-bezier(0,0,.2,1) infinite', display: 'inline-block', fontWeight:900 }}>!</span>
-        Emergency
-      </motion.button>
-    </div>
- 
-    {/* HAMBURGER MENU - RIGHT SIDE */}
-    <PremiumHamburgerMenu />
-  </div>
-</header>
+      <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+        <div className="bc-nav-inner">
+          {/* Logo - Updated Title */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}
+            onClick={() => go('/')}
+          >
+            <span style={{ fontSize:'clamp(13px,1.6vw,16px)', fontWeight:900, color:'#D32F2F', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+              BloodConnect: Smart Donor Matching System
+            </span>
+          </motion.div>
+      
+          {/* Emergency Button - CENTER */}
+          <div style={{ flex:1, display:'flex', justifyContent:'center' }}>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              onClick={() => go('/emergency')}
+              className="bc-btn bc-btn-primary"
+              style={{ padding:'10px 24px', borderRadius:20, fontSize:13, display:'flex', alignItems:'center', gap:8 }}
+            >
+              <span style={{ animation: 'bc-pulse 1.2s cubic-bezier(0,0,.2,1) infinite', display: 'inline-block', fontWeight:900 }}>!</span>
+              Emergency
+            </motion.button>
+          </div>
+      
+          {/* HAMBURGER MENU - RIGHT SIDE */}
+          <PremiumHamburgerMenu />
+        </div>
+      </header>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════ */}
-      <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(20px,3.5vw,44px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(52px,7vw,100px)' }}>
+      <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(14px,2vw,28px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(36px,4vw,64px)' }}>
 
         {/* HERO SECTION */}
         <section className="bc-hero-grid">
-          <div style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,24px)' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:'clamp(10px,1.2vw,16px)' }}>
             <div style={fadeUp(0)}>
               <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 20px', borderRadius:9999, width:'fit-content', border:'1px solid rgba(211,47,47,.15)' }}>
                 <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
                   <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#D32F2F', opacity:.75, animation:'bc-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
                   <span style={{ position:'relative', display:'inline-flex', width:12, height:12, borderRadius:'50%', background:'#D32F2F', boxShadow:'0 0 12px #D32F2F' }}/>
                 </span>
-                <span style={{ color:'#D32F2F', fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>AI-POWERED ROUTING ACTIVE</span>
+                <span style={{ color:'#D32F2F', fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>Real-Time Lifeline System</span>
               </div>
             </div>
 
             <div style={fadeUp(.1)}>
-              <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:'#D32F2F', margin:0 }}>
-                Your <span style={{ color:'#D32F2F', textShadow:'0 4px 20px rgba(211,47,47,.35)' }}>Blood</span> Can<br/>
-                <em style={{ color:'#405878', fontStyle:'italic' }}>Save Three Lives</em>
+              <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,3.8vw,48px)', lineHeight:.93, fontWeight:900, color:'#D32F2F', margin:0 }}>
+                Connected by <span style={{ color:'#D32F2F', textShadow:'0 4px 20px rgba(211,47,47,.35)' }}> Blood</span>  <br/>
+                <em style={{ color:'#405878', fontStyle:'italic' }}>United by Hope</em>
               </h1>
             </div>
 
             <div style={fadeUp(.2)}>
               <p style={{ fontSize:'clamp(13px,1.3vw,17px)', color:'rgba(211,47,47,.7)', fontWeight:600, maxWidth:480, lineHeight:1.65, margin:0 }}>
-                Life-Saving Precision meets Human Connection. Lebanon's premier intelligent network bridging heroes to urgent needs.
-              </p>
+                Born from Lebanon's recent crises, this platform transforms compassion into action by connecting lifesaving blood donors with patients in urgent need. </p>
             </div>
 
             <div style={{ ...fadeUp(.3), display:'flex', flexWrap:'wrap', gap:'clamp(10px,1.2vw,16px)', paddingTop:2 }}>
@@ -628,19 +717,10 @@ export default function Home() {
                 Sign In
               </button>
             </div>
-
-            <div style={{ ...fadeUp(.4), display:'flex', alignItems:'center', gap:16, paddingTop:2 }}>
-              <div style={{ display:'flex' }}>
-                {['A+','O-','B+'].map((t, i) => (
-                  <div key={t} className="bc-glass" style={{ width:40, height:40, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#D32F2F', marginLeft: i === 0 ? 0 : -11, zIndex:3 - i, boxShadow:'0 4px 12px rgba(211,47,47,.1)' }}>{t}</div>
-                ))}
-              </div>
-              <span style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em' }}>Network Match Active</span>
-            </div>
           </div>
 
-          <div className="bc-hero-visual" style={{ position:'relative', height:'clamp(360px,46vw,560px)' }}>
-            <div className="bc-glass-deep bc-card-hover" style={{ position:'absolute', inset:0, borderRadius:'clamp(32px,4.5vw,60px)', overflow:'hidden', border:'2px solid rgba(211,47,47,.12)' }}>
+          <div className="bc-hero-visual" style={{ position:'relative', height:'clamp(280px,28vw,420px)' }}>
+            <div className="bc-glass-deep bc-card-hover" style={{ position:'absolute', inset:0, borderRadius:'clamp(24px,2.8vw,40px)', overflow:'hidden', border:'2px solid rgba(211,47,47,.12)' }}>
               <BloodDropVisual />
             </div>
 
@@ -674,64 +754,70 @@ export default function Home() {
         </section>
 
         {/* NETWORK SECTION */}
-        <section style={{ display:'flex', flexDirection:'column', gap:'clamp(22px,3vw,44px)' }}>
-          <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'space-between', alignItems:'flex-end', gap:18 }}>
-            <div>
-              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:'#D32F2F', lineHeight:1.1, margin:0 }}>Lebanon's Smart Network</h2>
-              <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, marginTop:8, marginBottom:0 }}>Real-time matching active across 4,200+ centers nationwide.</p>
-            </div>
-            <div className="bc-glass bc-card-hover" style={{ display:'flex', gap:'clamp(18px,2.5vw,38px)', padding:'clamp(12px,1.5vw,22px) clamp(20px,3vw,38px)', borderRadius:28, border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden' }}>
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(255,235,238,.4),transparent)', pointerEvents:'none' }}/>
-              {[{val:'24k+',label:'Active Heroes'},{val:'142',label:'Urgent Calls'}].map(({val,label},i) => (
-                <div key={label} style={{ textAlign:'center', position:'relative', zIndex:1 }}>
-                  {i === 1 && <div style={{ position:'absolute', left:-10, top:'50%', transform:'translateY(-50%)', width:2, height:40, background:'linear-gradient(180deg,transparent,#D32F2F,transparent)' }}/>}
-                  <p style={{ fontSize:'clamp(24px,3vw,38px)', fontWeight:900, color:'#D32F2F', margin:0, textShadow:'0 2px 12px rgba(211,47,47,.2)' }}>{val}</p>
-                  <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.18em', marginTop:4, marginBottom:0 }}>{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        <section style={{ display:'flex', flexDirection:'column', gap:'clamp(16px,1.8vw,28px)' }}>
           <div className="bc-network-grid">
             <LebanonMap />
 
-            <div style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,1.6vw,18px)' }}>
-              <div className="bc-glass-deep bc-card-hover" style={{ flex:1, borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-                <div style={{ position:'absolute', right:-40, top:-40, width:120, height:120, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
-                <h3 style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:'clamp(15px,1.8vw,21px)', fontWeight:900, color:'#D32F2F', marginBottom:10, marginTop:0 }}>Medical Ecosystem</h3>
-                <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.6, marginBottom:16, marginTop:0 }}>Unified tracking for donors, hospitals, and emergency units.</p>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:12 }}>
-                  {[{svg:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z',c:'#D32F2F'},
-                    {svg:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',c:'#405878'},
-                    {svg:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',c:'#D32F2F'},
-                  ].map(({svg,c},i) => (
-                    <button key={i} className="bc-glass bc-btn" style={{ width:48, height:48, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.1)', cursor:'pointer' }}>
-                      <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:c }}><path d={svg}/></svg>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', borderRadius:'clamp(20px,3vw,38px)', padding:'clamp(18px,2.4vw,32px)', boxShadow:'0 16px 48px rgba(211,47,47,.35)', display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
-                <div style={{ position:'absolute', right:-22, bottom:-22, width:120, height:120, background:'rgba(255,255,255,.15)', borderRadius:'50%', filter:'blur(24px)', pointerEvents:'none' }}/>
-                <div style={{ position:'absolute', left:20, top:20, width:60, height:60, background:'rgba(255,255,255,.1)', borderRadius:'50%', filter:'blur(20px)', pointerEvents:'none' }}/>
-                <div>
-                  <p style={{ fontSize:'clamp(28px,3.8vw,44px)', fontWeight:900, margin:0 }}>8.4<span style={{ fontSize:'clamp(12px,1.4vw,17px)', fontWeight:400, opacity:.7, marginLeft:4 }}>min</span></p>
-                  <p style={{ fontWeight:900, fontSize:8, letterSpacing:'.28em', textTransform:'uppercase', opacity:.7, marginTop:8, marginBottom:0 }}>Avg Response Time</p>
-                </div>
-                <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, marginTop:18, lineHeight:1.6, opacity:.9, marginBottom:0 }}>Our decentralized intelligence optimizes matching speed daily.</p>
-              </div>
-            </div>
+<div className="bc-glass" style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', gap:'clamp(16px,2vw,24px)', padding:'clamp(16px,2vw,24px)', borderRadius:'clamp(16px,2.5vw,28px)', border:'2px solid rgba(211,47,47,.1)' }}>
+  <div style={{ textAlign:'center', marginBottom:8 }}>
+    <span style={{ fontSize:'clamp(11px,1.2vw,14px)', fontWeight:900, color:'#D32F2F', textTransform:'uppercase', letterSpacing:'.1em' }}>Live Analytics</span>
+  </div>
+  
+  {[
+  { label:'Donor Registrations', value: analytics.donors, color:'#50C878', icon:'👤' },
+  { label:'Emergency Clicks', value: analytics.emergencies, color:'#ff9800', icon:'🚨' },
+].map((stat, i) => {
+  const maxVal = Math.max(analytics.donors, analytics.emergencies, 20)
+  const widthPercent = (stat.value / maxVal) * 100
+    return (
+      <div key={i} style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:'clamp(14px,1.4vw,18px)' }}>{stat.icon}</span>
+            <span style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:700, color:'rgba(211,47,47,.65)', textTransform:'uppercase', letterSpacing:'.05em' }}>{stat.label}</span>
+          </div>
+          <span style={{ fontSize:'clamp(13px,1.2vw,16px)', fontWeight:900, color: stat.color, textShadow:`0 2px 8px ${stat.color}40` }}>{stat.value}</span>
+        </div>
+        <div style={{ width:'100%', height:'clamp(24px,3.5vw,36px)', background:'rgba(211,47,47,.08)', borderRadius:'clamp(8px,1.2vw,12px)', overflow:'hidden', border:'1px solid rgba(211,47,47,.12)', position:'relative' }}>
+          <motion.div
+            animate={{ width:`${widthPercent}%` }}
+            transition={{ duration:0.8, ease:'easeOut' }}
+            style={{ 
+              height:'100%', 
+              background:`linear-gradient(90deg,${stat.color},${stat.color}dd)`, 
+              borderRadius:'clamp(8px,1.2vw,12px)', 
+              boxShadow:`0 4px 16px ${stat.color}50`,
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'flex-end',
+              paddingRight:'clamp(8px,1vw,12px)'
+            }}
+          >
+            <span style={{ 
+              fontSize:'clamp(9px,.9vw,11px)', 
+              fontWeight:800, 
+              color:'white', 
+              textShadow:'0 1px 3px rgba(0,0,0,.3)',
+              opacity: widthPercent > 15 ? 1 : 0
+            }}>
+              {stat.value > 0 ? `${widthPercent.toFixed(0)}%` : ''}
+            </span>
+          </motion.div>
+        </div>
+      </div>
+    )
+  })}
+</div>
           </div>
         </section>
 
         {/* COMPATIBILITY MATRIX SECTION */}
-        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(24px,4vw,56px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.1)' }}>
+        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(18px,2.5vw,40px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.1)' }}>
           <div style={{ position:'absolute', right:'-18%', top:'-18%', width:'55%', height:'55%', background:'rgba(64,88,120,.18)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
           <div style={{ position:'absolute', left:'-18%', bottom:'-18%', width:'55%', height:'55%', background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
 
           <div style={{ textAlign:'center', maxWidth:580, margin:'0 auto', marginBottom:'clamp(28px,4vw,52px)', position:'relative', zIndex:1 }}>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.8vw,46px)', fontWeight:900, color:'#D32F2F', marginBottom:12, marginTop:0 }}>The Compatibility Matrix</h2>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(20px,2.8vw,36px)', fontWeight:900, color:'#D32F2F', marginBottom:12, marginTop:0 }}>The Compatibility Matrix</h2>
             <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:0 }}>Click any blood type to unlock donor and recipient pathways with visual precision.</p>
           </div>
 
@@ -816,10 +902,10 @@ export default function Home() {
 
         {/* CTA SECTION */}
         <section>
-          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(36px,5.5vw,80px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
+          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(28px,3.5vw,56px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', left:-40, top:0, width:180, height:180, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(50px)', opacity:.6, pointerEvents:'none' }}/>
             <div style={{ position:'absolute', right:-40, bottom:-20, width:150, height:150, background:'rgba(64,88,120,.3)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(26px,5.5vw,62px)', fontWeight:900, color:'#D32F2F', position:'relative', zIndex:1, lineHeight:1.1, letterSpacing:'-.04em', margin:0 }}>Ready to save lives?</h2>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3.5vw,48px)', fontWeight:900, color:'#D32F2F', position:'relative', zIndex:1, lineHeight:1.1, letterSpacing:'-.04em', margin:0 }}>Ready to save lives?</h2>
             <p style={{ fontSize:'clamp(12px,1.4vw,16px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:'clamp(12px,1.8vw,24px) auto 0', maxWidth:520, position:'relative', zIndex:1, lineHeight:1.65 }}>
               Join Lebanon's most innovative network of heroes. Your contribution is vital, and with our intelligent logistics, your impact is immediate.
             </p>
@@ -835,30 +921,26 @@ export default function Home() {
       </main>
 
       {/* FOOTER */}
-     <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
-  <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
+      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
+        <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
+            {/* Column 1: BloodConnect Info */}
+            <div>
+              <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
+              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
+                "Pioneering the future of hematological logistics through empathy and code."
+              </p>
+            </div>
+          </div>
       
-      {/* Column 1: BloodConnect Info */}
-      <div>
-        <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
-        <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
-          "Pioneering the future of hematological logistics through empathy and code."
-        </p>
-      </div>
- 
-      
-      
-    </div>
- 
-    {/* Simple copyright at bottom - REMOVED social icons */}
-    <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)' }}>
-      <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
-        © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
-      </p>
-    </div>
-  </div>
-</footer>
+          {/* Simple copyright at bottom */}
+          <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)' }}>
+            <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
+              © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {/* EMERGENCY FAB */}
       <div className="bc-fab-wrap">
@@ -877,14 +959,14 @@ export default function Home() {
                 { emoji:'💬', label:'Live Chat', path:'/emergency/chat' },
                 { emoji:'📍', label:'Nearest Center', path:'/emergency/locate' },
               ].map((a, i) => (
-                <button key={i} onClick={(e) => { e.stopPropagation(); go(a.path) }}
+                <div key={i} onClick={(e) => { e.stopPropagation(); go(a.path) }}
                   className="bc-btn"
                   style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'10px 12px', borderRadius:14, background:'none', border:'none', cursor:'pointer', textAlign:'left', transition:'background .18s', fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,235,238,.5)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                   <span style={{ fontSize:20 }}>{a.emoji}</span>
                   <span style={{ fontSize:13, fontWeight:700, color:'#D32F2F' }}>{a.label}</span>
-                </button>
+                </div>
               ))}
             </div>
           )}

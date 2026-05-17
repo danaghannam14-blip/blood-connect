@@ -15,12 +15,16 @@ import NotFound from './pages/NotFound'
 import HospitalPartners from './pages/HospitalPartners'
 import HowItWorks from './pages/HowItWorks'
 import Impact from './pages/Impact'
+import Chatbot from './pages/Chatbot'
+
+
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
+        <Route path="/chatbot" element={<Chatbot />} />
         <Route path="/" element={<Home />} />
         <Route path="/hospital-partners" element={<HospitalPartners />} />
         <Route path="/how-it-works" element={<HowItWorks />} />

@@ -318,8 +318,19 @@ function Login() {
       const donorData = { ...res.data.donor, is_eligible: false }
       localStorage.setItem('donorData', JSON.stringify(donorData))
 
+      // Track donor login for analytics
+      try {
+        await axios.post('https://blood-bank-eqyr.onrender.com/api/analytics/event', {
+          eventType: 'donor_login'
+        })
+        console.log('✅ Donor login tracked for analytics')
+      } catch (analyticsErr) {
+        console.error('Analytics tracking failed:', analyticsErr)
+        // Don't block login if analytics fails
+      }
+
       // Always route donors through health screening before dashboard
-      navigate('/donor/chatbot')
+      navigate('/chatbot')
       setIsLoading(false)
       return
     } catch {

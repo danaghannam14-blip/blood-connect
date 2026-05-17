@@ -661,10 +661,11 @@ function Chatbot() {
       setLoading(true)
       const donorData = JSON.parse(localStorage.getItem('donorData'))
       try {
-        const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/chatbot/screen', {
-          donor_id: donorData.id,
-          answers: newAnswers,
-        })
+        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const res = await axios.post(`${baseURL}/chatbot/screen`, {
+  donor_id: donorData.id,
+  answers: newAnswers,
+})
         await new Promise(resolve => setTimeout(resolve, 2000))
         setLoading(false)
         setEligible(res.data.eligible)

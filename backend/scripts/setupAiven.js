@@ -5,7 +5,7 @@ const conn = mysql.createConnection({
   host: 'mysql-16d1c321-blood-bank2026.k.aivencloud.com',
   port: 18083,
   user: 'avnadmin',
- password: process.env.AIVEN_PASSWORD,
+  password: process.env.AIVEN_PASSWORD,
   database: 'defaultdb',
   ssl: { rejectUnauthorized: false }
 })
@@ -119,6 +119,14 @@ CREATE TABLE IF NOT EXISTS appointments (
   FOREIGN KEY (donor_id) REFERENCES donors(id),
   FOREIGN KEY (hospital_id) REFERENCES hospitals(id),
   UNIQUE KEY no_overlap (hospital_id, appointment_date, appointment_time)
+);
+
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_event_type (event_type),
+  INDEX idx_created_at (created_at)
 );
 `
 
