@@ -535,7 +535,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const baseURL = import.meta.env.VITE_API_URL || 'https://blood-bank-eqyr.onrender.com/api'
+        const baseURL = 'https://blood-bank-eqyr.onrender.com/api'
         const res = await fetch(`${baseURL}/analytics/dashboard`)
         if (res.ok) {
           const data = await res.json()
@@ -562,7 +562,7 @@ export default function Home() {
 const go = (path) => { 
   // Track emergency clicks ONLY
   if (path === '/emergency') {
-    const baseURL = import.meta.env.VITE_API_URL || 'https://blood-bank-eqyr.onrender.com/api'
+    const baseURL = 'https://blood-bank-eqyr.onrender.com/api'
     
     console.log('🚨 EMERGENCY BUTTON CLICKED')
     console.log('📍 Sending to:', `${baseURL}/analytics/event`)
