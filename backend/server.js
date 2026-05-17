@@ -1,14 +1,3 @@
-const { execSync } = require('child_process');
-
-// Install Python dependencies on startup
-try {
-  console.log('📦 Installing Python dependencies...');
-  execSync('pip install --break-system-packages easyocr opencv-python numpy pillow', { stdio: 'inherit' });
-  console.log('✅ Python dependencies installed');
-} catch (err) {
-  console.error('⚠️ Failed to install Python deps:', err.message);
-}
-
 const express = require('express');
 const multer = require('multer');
 const dotenv = require('dotenv');
