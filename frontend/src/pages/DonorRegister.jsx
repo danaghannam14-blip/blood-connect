@@ -454,39 +454,40 @@ function DonorRegister() {
     })
   }
 
-  const handleScanId = async () => {
-    if (!idFile) { 
-      setIdMessage('Please select your ID photo first.') 
-      setIdStatus('failed')
-      return 
-    }
-    setIdStatus('scanning')
-    setIdMessage('')
-    try {
-      const compressed = await compressImage(idFile)
-      const formData = new FormData()
-      formData.append('id_photo', compressed, 'id.jpg')
-      
-      const res = await axios.post(`${API}/api/idcheck/scan`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 30000
-      })
-      
-      if (res.data.eligible) {
-        setIdStatus('verified')
-        setIdMessage(`Age verified! You are ${res.data.age} years old.`)
-        setForm(prev => ({ ...prev, date_of_birth: res.data.date_of_birth }))
-      } else {
-        setIdStatus('failed')
-        setIdMessage(res.data.message || 'You must be 18 years or older to donate.')
-      }
-    } catch (err) {
-      setIdStatus('failed')
-      const errorMsg = err.response?.data?.message || err.message || 'Could not scan ID. Please try a clearer photo.'
-      setIdMessage(errorMsg)
-      console.error('ID scan error:', err)
-    }
+
+const handleScanId = async () => {
+  if (!idFile) { 
+    setIdMessage('Please select your ID photo first.') 
+    setIdStatus('failed')
+    return 
   }
+  setIdStatus('scanning')
+  setIdMessage('')
+  try {
+    const compressed = await compressImage(idFile)
+    const formData = new FormData()
+    formData.append('id_photo', compressed, 'id.jpg')
+    
+    const res = await axios.post(`${API}/api/idcheck/scan`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000
+    })
+    
+    if (res.data.eligible) {
+      setIdStatus('verified')
+      setIdMessage(`Age verified! You are ${res.data.age} years old.`)
+      setForm(prev => ({ ...prev, date_of_birth: res.data.date_of_birth }))
+    } else {
+      setIdStatus('failed')
+      setIdMessage(res.data.message || 'You must be 18 years or older to donate.')
+    }
+  } catch (err) {
+    setIdStatus('failed')
+    const errorMsg = err.response?.data?.message || err.message || 'Could not scan ID. Please try a clearer photo.'
+    setIdMessage(errorMsg)
+    console.error('ID scan error:', err)
+  }
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
