@@ -1,6 +1,22 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+const fixDate = (dateStr) => {
+  if (!dateStr) return dateStr;
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  let [a, b, c] = parts;
+  if (parseInt(a) <= 31 && parseInt(c) > 1900) {
+    return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+  }
+  return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
+};
 
 router.post('/scan', upload.single('id_photo'), async (req, res) => {
   let tempFile = null;
@@ -9,7 +25,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
       return res.status(400).json({ message: 'No image uploaded' });
     }
 
-    tempFile = path.join('/tmp', `id_${Date.now()}.jpg`);  // ✅ Remove const
+    tempFile = path.join('/tmp', `id_${Date.now()}.jpg`);
     fs.writeFileSync(tempFile, req.file.buffer);
 
     console.log('📤 Running EasyOCR on:', tempFile);
@@ -123,3 +139,5 @@ except Exception as e:
     res.status(500).json({ message: 'Failed to scan ID.' });
   }
 });
+
+module.exports = router;
