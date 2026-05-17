@@ -11,11 +11,11 @@ const app = express();
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://bloodconnect-lb.vercel.app',
-      process.env.FRONTEND_URL
-    ];
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://bloodconnect-lb.vercel.app',
+  process.env.FRONTEND_URL
+];
     
     // Allow requests with no origin (like mobile apps, Postman, curl)
     if (!origin) {
