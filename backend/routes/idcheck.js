@@ -1,35 +1,21 @@
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const Anthropic = require('@anthropic-ai/sdk');
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
-
-const fixDate = (dateStr) => {
-  if (!dateStr) return dateStr;
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  let [a, b, c] = parts;
-  if (parseInt(a) <= 31 && parseInt(c) > 1900) {
-    return `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
-  }
-  return `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}`;
-};
-
 router.post('/scan', upload.single('id_photo'), async (req, res) => {
   try {
+    console.log('=== REQUEST RECEIVED ===');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    console.log('File:', req.file ? { size: req.file.size, mimetype: req.file.mimetype } : 'NO FILE');
+
     if (!req.file) {
+      console.log('❌ No file in request');
       return res.status(400).json({ message: 'No image uploaded' });
     }
 
+    console.log('✅ File received, converting to base64...');
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
 
     console.log('📤 Sending to Claude:', req.file.size, 'bytes');
+    console.log('🔑 API Key exists:', !!process.env.ANTHROPIC_API_KEY);
 
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
@@ -61,8 +47,9 @@ If NOT a Lebanese ID:
       ]
     });
 
+    console.log('✅ Claude response received');
     const text = message.content[0].type === 'text' ? message.content[0].text : '';
-    console.log('✅ Claude response:', text);
+    console.log('Response text:', text);
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -107,9 +94,9 @@ If NOT a Lebanese ID:
     });
 
   } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({ message: 'Failed to scan ID. Please try again.' });
+    console.error('❌ FULL ERROR:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: error.message || 'Failed to scan ID' });
   }
 });
-
-module.exports = router;
