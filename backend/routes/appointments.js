@@ -153,6 +153,26 @@ router.put('/confirm/:id', (req, res) => {
           [appointment.hospital_id, appointment.blood_type || 'O+'],
           () => {}
         )
+        // Decrement quantity_needed on the matching pending blood request
+db.query(
+  `UPDATE blood_requests 
+   SET quantity_needed = quantity_needed - 1 
+   WHERE hospital_id = ? AND blood_type = ? AND status = 'pending' AND quantity_needed > 0 
+   ORDER BY created_at ASC 
+   LIMIT 1`,
+  [appointment.hospital_id, appointment.blood_type || 'O+'],
+  (err, result) => {
+    if (err) console.error('Failed to decrement request:', err.message);
+
+    // Then check if that request is now fully fulfilled and close it
+    db.query(
+      `UPDATE blood_requests SET status = 'fulfilled' 
+       WHERE hospital_id = ? AND blood_type = ? AND quantity_needed = 0 AND status = 'pending'`,
+      [appointment.hospital_id, appointment.blood_type || 'O+'],
+      () => {}
+    );
+  }
+);
 // Mark notification as donated
 db.query(
   'UPDATE notifications SET donated = 1 WHERE donor_id = ? AND hospital_id = ?',
