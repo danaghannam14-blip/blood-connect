@@ -111,7 +111,7 @@ const STYLES = `
     background:rgba(255,255,255,.62);
     backdrop-filter:blur(40px);
     -webkit-backdrop-filter:blur(40px);
-    border-bottom:2px solid rgba(211,47,47,.1);
+    border-bottom:2px solid rgba#405878;
     box-shadow:0 4px 24px rgba(211,47,47,.06);
   }
 
@@ -349,7 +349,7 @@ function Dashboard() {
                     initial={{ scaleX: 0 }}
                     animate={visible ? { scaleX: 1 } : { scaleX: 0 }}
                     transition={{ delay: 0.3 + i * 0.1 }}
-                    style={{ position:'absolute', height:2, width:'clamp(20px,3vw,40px)', background: steps[i+1].done ? '#22c55e' : 'rgba(211,47,47,.1)', left: `calc(50% + ${24 + i * 0}px)`, originX:0 }}
+                    style={{ position:'absolute', height:2, width:'clamp(20px,3vw,40px)', background: steps[i+1].done ? '#22c55e' : 'rgba#405878', left: `calc(50% + ${24 + i * 0}px)`, originX:0 }}
                   />
                 )}
               </motion.div>
@@ -544,7 +544,7 @@ function Dashboard() {
                         </div>
                         <motion.span
                           whileHover={{ scale: 1.1 }}
-                          style={{ background:'rgba(211,47,47,.1)', color:'#D32F2F', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
+                          style={{ background:'rgba#405878', color:'#D32F2F', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
                         >
                           {row.blood_type}
                         </motion.span>

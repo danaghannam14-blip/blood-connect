@@ -167,7 +167,7 @@ function Orbs({ set }) {
 function LiveTicker() {
   const items = ['🔴 Tripoli — O- critically needed','🟡 Beirut — A+ supply stable','🔴 Baalbek — B+ urgent request','🟢 Sidon — AB+ available','🔴 Zahle — O+ shortage alert','🟢 Jounieh — All types available','🔴 Tyre — AB- emergency request']
   return (
-    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(64,88,120,.07))', borderTop:'1px solid rgba(211,47,47,.1)', borderBottom:'1px solid rgba(211,47,47,.1)', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
+    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(64,88,120,.07))', borderTop:'1px solid rgba#405878', borderBottom:'1px solid rgba#405878', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
       <div style={{ display:'flex', alignItems:'center' }}>
         <div style={{ background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', padding:'4px 18px', fontSize:10, fontWeight:900, letterSpacing:'.22em', textTransform:'uppercase', flexShrink:0, marginRight:24, borderRadius:'0 8px 8px 0' }}>LIVE</div>
         <div className="em-ticker-wrap">
@@ -227,7 +227,7 @@ function HospitalCard({ h, index, compatibleTypes }) {
       initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }}
       transition={{ delay:index*0.055, duration:.45, type:'spring' }}
       className="em-glass em-card-hover"
-      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden', marginBottom:10 }}
+      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba#405878', position:'relative', overflow:'hidden', marginBottom:10 }}
     >
       {index===0 && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#D32F2F,transparent)' }}/>}
       {index===0 && <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>}
@@ -434,7 +434,7 @@ function Emergency() {
                     <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em', margin:'0 0 10px' }}>Compatible for <span style={{ color:'#D32F2F' }}>{patientBloodType}</span> patient</p>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                       {compatibleBloodForPatient[patientBloodType].map(bt => (
-                        <span key={bt} style={{ background:'rgba(211,47,47,.1)', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                        <span key={bt} style={{ background:'rgba#405878', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
                       ))}
                     </div>
                   </div>
@@ -506,7 +506,7 @@ function Emergency() {
                 {patientBloodType && (
                   <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'3px 0 0', fontWeight:700 }}>
                     Compatible blood for{' '}
-                    <span style={{ color:'#D32F2F', fontWeight:900, background:'rgba(211,47,47,.1)', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
+                    <span style={{ color:'#D32F2F', fontWeight:900, background:'rgba#405878', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
                   </p>
                 )}
               </div>
@@ -534,12 +534,12 @@ function Emergency() {
 
           {/* LEFT — list */}
           <motion.div initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }} transition={{ delay:.1, duration:.5 }}>
-            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba(211,47,47,.1)', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba#405878', marginBottom:12 }}>
               <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap?'active':'inactive'}`}>📋 Hospital List</button>
               <button onClick={() => setShowMap(true)}  className={`em-toggle-btn ${showMap?'active':'inactive'}`}>🗺️ Map View</button>
             </div>
 
-            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba(211,47,47,.1)', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba#405878', marginBottom:12 }}>
               <span style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>Stock level</span>
               <div style={{ display:'flex', gap:14 }}>
                 {[{ c:'#ea580c', l:'Low (≤5)' }, { c:'#16a34a', l:'Available' }].map(({ c, l }) => (
@@ -559,7 +559,7 @@ function Emergency() {
                 </div>
               ) : filteredHospitals.length === 0 ? (
                 <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="em-glass"
-                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba(211,47,47,.1)' }}>
+                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba#405878' }}>
                   <div style={{ fontSize:42, marginBottom:12 }}>😔</div>
                   <p style={{ fontWeight:900, color:'#D32F2F', fontSize:14, margin:'0 0 6px' }}>No hospitals found</p>
                   <p style={{ fontSize:12, color:'rgba(211,47,47,.5)', fontWeight:600, margin:0, lineHeight:1.6 }}>Try searching a different location or call hospitals directly.</p>
@@ -585,7 +585,7 @@ function Emergency() {
                         { label:'Compatible Types', val:compatibleTypes.length, icon:'🩸' },
                         { label:'Network Status', val:'LIVE', icon:'📡' },
                       ].map(({ label, val, icon }) => (
-                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba(211,47,47,.1)' }}>
+                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba#405878' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
                             <span style={{ fontSize:16 }}>{icon}</span>
                             <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.18em', margin:0 }}>{label}</p>
@@ -596,11 +596,11 @@ function Emergency() {
                     </div>
                     {patientBloodType && (
                       <div style={{ padding:'0 clamp(14px,1.8vw,24px) clamp(14px,1.8vw,22px)' }}>
-                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba(211,47,47,.1)' }}>
+                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba#405878' }}>
                           <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px' }}>Compatible donor types</p>
                           <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                             {compatibleTypes.map(bt => (
-                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba(211,47,47,.1),rgba(64,88,120,.07))', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba#405878,rgba(64,88,120,.07))', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
                             ))}
                           </div>
                         </div>
@@ -610,7 +610,7 @@ function Emergency() {
                 </motion.div>
               ) : (
                 <motion.div key="map" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
-                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba(211,47,47,.1)', height:'calc(100vh - 260px)' }}>
+                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba#405878', height:'calc(100vh - 260px)' }}>
                   {userLocation && (
                     <MapContainer center={userLocation} zoom={13} style={{ height:'100%', width:'100%' }}>
                       <RecenterMap center={mapCenter||userLocation} />

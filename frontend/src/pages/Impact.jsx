@@ -86,7 +86,7 @@ function Impact() {
 
     .imp-stat-card:hover {
       transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba(211,47,47,.1);
+      box-shadow:0 20px 40px rgba#405878;
     }
 
     .imp-stat-number {
@@ -145,7 +145,7 @@ function Impact() {
 
     .imp-story-card:hover {
       transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba(211,47,47,.1);
+      box-shadow:0 20px 40px rgba#405878;
     }
 
     .imp-story-card h3 {

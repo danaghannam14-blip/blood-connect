@@ -272,7 +272,7 @@ function HospitalPartners() {
       background:rgba(255,255,255,.62);
       backdrop-filter:blur(40px);
       -webkit-backdrop-filter:blur(40px);
-      border-bottom:2px solid rgba(211,47,47,.1);
+      border-bottom:2px solid rgba#405878;
       box-shadow:0 4px 24px rgba(211,47,47,.06);
     }
 
@@ -492,7 +492,7 @@ function HospitalPartners() {
     }
 
     .hp-error {
-      background:rgba(211,47,47,.1);
+      background:rgba#405878;
       border:2px solid rgba(211,47,47,.3);
       border-radius:16px;
       padding:24px;

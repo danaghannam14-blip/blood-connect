@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PremiumHamburgerMenu } from "../components/NavbarHamburger-Premium"
-/* ─── Blood type compatibility data ─────────────────────── */
+import lebanonMap from '../assets/lebanon-map.png'
+
 const BLOOD_DATA = {
   'A+':  { canReceive: ['A+','A-','O+','O-'],                          canDonateTo: ['A+','AB+'],                         reach: '34%' },
   'A-':  { canReceive: ['A-','O-'],                                    canDonateTo: ['A+','A-','AB+','AB-'],              reach: '6%'  },
@@ -15,7 +16,6 @@ const BLOOD_DATA = {
 }
 const ALL_TYPES = ['A+','A-','B+','B-','AB+','AB-','O+','O-']
 
-/* ─── Injected CSS ───────────────────────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
@@ -36,7 +36,6 @@ const STYLES = `
   @keyframes bc-orb       { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.08); } 66% { transform:translateY(8px) translateX(-10px) scale(.96); } }
   @keyframes bc-vitfill   { from { width:0; } to { width:92%; } }
   @keyframes bc-pop       { 0% { transform:scale(.8); opacity:0; } 60% { transform:scale(1.05); } 100% { transform:scale(1); opacity:1; } }
-  @keyframes bc-shimmer   { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
   @keyframes bc-glow-ring { 0%,100% { box-shadow:0 0 16px rgba(211,47,47,.2),inset 0 0 8px rgba(211,47,47,.08); } 50% { box-shadow:0 0 40px rgba(211,47,47,.55),inset 0 0 20px rgba(211,47,47,.22); } }
   @keyframes bc-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes bc-heartbeat { 0%,100%  { transform:scale(1); } 14% { transform:scale(1.15); } 28% { transform:scale(1); } 42% { transform:scale(1.15); } }
@@ -56,14 +55,14 @@ const STYLES = `
     background:rgba(255,255,255,.42);
     backdrop-filter:blur(28px) saturate(180%);
     -webkit-backdrop-filter:blur(28px) saturate(180%);
-    border:1px solid rgba(255,255,255,.72);
+    border:1px solid rgba(211,47,47,.2);
     box-shadow:0 8px 32px rgba(211,47,47,.07),inset 0 0 20px rgba(255,255,255,.6);
   }
   .bc-glass-deep {
     background:rgba(255,255,255,.35);
     backdrop-filter:blur(40px) contrast(1.1);
     -webkit-backdrop-filter:blur(40px) contrast(1.1);
-    border:1px solid rgba(255,255,255,.8);
+    border:1px solid rgba(211,47,47,.2);
     box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
   }
 
@@ -72,7 +71,7 @@ const STYLES = `
     background:rgba(255,255,255,.62);
     backdrop-filter:blur(40px);
     -webkit-backdrop-filter:blur(40px);
-    border-bottom:2px solid rgba(211,47,47,.1);
+    border-bottom:2px solid rgba(211,47,47,.2);
     box-shadow:0 4px 24px rgba(211,47,47,.06);
   }
   .bc-nav-inner {
@@ -110,7 +109,7 @@ const STYLES = `
     border:2px solid rgba(211,47,47,.2) !important;
     color:#D32F2F;
   }
-  .bc-btn-secondary:hover { background:rgba(255,255,255,.72);border-color:rgba(211,47,47,.42) !important; }
+  .bc-btn-secondary:hover { background:rgba(255,255,255,.72);border-color:rgba(211,47,47,.2) !important; }
 
   .bc-chip {
     cursor:pointer;border:none;outline:none;
@@ -128,7 +127,7 @@ const STYLES = `
   .bc-cell-receive {
     cursor:pointer;
     background:#d2e2f7;
-    border:2px solid #405878;
+    border:2px solid rgba(211,47,47,.2);
     border-radius:clamp(10px,1.3vw,14px);
     aspect-ratio:1;
     display:flex;align-items:center;justify-content:center;
@@ -140,7 +139,7 @@ const STYLES = `
   .bc-cell-donate {
     cursor:pointer;
     background:rgba(255,235,238,.5);
-    border:2px solid rgba(211,47,47,.4);
+    border:2px solid rgba(211,47,47,.2);
     border-radius:clamp(10px,1.3vw,14px);
     aspect-ratio:1;
     display:flex;align-items:center;justify-content:center;
@@ -159,46 +158,23 @@ const STYLES = `
 
   .bc-map-wrap {
     border-radius:clamp(24px,3.5vw,44px);overflow:hidden;
-    border:2px solid rgba(211,47,47,.15);
+    border:2px solid rgba(211,47,47,.2);
     box-shadow:0 24px 56px -12px rgba(211,47,47,.1),inset 0 0 40px rgba(255,255,255,.6);
     background:rgba(255,255,255,.4);
     backdrop-filter:blur(40px) contrast(1.1);
     display:flex;flex-direction:column;
+    height:100%;
   }
-  .bc-map-topbar {
-    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
-    padding:16px 20px 12px;
-    background:linear-gradient(135deg,rgba(255,235,238,.5),rgba(255,255,255,.3));
-    border-bottom:1px solid rgba(211,47,47,.1);
-  }
-  .bc-map-chip {
-    display:flex;align-items:center;gap:8px;
-    background:rgba(255,255,255,.7);border:1px solid rgba(211,47,47,.15);
-    border-radius:12px;padding:8px 16px;
-    font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D32F2F;
-    transition:all .2s;
-  }
-  .bc-map-chip:hover { transform:translateY(-2px);box-shadow:0 6px 16px rgba(211,47,47,.12); }
-  .bc-map-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+  
   .bc-map-svg-wrap {
-    width:100%;aspect-ratio:900/820;display:flex;align-items:center;justify-content:center;
-    padding:28px;overflow:hidden;
+    width:100%;flex:1;display:flex;align-items:center;justify-content:center;
+    padding:0;overflow:hidden;
     background:linear-gradient(180deg,rgba(14,165,233,.05),rgba(255,235,238,.1));
   }
-  .bc-map-svg-wrap svg { width:92%;height:92%;display:block;margin:auto;filter:drop-shadow(0 4px 20px rgba(211,47,47,.1)); }
-  .bc-map-bottombar {
-    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-    padding:12px 20px 16px;
-    background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,235,238,.4));
-    border-top:1px solid rgba(211,47,47,.1);
-  }
-  .bc-map-legend { display:flex;gap:20px;flex-wrap:wrap;align-items:center; }
-  .bc-map-legend-item { display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#D32F2F; }
-  .bc-map-vbar { width:130px;height:8px;background:rgba(211,47,47,.1);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.05); }
-  .bc-map-vfill { height:100%;background:linear-gradient(90deg,#D32F2F,#405878);border-radius:999px;animation:bc-vitfill 2s ease forwards; }
+  .bc-map-svg-wrap img { width:100%;height:100%;object-fit:cover;display:block;filter:drop-shadow(0 4px 20px rgba(211,47,47,.1)); }
 
   .bc-hero-grid    { display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,2vw,32px);align-items:center;min-height:74vh; }
-  .bc-network-grid { display:grid;grid-template-columns:1.4fr 1.4fr;gap:clamp(16px,1.8vw,24px);align-items:start; }
+  .bc-network-grid { display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,2vw,24px);align-items:stretch;height:100%; }
   .bc-compat-grid  { display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(20px,2.5vw,40px);align-items:start; }
   .bc-type-grid    { display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,.6vw,8px); }
 
@@ -260,7 +236,6 @@ if (typeof document !== 'undefined' && !document.getElementById('bc-styles-v1'))
   document.head.appendChild(s)
 }
 
-/* ─── Particle Field ─────────────────────────────────────── */
 function ParticleField() {
   const particles = Array.from({ length: 28 }, (_, i) => ({
     id: i,
@@ -293,163 +268,19 @@ function ParticleField() {
   )
 }
 
-/* ─── Lebanon Map ────────────────────────────────────────── */
 function LebanonMap() {
   return (
     <div className="bc-map-wrap">
-      <div className="bc-map-topbar">
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-          {[
-            { color:'#22c55e', label:'Beirut: Live Matching', delay:'0s' },
-            { color:'#D32F2F', label:'Tripoli: Urgent Need',  delay:'.4s' },
-          ].map(chip => (
-            <div key={chip.label} className="bc-map-chip">
-              <span className="bc-map-dot" style={{ background: chip.color, boxShadow:`0 0 8px ${chip.color}`, animation:`bc-pulse 1.8s ease-in-out infinite`, animationDelay: chip.delay }} />
-              {chip.label}
-            </div>
-          ))}
-        </div>
-        <span style={{ fontFamily:'monospace', fontSize:12, color:'rgba(211,47,47,.8)', background:'rgba(255,235,238,.6)', padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.15)' }}>
-          33°N 35°E
-        </span>
-      </div>
-
       <div className="bc-map-svg-wrap">
-        <svg viewBox="0 0 900 820" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="bcLbg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#2a2a45"/>
-              <stop offset="50%" stopColor="#243158"/>
-              <stop offset="100%" stopColor="#1a4a7a"/>
-            </linearGradient>
-            <filter id="bcGlow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <style>{`
-              .mgrid{stroke:rgba(64,88,120,.15);stroke-width:1}
-              .msea{fill:rgba(64,88,120,.35)}
-              .gov{stroke:rgba(14,165,233,.6);stroke-width:2.2;stroke-linejoin:round}
-              .akkar{fill:rgba(211,47,47,.25)}.north{fill:rgba(64,88,120,.35)}
-              .bh{fill:rgba(211,47,47,.3)}.kj{fill:rgba(64,88,120,.3)}
-              .ml{fill:rgba(211,47,47,.2)}.beqaa{fill:rgba(64,88,120,.25)}
-              .nab{fill:rgba(211,47,47,.22)}.south{fill:rgba(64,88,120,.2)}
-              .beirut-gov{fill:rgba(211,47,47,.75)}
-              .mcity{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;fill:white;letter-spacing:1px}
-              .msub{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.8px}
-              .mlabel{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;fill:rgba(255,255,255,.72);letter-spacing:1px}
-              .mfooter{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;fill:rgba(211,47,47,.5);letter-spacing:6px}
-              .dashBlue{stroke:#405878;stroke-width:2;stroke-dasharray:8 8}
-              .dashRed{stroke:#D32F2F;stroke-width:2;stroke-dasharray:8 8}
-              .dashGreen{stroke:#4ade80;stroke-width:2;stroke-dasharray:8 8}
-            `}</style>
-          </defs>
-
-          <rect width="900" height="820" fill="url(#bcLbg)"/>
-          <path className="msea" d="M0 0 L260 0 C240 140 240 250 245 380 C250 530 235 680 220 820 L0 820 Z"/>
-
-          <g>
-            {[80,160,240,320,400,480,560,640,720].map(y => <line key={`h${y}`} x1="0" y1={y} x2="900" y2={y} className="mgrid"/>)}
-            {[80,160,240,320,400,480,560,640,720,800].map(x => <line key={`v${x}`} x1={x} y1="0" x2={x} y2="820" className="mgrid"/>)}
-          </g>
-
-          <g transform="translate(120,5) scale(1.15)">
-            <path className="gov akkar" d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L500 106 L472 110 L448 116 L418 112 L388 105 L370 90 L374 68 Z"/>
-            <path className="gov north" d="M355 120 L388 105 L418 112 L448 116 L472 110 L495 120 L505 150 L498 182 L485 205 L462 224 L438 235 L410 248 L380 242 L352 238 L330 228 L318 210 L320 180 L335 145 Z"/>
-            <path className="gov bh" d="M495 120 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L518 388 L492 370 L470 352 L452 328 L438 300 L425 268 L410 248 L438 235 L462 224 L485 205 L498 182 L505 150 Z"/>
-            <path className="gov kj" d="M300 210 L330 228 L352 238 L380 242 L410 248 L425 268 L420 300 L400 325 L372 338 L340 332 L318 320 L298 295 L286 268 L286 235 Z"/>
-            <path className="gov beirut-gov" d="M268 328 L282 330 L288 345 L280 358 L265 356 L260 340 Z"/>
-            <path className="gov ml" d="M286 235 L298 295 L318 320 L340 332 L372 338 L400 325 L420 300 L438 318 L445 350 L438 380 L420 418 L392 450 L362 460 L332 455 L308 442 L286 418 L266 388 L252 352 L260 340 L265 356 L280 358 L288 345 L282 330 L268 328 L258 290 L268 250 Z"/>
-            <path className="gov beqaa" d="M438 318 L452 328 L470 352 L492 370 L520 390 L540 418 L530 448 L505 470 L492 500 L470 528 L448 520 L425 505 L405 485 L392 450 L420 418 L438 380 L445 350 Z"/>
-            <path className="gov nab" d="M332 455 L362 460 L392 450 L405 485 L425 505 L418 532 L395 555 L370 570 L338 565 L315 550 L300 522 L298 490 L310 468 Z"/>
-            <path className="gov south" d="M252 352 L266 388 L286 418 L310 468 L298 490 L300 522 L315 550 L338 565 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 Z"/>
-
-            <path d="M385 45 L430 38 L470 48 L500 42 L520 54 L548 50 L560 62 L556 82 L540 88 L525 102 L528 108 L558 118 L578 138 L594 172 L610 208 L620 245 L612 275 L628 300 L620 340 L602 362 L585 380 L560 372 L542 392 L540 418 L530 448 L505 470 L492 500 L470 528 L418 532 L395 555 L370 570 L330 600 L312 640 L288 675 L250 680 L220 665 L205 632 L205 592 L210 548 L218 500 L225 455 L232 412 L240 378 L252 352 L258 290 L268 250 L300 210 L320 180 L335 145 L355 120 L370 90 L374 68 Z"
-              fill="none" stroke="rgba(211,47,47,.6)" strokeWidth="3" filter="url(#bcGlow)"/>
-
-            <line x1="275" y1="343" x2="355" y2="165" className="dashBlue"/>
-            <line x1="275" y1="343" x2="520" y2="270" className="dashRed"/>
-            <line x1="275" y1="343" x2="265" y2="500" className="dashGreen"/>
-
-            {/* TRIPOLI */}
-            <circle cx="355" cy="165" r="34" fill="rgba(64,88,120,.2)">
-              <animate attributeName="r" values="34;50;34" dur="3s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values=".5;0;.5" dur="3s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="355" cy="165" r="11" fill="#405878" stroke="white" strokeWidth="4"/>
-            <rect x="188" y="137" width="155" height="58" rx="12" fill="rgba(0,0,0,.8)"/>
-            <text x="204" y="162" className="mcity">TRIPOLI</text>
-            <text x="204" y="183" className="msub" fill="#D32F2F">URGENT NEED</text>
-
-            {/* BEIRUT */}
-            <circle cx="275" cy="343" r="42" fill="rgba(211,47,47,.2)">
-              <animate attributeName="r" values="42;62;42" dur="2.5s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values=".5;0;.5" dur="2.5s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="275" cy="343" r="14" fill="#D32F2F" stroke="white" strokeWidth="4"/>
-            <rect x="82" y="318" width="182" height="58" rx="12" fill="rgba(0,0,0,.8)"/>
-            <text x="98" y="343" className="mcity">BEIRUT</text>
-            <text x="98" y="364" className="msub" fill="#405878">LIVE MATCHING</text>
-
-            {/* BAALBEK */}
-            <circle cx="520" cy="270" r="30" fill="rgba(211,47,47,.2)">
-              <animate attributeName="r" values="30;46;30" dur="3s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values=".45;0;.45" dur="3s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="520" cy="270" r="10" fill="#D32F2F" stroke="white" strokeWidth="4"/>
-            <rect x="330" y="220" width="150" height="56" rx="12" fill="rgba(0,0,0,.8)"/>
-            <text x="348" y="250" className="mcity">BAALBEK</text>
-            <text x="348" y="270" className="msub" fill="#405878">MATCHING</text>
-
-            {/* SIDON */}
-            <circle cx="265" cy="500" r="28" fill="rgba(64,88,120,.2)">
-              <animate attributeName="r" values="28;44;28" dur="3.5s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values=".45;0;.45" dur="3.5s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="265" cy="500" r="10" fill="#405878" stroke="white" strokeWidth="4"/>
-            <rect x="290" y="477" width="118" height="54" rx="12" fill="rgba(0,0,0,.8)"/>
-            <text x="305" y="500" className="mcity">SIDON</text>
-            <text x="305" y="520" className="msub" fill="#4ade80">ACTIVE</text>
-
-            <text x="455" y="82" textAnchor="middle" className="mlabel">AKKAR</text>
-            <text x="410" y="192" textAnchor="middle" className="mlabel">NORTH</text>
-            <text x="555" y="360" textAnchor="middle" className="mlabel">BAALBEK-HERMEL</text>
-            <text x="350" y="285" textAnchor="middle" className="mlabel">KESERWAN-JBEIL</text>
-            <text x="340" y="430" textAnchor="middle" className="mlabel">MOUNT LEBANON</text>
-            <text x="478" y="490" textAnchor="middle" className="mlabel">BEQAA</text>
-            <text x="360" y="555" textAnchor="middle" className="mlabel">NABATIEH</text>
-            <text x="238" y="610" textAnchor="middle" className="mlabel">SOUTH</text>
-
-            <text x="30" y="780" className="mfooter">LEBANON · BLOOD NETWORK · LIVE</text>
-          </g>
-        </svg>
-      </div>
-
-      <div className="bc-map-bottombar">
-        <div className="bc-map-legend">
-          {[
-            { color:'#D32F2F', label:'Live matching' },
-            { color:'#405878', label:'Urgent need' },
-            { color:'#4ade80', label:'Active' },
-            { color:'#ff8a80', label:'Matching' },
-          ].map(({ color, label }) => (
-            <div key={label} className="bc-map-legend-item">
-              <span className="bc-map-dot" style={{ background: color, width:12, height:12, boxShadow:`0 0 8px ${color}` }}/>
-              {label}
-            </div>
-          ))}
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-          <span style={{ fontSize:11, fontWeight:700, color:'#D32F2F' }}>Network vitality</span>
-          <div className="bc-map-vbar"><div className="bc-map-vfill"/></div>
-          <span style={{ fontSize:18, fontWeight:900, color:'#D32F2F' }}>92%</span>
-        </div>
+        <img 
+          src={lebanonMap}
+          alt="Lebanon Blood Network Map" 
+        />
       </div>
     </div>
   )
 }
 
-/* ─── Blood Drop Visual ──────────────────────────────────── */
 function BloodDropVisual() {
   const cells = Array.from({ length: 8 }, (_, i) => ({
     id: i,
@@ -516,7 +347,6 @@ function BloodDropVisual() {
   )
 }
 
-/* ─── Main Home Component ────────────────────────────────── */
 export default function Home() {
   const navigate = useNavigate()
   const [bloodType, setBloodType] = useState('A+')
@@ -524,14 +354,10 @@ export default function Home() {
   const [sosHover, setSosHover] = useState(false)
   const [visible, setVisible] = useState(false)
   const [analytics, setAnalytics] = useState({
-    admins: 0,
-    hospitals: 0,
     donors: 0,
     emergencies: 0,
-    maxValue: 100
   })
 
-  // Fetch analytics every 5 seconds
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -539,13 +365,9 @@ export default function Home() {
         const res = await fetch(`${baseURL}/analytics/dashboard`)
         if (res.ok) {
           const data = await res.json()
-          const max = Math.max(data.admins || 0, data.hospitals || 0, data.donors || 0, data.emergencies || 0, 100)
           setAnalytics({
-            admins: data.admins || 0,
-            hospitals: data.hospitals || 0,
             donors: data.donors || 0,
             emergencies: data.emergencies || 0,
-            maxValue: max
           })
         }
       } catch (err) {
@@ -559,60 +381,20 @@ export default function Home() {
   }, [])
   
   useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
-const go = (path) => { 
-  // Track emergency clicks ONLY
-  if (path === '/emergency') {
-    const baseURL = 'https://blood-bank-eqyr.onrender.com/api'
-    
-    console.log('🚨 EMERGENCY BUTTON CLICKED')
-    console.log('📍 Sending to:', `${baseURL}/analytics/event`)
-    
-    // POST to track emergency event
-    fetch(`${baseURL}/analytics/event`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        eventType: 'emergency' 
-      })
-    })
-    .then(res => {
-      console.log('📊 Server response status:', res.status)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    })
-    .then(data => {
-      console.log('✅ SUCCESS - Event recorded:', data)
-      
-      // Wait 300ms then refetch analytics to update bar
-      setTimeout(() => {
-        console.log('🔄 Refreshing analytics...')
-        fetch(`${baseURL}/analytics/dashboard`)
-          .then(res => res.json())
-          .then(data => {
-            console.log('📊 New analytics:', data)
-            // Update state with new data
-            setAnalytics({
-              donors: data.donors || 0,
-              emergencies: data.emergencies || 0,
-            })
-            console.log('✅ UI Updated!')
-          })
-          .catch(err => console.error('Refresh failed:', err))
-      }, 300)
-    })
-    .catch(err => {
-      console.error('❌ TRACKING FAILED:', err.message)
-    })
-  }
   
-  // Navigate after tracking
-  navigate(path)
-}
+  const go = (path) => { 
+    if (path === '/emergency') {
+      const baseURL = 'https://blood-bank-eqyr.onrender.com/api'
+      fetch(`${baseURL}/analytics/event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventType: 'emergency' })
+      }).catch(err => console.error('Tracking failed:', err))
+    }
+    navigate(path)
+  }
 
   const selectType = (t) => { if (t === bloodType) return; setBloodType(t); setAnimKey(k => k + 1) }
-
   const data = BLOOD_DATA[bloodType]
 
   const fadeUp = (delay = 0) => ({
@@ -631,7 +413,6 @@ const go = (path) => {
     <div className="bc-root">
       <ParticleField />
 
-      {/* Orbs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
         {[
           { t:'8%', l:'8%', w:'min(420px,36vw)', c:'rgba(211,47,47,.17)', d:'0s' },
@@ -643,10 +424,8 @@ const go = (path) => {
         ))}
       </div>
 
-      {/* ══ NAVBAR WITH HAMBURGER MENU ════════════════════════ */}
       <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition:'transform .6s cubic-bezier(.22,1,.36,1)' }}>
         <div className="bc-nav-inner">
-          {/* Logo - Updated Title */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -659,7 +438,6 @@ const go = (path) => {
             </span>
           </motion.div>
       
-          {/* Emergency Button - CENTER */}
           <div style={{ flex:1, display:'flex', justifyContent:'center' }}>
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
@@ -674,15 +452,12 @@ const go = (path) => {
             </motion.button>
           </div>
       
-          {/* HAMBURGER MENU - RIGHT SIDE */}
           <PremiumHamburgerMenu />
         </div>
       </header>
 
-      {/* ══ MAIN CONTENT ═══════════════════════════════════════ */}
       <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(14px,2vw,28px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(36px,4vw,64px)' }}>
 
-        {/* HERO SECTION */}
         <section className="bc-hero-grid">
           <div style={{ display:'flex', flexDirection:'column', gap:'clamp(10px,1.2vw,16px)' }}>
             <div style={fadeUp(0)}>
@@ -724,7 +499,7 @@ const go = (path) => {
               <BloodDropVisual />
             </div>
 
-            <div className="bc-stat-card-a bc-glass bc-card-hover" style={{ position:'absolute', top:'-4%', right:'-4%', zIndex:20, borderRadius:26, padding:'clamp(14px,1.8vw,22px)', minWidth:'min(200px,22vw)', border:'2px solid #405878' }}>
+            <div className="bc-stat-card-a bc-glass bc-card-hover" style={{ position:'absolute', top:'-4%', right:'-4%', zIndex:20, borderRadius:26, padding:'clamp(14px,1.8vw,22px)', minWidth:'min(200px,22vw)', border:'2px solid rgba(211,47,47,.2)' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                 <div style={{ width:44, height:44, background:'rgba(211,47,47,.1)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', animation:'bc-hb 1.5s ease-in-out infinite', flexShrink:0 }}>
                   <svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#D32F2F' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
@@ -745,7 +520,7 @@ const go = (path) => {
               </div>
             </div>
 
-            <div className="bc-stat-card-b bc-glass" style={{ position:'absolute', bottom:'-4%', left:'-6%', width:'clamp(100px,12vw,150px)', height:'clamp(100px,12vw,150px)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex:20, border:'2px solid #405878' }}>
+            <div className="bc-stat-card-b bc-glass" style={{ position:'absolute', bottom:'-4%', left:'-6%', width:'clamp(100px,12vw,150px)', height:'clamp(100px,12vw,150px)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex:20, border:'2px solid rgba(211,47,47,.2)' }}>
               <svg viewBox="0 0 24 24" style={{ width:'44%', height:'44%', stroke:'#D32F2F', fill:'none', strokeWidth:2, animation:'bc-spin8 8s linear infinite' }}>
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
@@ -753,66 +528,60 @@ const go = (path) => {
           </div>
         </section>
 
-        {/* NETWORK SECTION */}
         <section style={{ display:'flex', flexDirection:'column', gap:'clamp(16px,1.8vw,28px)' }}>
           <div className="bc-network-grid">
             <LebanonMap />
 
-<div className="bc-glass" style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', gap:'clamp(16px,2vw,24px)', padding:'clamp(16px,2vw,24px)', borderRadius:'clamp(16px,2.5vw,28px)', border:'2px solid rgba(211,47,47,.1)' }}>
-  <div style={{ textAlign:'center', marginBottom:8 }}>
-    <span style={{ fontSize:'clamp(11px,1.2vw,14px)', fontWeight:900, color:'#D32F2F', textTransform:'uppercase', letterSpacing:'.1em' }}>Live Analytics</span>
-  </div>
-  
-  {[
-  { label:'Donor Registrations', value: analytics.donors, color:'#50C878', icon:'👤' },
-  { label:'Emergency Clicks', value: analytics.emergencies, color:'#ff9800', icon:'🚨' },
-].map((stat, i) => {
-  const maxVal = Math.max(analytics.donors, analytics.emergencies, 20)
-  const widthPercent = (stat.value / maxVal) * 100
-    return (
-      <div key={i} style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <span style={{ fontSize:'clamp(14px,1.4vw,18px)' }}>{stat.icon}</span>
-            <span style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:700, color:'rgba(211,47,47,.65)', textTransform:'uppercase', letterSpacing:'.05em' }}>{stat.label}</span>
-          </div>
-          <span style={{ fontSize:'clamp(13px,1.2vw,16px)', fontWeight:900, color: stat.color, textShadow:`0 2px 8px ${stat.color}40` }}>{stat.value}</span>
-        </div>
-        <div style={{ width:'100%', height:'clamp(24px,3.5vw,36px)', background:'rgba(211,47,47,.08)', borderRadius:'clamp(8px,1.2vw,12px)', overflow:'hidden', border:'1px solid rgba(211,47,47,.12)', position:'relative' }}>
-          <motion.div
-            animate={{ width:`${widthPercent}%` }}
-            transition={{ duration:0.8, ease:'easeOut' }}
-            style={{ 
-              height:'100%', 
-              background:`linear-gradient(90deg,${stat.color},${stat.color}dd)`, 
-              borderRadius:'clamp(8px,1.2vw,12px)', 
-              boxShadow:`0 4px 16px ${stat.color}50`,
-              display:'flex',
-              alignItems:'center',
-              justifyContent:'flex-end',
-              paddingRight:'clamp(8px,1vw,12px)'
-            }}
-          >
-            <span style={{ 
-              fontSize:'clamp(9px,.9vw,11px)', 
-              fontWeight:800, 
-              color:'white', 
-              textShadow:'0 1px 3px rgba(0,0,0,.3)',
-              opacity: widthPercent > 15 ? 1 : 0
-            }}>
-              {stat.value > 0 ? `${widthPercent.toFixed(0)}%` : ''}
-            </span>
-          </motion.div>
-        </div>
-      </div>
-    )
-  })}
-</div>
+            <div className="bc-glass" style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', gap:'clamp(20px,2.5vw,28px)', padding:'clamp(28px,3.5vw,40px)', borderRadius:'clamp(16px,2.5vw,28px)', border:'2px solid rgba(211,47,47,.2)' }}>
+              <div style={{ textAlign:'center' }}>
+                <span style={{ fontSize:'clamp(11px,1.2vw,14px)', fontWeight:900, color:'#D32F2F', textTransform:'uppercase', letterSpacing:'.1em' }}>Live Analytics</span>
+              </div>
+              
+              <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'center', gap:'clamp(40px,6vw,60px)', flex:1 }}>
+                {[
+                  { label:'Donor Registrations', value: analytics.donors, color:'#4CAF50'},
+                  { label:'Emergency Clicks', value: analytics.emergencies, color:'#FF9800' },
+                ].map((stat, i) => {
+                  const maxVal = Math.max(analytics.donors, analytics.emergencies, 20)
+                  const heightPercent = maxVal > 0 ? (stat.value / maxVal) * 100 : 0
+                  return (
+                    <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'clamp(12px,1.8vw,20px)', flex:1, minWidth:0 }}>
+                      <div style={{ textAlign:'center' }}>
+                        <span style={{ fontSize:'clamp(28px,5vw,56px)', fontWeight:900, color:'#D32F2F', textShadow:`0 2px 8px rgba(211,47,47,.2)`, display:'block' }}>
+                          {stat.value}
+                        </span>
+                      </div>
+
+                      <div style={{ width:'clamp(50px,7vw,80px)', flex:1, background:'rgba(211,47,47,.2)', borderRadius:'clamp(8px,1.2vw,12px)', overflow:'hidden', border:'2px solid rgba(211,47,47,.2)', position:'relative', minHeight:'clamp(140px,40vh,260px)' }}>
+                        <motion.div
+                          animate={{ height:`${heightPercent}%` }}
+                          transition={{ duration:0.8, ease:'easeOut' }}
+                          style={{ 
+                            width:'100%',
+                            background:`linear-gradient(180deg,#D32F2F,rgba(211,47,47,.8))`, 
+                            borderRadius:'clamp(6px,1.2vw,12px)', 
+                            boxShadow:`0 4px 16px rgba(211,47,47,.3)`,
+                            position:'absolute',
+                            bottom:0,
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:6, width:'100%' }}>
+                        <span style={{ fontSize:'clamp(18px,2.8vw,28px)' }}>{stat.icon}</span>
+                        <span style={{ fontSize:'clamp(9px,.95vw,11px)', fontWeight:700, color:'rgba(211,47,47,.65)', textTransform:'uppercase', letterSpacing:'.05em', lineHeight:1.2 }}>
+                          {stat.label}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* COMPATIBILITY MATRIX SECTION */}
-        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(18px,2.5vw,40px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.1)' }}>
+        <section className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(18px,2.5vw,40px)', position:'relative', overflow:'hidden', border:'2px solid rgba(211,47,47,.2)' }}>
           <div style={{ position:'absolute', right:'-18%', top:'-18%', width:'55%', height:'55%', background:'rgba(64,88,120,.18)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
           <div style={{ position:'absolute', left:'-18%', bottom:'-18%', width:'55%', height:'55%', background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(100px)', pointerEvents:'none' }}/>
 
@@ -890,7 +659,7 @@ const go = (path) => {
                 </div>
               </div>
 
-              <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:14, padding:'clamp(10px,1.5vw,18px)', borderRadius:18, border:'2px solid rgba(211,47,47,.1)', background:'rgba(255,235,238,.3)' }}>
+              <div className="bc-glass" style={{ display:'flex', alignItems:'center', gap:14, padding:'clamp(10px,1.5vw,18px)', borderRadius:18, border:'2px solid rgba(211,47,47,.2)', background:'rgba(255,235,238,.3)' }}>
                 <svg viewBox="0 0 24 24" style={{ width:32, height:32, fill:'rgba(211,47,47,.45)', flexShrink:0 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                 <p style={{ fontSize:'clamp(10px,1vw,12px)', fontWeight:600, lineHeight:1.6, margin:0, color:'#D32F2F' }}>
                   <span style={{ fontWeight:900 }}>Did you know?</span> O- is the universal hero — it can be given to any blood type during critical emergencies.
@@ -899,32 +668,11 @@ const go = (path) => {
             </div>
           </div>
         </section>
-
-        {/* CTA SECTION */}
-        <section>
-          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,56px)', padding:'clamp(28px,3.5vw,56px) clamp(20px,4.5vw,52px)', textAlign:'center', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', left:-40, top:0, width:180, height:180, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(50px)', opacity:.6, pointerEvents:'none' }}/>
-            <div style={{ position:'absolute', right:-40, bottom:-20, width:150, height:150, background:'rgba(64,88,120,.3)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }}/>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3.5vw,48px)', fontWeight:900, color:'#D32F2F', position:'relative', zIndex:1, lineHeight:1.1, letterSpacing:'-.04em', margin:0 }}>Ready to save lives?</h2>
-            <p style={{ fontSize:'clamp(12px,1.4vw,16px)', color:'rgba(211,47,47,.65)', fontWeight:600, margin:'clamp(12px,1.8vw,24px) auto 0', maxWidth:520, position:'relative', zIndex:1, lineHeight:1.65 }}>
-              Join Lebanon's most innovative network of heroes. Your contribution is vital, and with our intelligent logistics, your impact is immediate.
-            </p>
-            <div style={{ marginTop:'clamp(20px,2.5vw,36px)', position:'relative', zIndex:1 }}>
-              <button className="bc-btn bc-btn-primary" onClick={() => go('/donor/register')}
-                style={{ padding:'clamp(14px,1.8vw,20px) clamp(28px,4vw,52px)', borderRadius:28, fontSize:'clamp(14px,1.4vw,18px)', display:'inline-flex', alignItems:'center', gap:10 }}>
-                Become a Donor Today
-                <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:'white' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
-              </button>
-            </div>
-          </div>
-        </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.1)', background:'rgba(255,255,255,.4)' }}>
+      <footer className="bc-glass" style={{ marginTop:'clamp(44px,6vw,100px)', borderTop:'2px solid rgba(211,47,47,.2)', background:'rgba(255,255,255,.4)' }}>
         <div style={{ maxWidth:1360, margin:'0 auto', padding:'clamp(32px,4.5vw,64px) clamp(16px,3.5vw,44px)' }}>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'clamp(24px,3.5vw,52px)', marginBottom:'clamp(28px,3.5vw,56px)' }}>
-            {/* Column 1: BloodConnect Info */}
             <div>
               <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:'#D32F2F', fontSize:'clamp(18px,2.2vw,26px)', fontWeight:800, marginBottom:16, letterSpacing:'-.04em' }}>BloodConnect</div>
               <p style={{ color:'rgba(211,47,47,.65)', fontWeight:600, lineHeight:1.65, fontStyle:'italic', fontSize:'clamp(11px,1.1vw,13px)', margin:0 }}>
@@ -933,8 +681,7 @@ const go = (path) => {
             </div>
           </div>
       
-          {/* Simple copyright at bottom */}
-          <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.1)' }}>
+          <div style={{ paddingTop:22, borderTop:'2px solid rgba(211,47,47,.2)' }}>
             <p style={{ color:'rgba(211,47,47,.4)', fontSize:'clamp(8px,.85vw,10px)', fontWeight:900, textTransform:'uppercase', letterSpacing:'.16em', margin:0 }}>
               © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
             </p>
@@ -942,7 +689,6 @@ const go = (path) => {
         </div>
       </footer>
 
-      {/* EMERGENCY FAB */}
       <div className="bc-fab-wrap">
         <div className="bc-fab-ring" style={{ opacity:.45 }}/>
         <div className="bc-fab-ring2" style={{ opacity:.25 }}/>
@@ -950,26 +696,7 @@ const go = (path) => {
         <button className="bc-fab" onClick={() => go('/emergency')}
           onMouseEnter={() => setSosHover(true)}
           onMouseLeave={() => setSosHover(false)}>
-        
-          {sosHover && (
-            <div className="bc-glass" style={{ position:'absolute', bottom:'115%', right:0, minWidth:220, borderRadius:22, padding:'14px 12px', border:'2px solid rgba(211,47,47,.12)', boxShadow:'0 20px 48px rgba(211,47,47,.18)', zIndex:70 }}>
-              <p style={{ fontSize:9, fontWeight:900, color:'#D32F2F', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px 4px' }}>EMERGENCY ACTIONS</p>
-              {[
-                { emoji:'📞', label:'Call Hotline', path:'/emergency/call' },
-                { emoji:'💬', label:'Live Chat', path:'/emergency/chat' },
-                { emoji:'📍', label:'Nearest Center', path:'/emergency/locate' },
-              ].map((a, i) => (
-                <div key={i} onClick={(e) => { e.stopPropagation(); go(a.path) }}
-                  className="bc-btn"
-                  style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'10px 12px', borderRadius:14, background:'none', border:'none', cursor:'pointer', textAlign:'left', transition:'background .18s', fontFamily:"'Plus Jakarta Sans',sans-serif" }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,235,238,.5)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <span style={{ fontSize:20 }}>{a.emoji}</span>
-                  <span style={{ fontSize:13, fontWeight:700, color:'#D32F2F' }}>{a.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          
         </button>
       </div>
     </div>

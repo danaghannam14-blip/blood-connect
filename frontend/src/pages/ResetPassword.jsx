@@ -440,7 +440,7 @@ function ResetPassword() {
           </div>
 
           {/* Main Card */}
-          <div className="rp-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}>
+          <div className="rp-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}>
             
             <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#88bdf2,transparent)' }}/>
             <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>

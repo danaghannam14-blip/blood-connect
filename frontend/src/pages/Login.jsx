@@ -232,7 +232,7 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay, duration: 0.5, type: 'spring' }}
       className="bc-glass bc-card-hover"
-      style={{ borderRadius:'clamp(18px,2.5vw,28px)', padding:'clamp(16px,2vw,24px)', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+      style={{ borderRadius:'clamp(18px,2.5vw,28px)', padding:'clamp(16px,2vw,24px)', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
     >
       <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>
       <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative', zIndex:1 }}>
@@ -423,7 +423,7 @@ function Login() {
             <div style={{ ...fadeUp(.4), display:'flex', alignItems:'center', gap:16, paddingTop:8 }}>
               <div style={{ display:'flex' }}>
                 {['A+','O-','B+','AB+'].map((t, i) => (
-                  <div key={t} className="bc-glass" style={{ width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#D32F2F', marginLeft: i === 0 ? 0 : -12, zIndex:4 - i, boxShadow:'0 4px 12px rgba(211,47,47,.1)' }}>{t}</div>
+                  <div key={t} className="bc-glass" style={{ width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#D32F2F', marginLeft: i === 0 ? 0 : -12, zIndex:4 - i, boxShadow:'0 4px 12px rgba#405878' }}>{t}</div>
                 ))}
               </div>
               <span style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em' }}>Network Match Active</span>

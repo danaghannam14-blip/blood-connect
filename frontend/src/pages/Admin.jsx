@@ -115,7 +115,7 @@ const STYLES = `
     background:rgba(255,255,255,.42);
     backdrop-filter:blur(40px);
     -webkit-backdrop-filter:blur(40px);
-    border-bottom:2px solid rgba(211,47,47,.1);
+    border-bottom:2px solid rgba#405878;
     box-shadow:0 8px 32px rgba(211,47,47,.12);
   }
 
@@ -144,7 +144,7 @@ const STYLES = `
   .ad-tab-btn {
     position:relative;overflow:hidden;
     background:rgba(255,255,255,.5);
-    border:2px solid rgba(211,47,47,.1);
+    border:2px solid rgba#405878;
     color:#D32F2F;
     font-weight:700;
     transition:all .28s cubic-bezier(.22,1,.36,1);
@@ -258,7 +258,7 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
       style={{
         borderRadius: '20px',
         padding: '24px',
-        border: '2px solid rgba(211,47,47,.1)',
+        border: '2px solid rgba#405878',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -542,7 +542,7 @@ function Admin() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="ad-glass-deep"
-            style={{ borderRadius:'28px', padding:'60px', textAlign:'center', border:'2px solid rgba(211,47,47,.1)' }}
+            style={{ borderRadius:'28px', padding:'60px', textAlign:'center', border:'2px solid rgba#405878' }}
           >
             <motion.div
               animate={{ rotate: 360 }}
@@ -576,14 +576,14 @@ function Admin() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
                       className="ad-glass-deep ad-card-hover"
-                      style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                      style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                     >
                       <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, background:'rgba(255,235,238,.4)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
                       
                       <h3 style={{ fontSize:20, fontWeight:900, color:'#D32F2F', marginBottom:16, position:'relative', zIndex:1 }}>🩸 Most Needed Blood Type</h3>
                       {mostNeeded ? (
                         <div style={{ display:'flex', alignItems:'center', gap:18, position:'relative', zIndex:1 }}>
-                          <div className="ad-glass" style={{ width:90, height:90, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.1)', boxShadow: '0 8px 24px rgba(211,47,47,.15)' }}>
+                          <div className="ad-glass" style={{ width:90, height:90, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba#405878', boxShadow: '0 8px 24px rgba(211,47,47,.15)' }}>
                             <p style={{ fontSize:32, fontWeight:900, color:'#D32F2F', margin:0 }}>{mostNeeded[0]}</p>
                           </div>
                           <div>
@@ -602,7 +602,7 @@ function Admin() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 }}
                       className="ad-glass-deep ad-card-hover"
-                      style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                      style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                     >
                       <div style={{ position:'absolute', top:-40, left:-40, width:160, height:160, background:'rgba(14,165,233,.3)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
                       
@@ -615,7 +615,7 @@ function Admin() {
                               key={bt}
                               whileHover={{ scale: 1.1, y: -4 }}
                               className="ad-glass"
-                              style={{ borderRadius:14, padding:12, textAlign:'center', border:'2px solid rgba(211,47,47,.1)' }}
+                              style={{ borderRadius:14, padding:12, textAlign:'center', border:'2px solid rgba#405878' }}
                             >
                               <p style={{ fontSize:11, fontWeight:900, color:'#D32F2F', margin:0 }}>{bt}</p>
                               <p style={{ fontSize:18, fontWeight:900, color:'rgba(211,47,47,.8)', margin:'4px 0 0' }}>{count}</p>
@@ -633,7 +633,7 @@ function Admin() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                     className="ad-glass-deep ad-card-hover"
-                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                   >
                     <h3 style={{ fontSize:20, fontWeight:900, color:'#D32F2F', marginBottom:16, position:'relative', zIndex:1 }}>🕐 Recent Blood Requests</h3>
                     {requests.length === 0 ? (
@@ -645,7 +645,7 @@ function Admin() {
                       <div style={{ overflowX:'auto', position:'relative', zIndex:1 }}>
                         <table style={{ width:'100%', fontSize:13 }}>
                           <thead>
-                            <tr style={{ borderBottom:'2px solid rgba(211,47,47,.1)', textAlign:'left' }}>
+                            <tr style={{ borderBottom:'2px solid rgba#405878', textAlign:'left' }}>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Hospital</th>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Blood Type</th>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Units</th>
@@ -680,7 +680,7 @@ function Admin() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="ad-glass-deep ad-card-hover"
-                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                 >
                   <h2 style={{ fontSize:22, fontWeight:900, color:'#D32F2F', marginBottom:20, position:'relative', zIndex:1 }}>👥 Donors ({donors.length})</h2>
                   {donors.length === 0 ? (
@@ -692,7 +692,7 @@ function Admin() {
                     <div style={{ overflowX:'auto', position:'relative', zIndex:1 }}>
                       <table style={{ width:'100%', fontSize:13 }}>
                         <thead>
-                          <tr style={{ borderBottom:'2px solid rgba(211,47,47,.1)', textAlign:'left' }}>
+                          <tr style={{ borderBottom:'2px solid rgba#405878', textAlign:'left' }}>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Name</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Email</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Blood Type</th>
@@ -728,7 +728,7 @@ function Admin() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="ad-glass-deep ad-card-hover"
-                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                   >
                     <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, background:'rgba(255,235,238,.4)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
                     
@@ -767,7 +767,7 @@ function Admin() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className="ad-glass-deep ad-card-hover"
-                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                   >
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12, position:'relative', zIndex:1 }}>
                       <h2 style={{ fontSize:22, fontWeight:900, color:'#D32F2F', margin:0 }}>🏥 Hospitals ({hospitals.filter(h => h.name.toLowerCase().includes(hospitalSearch.toLowerCase())).length})</h2>
@@ -782,7 +782,7 @@ function Admin() {
                       <div style={{ overflowX:'auto', position:'relative', zIndex:1 }}>
                         <table style={{ width:'100%', fontSize:13 }}>
                           <thead>
-                            <tr style={{ borderBottom:'2px solid rgba(211,47,47,.1)', textAlign:'left' }}>
+                            <tr style={{ borderBottom:'2px solid rgba#405878', textAlign:'left' }}>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Name</th>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Email</th>
                               <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Address</th>
@@ -836,7 +836,7 @@ function Admin() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="ad-glass-deep ad-card-hover"
-                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                 >
                   <h2 style={{ fontSize:22, fontWeight:900, color:'#D32F2F', marginBottom:20, position:'relative', zIndex:1 }}>🩸 Blood Requests ({requests.length})</h2>
                   {requests.length === 0 ? (
@@ -848,7 +848,7 @@ function Admin() {
                     <div style={{ overflowX:'auto', position:'relative', zIndex:1 }}>
                       <table style={{ width:'100%', fontSize:13 }}>
                         <thead>
-                          <tr style={{ borderBottom:'2px solid rgba(211,47,47,.1)', textAlign:'left' }}>
+                          <tr style={{ borderBottom:'2px solid rgba#405878', textAlign:'left' }}>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Hospital</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Blood Type</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Units</th>
@@ -888,7 +888,7 @@ function Admin() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="ad-glass-deep ad-card-hover"
-                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                   >
                     <h2 style={{ fontSize:22, fontWeight:900, color:'#D32F2F', marginBottom:8, position:'relative', zIndex:1 }}>➕ Add New Admin</h2>
                     <p style={{ fontSize:12, color:'rgba(211,47,47,.6)', marginBottom:20, position:'relative', zIndex:1 }}>Admin email must end with @bloodconnect.com</p>
@@ -921,13 +921,13 @@ function Admin() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className="ad-glass-deep ad-card-hover"
-                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', position:'relative', overflow:'hidden' }}
+                    style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
                   >
                     <h2 style={{ fontSize:22, fontWeight:900, color:'#D32F2F', marginBottom:20, position:'relative', zIndex:1 }}>🔐 Admins ({admins.length})</h2>
                     <div style={{ overflowX:'auto', position:'relative', zIndex:1 }}>
                       <table style={{ width:'100%', fontSize:13 }}>
                         <thead>
-                          <tr style={{ borderBottom:'2px solid rgba(211,47,47,.1)', textAlign:'left' }}>
+                          <tr style={{ borderBottom:'2px solid rgba#405878', textAlign:'left' }}>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Username</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Email</th>
                             <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(211,47,47,.5)' }}>Created At</th>
@@ -960,7 +960,7 @@ function Admin() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="ad-glass-deep ad-card-hover"
-                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba(211,47,47,.1)', maxWidth:600, marginX:'auto', position:'relative', overflow:'hidden' }}
+                  style={{ borderRadius:'28px', padding:'32px', border:'2px solid rgba#405878', maxWidth:600, marginX:'auto', position:'relative', overflow:'hidden' }}
                 >
                   <div style={{ position:'absolute', top:-40, left:-40, width:160, height:160, background:'rgba(255,235,238,.4)', borderRadius:'50%', filter:'blur(40px)', pointerEvents:'none' }} />
                   

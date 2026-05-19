@@ -112,7 +112,7 @@ const STYLES = `
   .hd-tab-btn {
     position:relative;overflow:hidden;
     background:rgba(255,255,255,.5);
-    border:2px solid rgba(211,47,47,.1);
+    border:2px solid rgba#405878;
     color:#D32F2F;
     font-weight:700;
     transition:all .28s cubic-bezier(.22,1,.36,1);
@@ -187,7 +187,7 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
       style={{
         borderRadius: '20px',
         padding: '24px',
-        border: '2px solid rgba(211,47,47,.1)',
+        border: '2px solid rgba#405878',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -388,7 +388,7 @@ function HospitalDashboard() {
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          borderBottom: '2px solid rgba(211,47,47,.1)',
+          borderBottom: '2px solid rgba#405878',
           backdropFilter: 'blur(40px)',
         }}
       >
@@ -489,7 +489,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep hd-card-hover"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
             >
               <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
               
@@ -620,7 +620,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Your Blood Requests</h2>
 
@@ -741,7 +741,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Donor Appointments</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Confirm donations when donors arrive, or mark as missed if they don't show up.</p>
@@ -893,7 +893,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Current Blood Stock</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 16px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Update your current blood inventory. This is visible to donors on the map.</p>
@@ -1000,7 +1000,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Record Blood Usage</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>When a patient receives blood, record it here to keep stock accurate.</p>
@@ -1087,7 +1087,7 @@ function HospitalDashboard() {
                         borderRadius: 14,
                         padding: 12,
                         background: 'rgba(255,235,238,.4)',
-                        border: '2px solid rgba(211,47,47,.1)',
+                        border: '2px solid rgba#405878',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -1114,7 +1114,7 @@ function HospitalDashboard() {
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
           transition={{ delay: 0.5 }}
           className="hd-glass-deep hd-card-hover"
-          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba(211,47,47,.1)', position: 'relative', overflow: 'hidden' }}
+          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
           <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Change Password</h2>
