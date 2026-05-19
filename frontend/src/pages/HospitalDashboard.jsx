@@ -285,13 +285,20 @@ function HospitalDashboard() {
     } finally { setSubmitting(false) }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this request?')) return
-    try {
-      await axios.delete(`${API}/api/requests/${id}`)
-      setRequests(prev => prev.filter(r => r.id !== id))
-    } catch (err) { console.log(err) }
+ const handleDeleteRequest = async (requestId) => {
+  if (!window.confirm('Delete this blood request?')) return
+  try {
+    const response = await fetch(`${API}/api/requests/${requestId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (response.ok) {
+      loadData()
+    }
+  } catch (error) {
+    console.error('Error deleting request:', error)
   }
+}
 
   const handleConfirmDonation = async (id, donorName) => {
     if (!window.confirm(`Confirm that ${donorName} donated successfully?`)) return
@@ -701,7 +708,7 @@ function HospitalDashboard() {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDelete(r.id)}
+                            onClick={() => handleDeleteRequest(r.id)}
                             className="hd-glass hd-btn"
                             style={{
                               fontSize: 11,

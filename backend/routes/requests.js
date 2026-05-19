@@ -86,7 +86,12 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, ur
     }
   );
 };
-
+router.delete('/:id', (req, res) => {
+  db.query('DELETE FROM blood_requests WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: err.message })
+    res.json({ message: 'Request deleted successfully' })
+  })
+})
 router.post('/create', (req, res) => {
   const { hospital_id, blood_type, quantity_needed, urgency = 'urgent' } = req.body;
   const sql = `INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed, urgency) VALUES (?, ?, ?, ?)`;
