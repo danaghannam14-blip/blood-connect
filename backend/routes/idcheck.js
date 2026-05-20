@@ -27,10 +27,18 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
 
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
+    const side = req.body.side || 'front';
 
-    console.log('📤 Scanning ID - Size:', req.file.size, 'bytes');
+    console.log(`📤 Scanning ID ${side} - Size:`, req.file.size, 'bytes');
 
-    // Extract both date of birth and blood type from the ID
+    let prompt = '';
+    
+    if (side === 'front') {
+      prompt = `You are analyzing the FRONT side of a national ID card from ANY country. Extract ONLY the date of birth. Look for "DOB", "Date of Birth", "تاريخ الميلاد", etc. Convert to YYYY-MM-DD format. Return ONLY: {"date_of_birth": "YYYY-MM-DD"}`;
+    } else {
+      prompt = `You are analyzing the BACK side of a national ID card from ANY country. Extract ONLY the blood type (A+, A-, B+, B-, AB+, AB-, O+, O-). Return ONLY: {"blood_type": "O+" or null if not found}`;
+    }
+
     const completion = await groq.chat.completions.create({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
@@ -39,19 +47,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
           content: [
             {
               type: 'text',
-              text: `This is an ID card (any country/format). Extract:
-1. Date of birth (in any format found, convert to YYYY-MM-DD)
-2. Blood type (look on the BACK of the card - usually shown as A+, A-, B+, B-, AB+, AB-, O+, O-)
-
-Return ONLY JSON with these exact keys:
-{
-  "date_of_birth": "YYYY-MM-DD",
-  "blood_type": "A+" or "B-" etc,
-  "country": "country name if visible"
-}
-
-If you can't find either field, still return the JSON with null for missing fields.
-Do NOT return errors - try your best to extract whatever is visible.`
+              text: prompt
             },
             {
               type: 'image_url',
@@ -67,55 +63,78 @@ Do NOT return errors - try your best to extract whatever is visible.`
     });
 
     let text = completion.choices[0].message.content.trim();
-    console.log('✅ Groq extracted:', text);
+    console.log(`✅ Groq response (${side}):`, text);
+    
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
-    let result = JSON.parse(text);
-
-    // Validate date of birth
-    if (!result.date_of_birth) {
-      return res.status(400).json({ message: 'Could not read date of birth. Please provide a clearer photo of the ID.' });
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('❌ JSON parse error:', text);
+      return res.status(400).json({ message: `Could not read ID ${side}. Please provide a clearer photo.` });
     }
 
-    result.date_of_birth = fixDate(result.date_of_birth);
+    if (side === 'front') {
+      if (!result.date_of_birth) {
+        return res.status(400).json({ message: 'Could not read date of birth. Please upload a clearer photo.' });
+      }
 
-    // Validate age
-    const dob = new Date(result.date_of_birth);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
+      result.date_of_birth = fixDate(result.date_of_birth);
 
-    if (age < 18) {
-      return res.status(400).json({
-        eligible: false,
-        message: 'You must be at least 18 years old to donate blood.',
+      const dob = new Date(result.date_of_birth);
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+
+      if (age < 18) {
+        return res.status(400).json({
+          eligible: false,
+          message: 'You must be at least 18 years old to donate blood.',
+          date_of_birth: result.date_of_birth,
+          age
+        });
+      }
+
+      return res.json({
+        eligible: true,
+        message: 'Age verified successfully!',
         date_of_birth: result.date_of_birth,
         age
       });
     }
 
-    // Validate blood type if provided
-    let blood_type = result.blood_type ? result.blood_type.toUpperCase().trim() : null;
-    
-    if (blood_type && !VALID_BLOOD_TYPES.includes(blood_type)) {
-      blood_type = null; // Invalid format, set to null and let user manually select
-    }
+    if (side === 'back') {
+      let blood_type = null;
+      
+      if (result.blood_type) {
+        blood_type = result.blood_type.toUpperCase().trim();
+        if (!VALID_BLOOD_TYPES.includes(blood_type)) {
+          blood_type = null;
+        }
+      }
 
-    res.json({
-      eligible: true,
-      message: 'Age verified successfully!',
-      date_of_birth: result.date_of_birth,
-      blood_type: blood_type, // Can be null if not found on ID
-      country: result.country || 'Not identified',
-      age
-    });
+      if (!blood_type) {
+        return res.status(400).json({
+          detected: false,
+          message: 'Blood type not detected. Please upload a clearer photo of the ID back.',
+          blood_type: null
+        });
+      }
+
+      return res.json({
+        detected: true,
+        message: 'Blood type extracted successfully!',
+        blood_type: blood_type
+      });
+    }
 
   } catch (error) {
     console.error('❌ Scan error:', error.message);
-    res.status(500).json({ message: 'Failed to scan ID. Please try a clearer photo and ensure the ID is fully visible.' });
+    return res.status(500).json({ message: 'Failed to scan ID. Please try again with a clearer photo.' });
   }
 });
 
