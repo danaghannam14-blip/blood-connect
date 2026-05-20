@@ -539,8 +539,8 @@ export default function Home() {
               
               <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'center', gap:'clamp(40px,6vw,60px)', flex:1 }}>
                 {[
-                  { label:'Donor Registrations', value: analytics.donors, color:'#4CAF50'},
-                  { label:'Emergency Clicks', value: analytics.emergencies, color:'#FF9800' },
+                  { label:'Donor Registrations', value: analytics.donors, color:'#4CAF50', icon:'👤' },
+                  { label:'Emergency Clicks', value: analytics.emergencies, color:'#FF9800', icon:'🚨' },
                 ].map((stat, i) => {
                   const maxVal = Math.max(analytics.donors, analytics.emergencies, 20)
                   const heightPercent = maxVal > 0 ? (stat.value / maxVal) * 100 : 0
@@ -576,6 +576,17 @@ export default function Home() {
                     </div>
                   )
                 })}
+              </div>
+
+              <div style={{ marginTop:'clamp(12px,1.5vw,20px)', paddingTop:'clamp(12px,1.5vw,20px)', borderTop:'2px solid rgba(211,47,47,.15)' }}>
+                <a href="https://www.google.com/maps/place/33.89652171663661,35.483144430563314/@33.89652171663661,35.483144430563314,18z" target="_blank" rel="noopener noreferrer"
+                  className="bc-btn bc-btn-primary"
+                  style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', borderRadius:16, fontSize:'clamp(10px,1.1vw,12px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:8, textDecoration:'none' }}>
+                  <span>📍</span>
+                  <span>Visit Our Center - Hamra</span>
+                  <span>→</span>
+                </a>
+                <p style={{ fontSize:'clamp(8px,.9vw,10px)', color:'rgba(211,47,47,.5)', margin:'8px 0 0', textAlign:'center', fontWeight:600, letterSpacing:'.05em', textTransform:'uppercase' }}>🏥 Real Center · Hamra District</p>
               </div>
             </div>
           </div>
@@ -696,7 +707,7 @@ export default function Home() {
         <button className="bc-fab" onClick={() => go('/emergency')}
           onMouseEnter={() => setSosHover(true)}
           onMouseLeave={() => setSosHover(false)}>
-          
+          !
         </button>
       </div>
     </div>
