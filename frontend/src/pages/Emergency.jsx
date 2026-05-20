@@ -617,7 +617,15 @@ function Emergency() {
                       <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
                       <Marker position={userLocation}><Popup>📍 Your Location</Popup></Marker>
                       {filteredHospitals.filter(h => h.latitude&&h.longitude).map(h => (
-                        <Marker key={h.id} position={[parseFloat(h.latitude),parseFloat(h.longitude)]} icon={hospitalIcon}>
+                        <Marker key={h.id} position={[parseFloat(h.latitude),parseFloat(h.longitude)]} icon={hospitalIcon}
+                          eventHandlers={{
+                            mouseover: function(e) {
+                              this.openPopup()
+                            },
+                            mouseout: function(e) {
+                              this.closePopup()
+                            }
+                          }}>
                           <Popup>
                             <div style={{ minWidth:180 }}>
                               <p style={{ fontWeight:'bold', color:'#dc2626', marginBottom:2 }}>{h.name}</p>

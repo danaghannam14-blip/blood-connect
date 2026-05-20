@@ -1,12 +1,43 @@
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
 
 // Backend API URL - Smart detection
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000'
   : 'https://blood-bank-eqyr.onrender.com'
+
+// Fix Leaflet marker icons
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
+const hospitalIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+})
+
+function RecenterMap({ center, zoom }) {
+  const map = useMap()
+  const lastCenterRef = useRef(null)
+  
+  useEffect(() => { 
+    if (center && (lastCenterRef.current === null || 
+        (lastCenterRef.current[0] !== center[0] || lastCenterRef.current[1] !== center[1]))) {
+      // Only update zoom when center actually changes (from filter button click)
+      map.flyTo(center, zoom || 10, { duration: 1 })
+      lastCenterRef.current = center
+    }
+  }, [center, zoom, map])
+  return null
+}
 
 function HospitalPartners() {
   const navigate = useNavigate()
@@ -15,6 +46,22 @@ function HospitalPartners() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [mapCenter, setMapCenter] = useState([33.8547, 35.8623]) // Lebanon center
+  const [mapZoom, setMapZoom] = useState(9)
+  const [selectedHospital, setSelectedHospital] = useState(null)
+
+  // Governorate coordinates for zooming
+  const GOVERNORATE_COORDS = {
+    'Akkar': { lat: 34.5933, lng: 36.0167, zoom: 11 },
+    'Baalbek-Hermel': { lat: 34.0033, lng: 36.2167, zoom: 10 },
+    'Beirut': { lat: 33.8886, lng: 35.4955, zoom: 12 },
+    'Beqaa': { lat: 33.8333, lng: 36.3333, zoom: 10 },
+    'Keserwan-Jbeil': { lat: 34.0667, lng: 35.6333, zoom: 11 },
+    'Mount Lebanon': { lat: 33.7833, lng: 35.5500, zoom: 11 },
+    'Nabatiyeh': { lat: 33.3667, lng: 35.2167, zoom: 11 },
+    'North Lebanon': { lat: 34.4167, lng: 35.8333, zoom: 10 },
+    'South Lebanon': { lat: 33.2667, lng: 35.3833, zoom: 10 },
+  }
 
   // 9 Official Lebanese Governorates
   const LEBANESE_GOVERNORATES = [
@@ -58,7 +105,6 @@ function HospitalPartners() {
       }
 
       const data = await response.json()
-      
       const hospitalsArray = Array.isArray(data) ? data : []
       
       // Transform and normalize data
@@ -68,7 +114,7 @@ function HospitalPartners() {
         city: extractCityFromAddress(hospital.address),
         governorate: normalizeGovernorate(hospital.address),
         active: true,
-        phone: hospital.phone || '', // Now comes directly from database
+        phone: hospital.phone || '',
         address: abbreviateAddress(hospital.address || ''),
         fullAddress: hospital.address || '',
         latitude: hospital.latitude,
@@ -77,15 +123,6 @@ function HospitalPartners() {
 
       // Sort hospitals alphabetically by name
       transformedHospitals.sort((a, b) => a.name.localeCompare(b.name))
-
-      // Calculate statistics
-      const governorateCounts = {}
-      transformedHospitals.forEach(h => {
-        const gov = h.governorate
-        governorateCounts[gov] = (governorateCounts[gov] || 0) + 1
-      })
-
-      console.log('✅ [HospitalPartners] Governorate Distribution:', governorateCounts)
 
       setHospitals(transformedHospitals)
       setLoading(false)
@@ -104,14 +141,11 @@ function HospitalPartners() {
     
     const addressLower = address.toLowerCase()
     
-    // Comprehensive mapping of all variations
     const normalizationMap = {
-      // Akkar
       'akkar': 'Akkar',
       'محافظة عكار': 'Akkar',
       'عكار': 'Akkar',
       
-      // Baalbek-Hermel
       'baalbek': 'Baalbek-Hermel',
       'baalbak': 'Baalbek-Hermel',
       'hermel': 'Baalbek-Hermel',
@@ -121,7 +155,6 @@ function HospitalPartners() {
       'baalbek-hermel': 'Baalbek-Hermel',
       'beqaa': 'Baalbek-Hermel',
       
-      // Beirut
       'beirut': 'Beirut',
       'beyrouth': 'Beirut',
       'محافظة بيروت': 'Beirut',
@@ -131,7 +164,6 @@ function HospitalPartners() {
       'sin el fil': 'Beirut',
       'سن الفيل': 'Beirut',
       
-      // Beqaa
       'beqaa': 'Beqaa',
       'bekaa': 'Beqaa',
       'محافظة البقاع': 'Beqaa',
@@ -142,7 +174,6 @@ function HospitalPartners() {
       'zahlé': 'Beqaa',
       'زحلة': 'Beqaa',
       
-      // Keserwan-Jbeil
       'keserwan': 'Keserwan-Jbeil',
       'jbeil': 'Keserwan-Jbeil',
       'jbail': 'Keserwan-Jbeil',
@@ -152,7 +183,6 @@ function HospitalPartners() {
       'jounieh': 'Keserwan-Jbeil',
       'juniyah': 'Keserwan-Jbeil',
       
-      // Mount Lebanon
       'mount lebanon': 'Mount Lebanon',
       'محافظة جبل لبنان': 'Mount Lebanon',
       'جبل لبنان': 'Mount Lebanon',
@@ -161,7 +191,6 @@ function HospitalPartners() {
       'chouf': 'Mount Lebanon',
       'شوف': 'Mount Lebanon',
       
-      // Nabatiyeh
       'nabatiyeh': 'Nabatiyeh',
       'nabatieh': 'Nabatiyeh',
       'محافظة النبطية': 'Nabatiyeh',
@@ -169,7 +198,6 @@ function HospitalPartners() {
       'bent jbail': 'Nabatiyeh',
       'bint jbail': 'Nabatiyeh',
       
-      // North Lebanon
       'north lebanon': 'North Lebanon',
       'محافظة الشمال': 'North Lebanon',
       'الشمال': 'North Lebanon',
@@ -180,7 +208,6 @@ function HospitalPartners() {
       'halba': 'North Lebanon',
       'البترون': 'North Lebanon',
       
-      // South Lebanon
       'south lebanon': 'South Lebanon',
       'محافظة الجنوب': 'South Lebanon',
       'الجنوب': 'South Lebanon',
@@ -194,7 +221,6 @@ function HospitalPartners() {
       'جزين': 'South Lebanon',
     }
     
-    // Try exact match
     for (let [key, value] of Object.entries(normalizationMap)) {
       if (addressLower.includes(key)) {
         return value
@@ -272,7 +298,7 @@ function HospitalPartners() {
       background:rgba(255,255,255,.62);
       backdrop-filter:blur(40px);
       -webkit-backdrop-filter:blur(40px);
-      border-bottom:2px solid rgba#405878;
+      border-bottom:2px solid rgba(211,47,47,.2);
       box-shadow:0 4px 24px rgba(211,47,47,.06);
     }
 
@@ -492,7 +518,7 @@ function HospitalPartners() {
     }
 
     .hp-error {
-      background:rgba#405878;
+      background:rgba(211,47,47,.08);
       border:2px solid rgba(211,47,47,.3);
       border-radius:16px;
       padding:24px;
@@ -517,8 +543,40 @@ function HospitalPartners() {
       font-weight:700;
     }
 
+    .hp-toggle-btn {
+      flex:1;
+      padding:14px 18px;
+      border-radius:16px;
+      font-size:14px;
+      font-weight:900;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      cursor:pointer;
+      border:none;
+      transition:all .25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .hp-toggle-btn.active {
+      background:linear-gradient(135deg,#D32F2F,#ff6b6b);
+      color:white;
+      box-shadow:0 10px 28px rgba(211,47,47,.32);
+    }
+
+    .hp-toggle-btn.inactive {
+      background:rgba(255,255,255,.5);
+      backdrop-filter:blur(10px);
+      color:rgba(211,47,47,.6);
+      border:2px solid rgba(211,47,47,.12);
+    }
+
+    .hp-toggle-btn.inactive:hover {
+      background:rgba(255,255,255,.75);
+      border-color:rgba(211,47,47,.28);
+    }
+
     @media (max-width:960px) {
       .hp-nav-inner { flex-direction:row; }
+      .hp-main-grid { grid-template-columns:1fr !important; }
+      .hp-map-container { display:none !important; }
     }
   `
 
@@ -534,6 +592,24 @@ function HospitalPartners() {
   const regions = ['all', ...sortedGovernorates]
   
   const filtered = filter === 'all' ? hospitals : hospitals.filter(h => h.governorate === filter)
+
+  // Calculate map center and zoom only when filter changes
+  useEffect(() => {
+    if (filtered.length > 0) {
+      const validHospitals = filtered.filter(h => h.latitude && h.longitude)
+      if (validHospitals.length > 0) {
+        const avgLat = validHospitals.reduce((sum, h) => sum + parseFloat(h.latitude), 0) / validHospitals.length
+        const avgLng = validHospitals.reduce((sum, h) => sum + parseFloat(h.longitude), 0) / validHospitals.length
+        setMapCenter([avgLat, avgLng])
+        // Use governorate zoom if available
+        if (filter !== 'all' && GOVERNORATE_COORDS[filter]) {
+          setMapZoom(GOVERNORATE_COORDS[filter].zoom)
+        } else if (filter === 'all') {
+          setMapZoom(9)
+        }
+      }
+    }
+  }, [filter])
 
   return (
     <div className="hp-root">
@@ -631,7 +707,20 @@ function HospitalPartners() {
               initial={{ opacity: 0, y: -10 }}
               animate={visible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: idx * 0.05 }}
-              onClick={() => setFilter(region)}
+              onClick={() => {
+                setFilter(region)
+                // Zoom into governorate
+                if (region === 'all') {
+                  setMapCenter([33.8547, 35.8623])
+                  setMapZoom(9)
+                } else {
+                  const coords = GOVERNORATE_COORDS[region]
+                  if (coords) {
+                    setMapCenter([coords.lat, coords.lng])
+                    setMapZoom(coords.zoom)
+                  }
+                }
+              }}
               className={`hp-filter-btn ${filter === region ? 'active' : ''}`}
             >
               {region === 'all' ? 'All Governorates' : region}
@@ -640,10 +729,44 @@ function HospitalPartners() {
         </motion.section>
       )}
 
-      {/* HOSPITALS GRID */}
-      <section style={{ position: 'relative', zIndex: 10, maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,3.5vw,44px) clamp(60px,8vw,100px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'clamp(16px,2.5vw,24px)' }}>
+      {/* MAP (always shown) */}
+      {!loading && filtered.length > 0 && (
+        <section style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: 'clamp(20px,2.5vw,32px) clamp(16px,3.5vw,44px) clamp(40px,6vw,80px)' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ borderRadius: 28, overflow: 'hidden', border: '2px solid rgba(211,47,47,.15)', boxShadow: '0 24px 60px rgba(211,47,47,.1)', height: 'clamp(300px,50vh,600px)' }}>
+            {mapCenter && (
+              <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
+                <RecenterMap center={mapCenter} zoom={mapZoom} />
+                <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {filtered.filter(h => h.latitude && h.longitude).map(h => (
+                  <Marker key={h.id} position={[parseFloat(h.latitude), parseFloat(h.longitude)]} icon={hospitalIcon}
+                    eventHandlers={{
+                      mouseover: function(e) {
+                        this.openPopup()
+                      },
+                      mouseout: function(e) {
+                        this.closePopup()
+                      }
+                    }}>
+                    <Popup>
+                      <div style={{ minWidth: 200 }}>
+                        <p style={{ fontWeight: 'bold', color: '#dc2626', margin: 0, marginBottom: 6 }}>{h.name}</p>
+                        <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0' }}>{h.fullAddress}</p>
+                        {h.phone && <p style={{ fontSize: 12, fontWeight: 'bold', color: '#405878', margin: '6px 0' }}>📞 {h.phone}</p>}
+                        <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 12, fontWeight: 'bold', textDecoration: 'none' }}>Get Directions →</a>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            )}
+          </motion.div>
+        </section>
+      )}
+
+      {/* HOSPITALS GRID (always shown) */}
+      <section style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '0 clamp(16px,3.5vw,44px) clamp(60px,8vw,100px)' }}>
         {loading ? (
-          <div style={{ gridColumn: '1/-1' }} className="hp-loading">
+          <div className="hp-loading">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -652,68 +775,60 @@ function HospitalPartners() {
             Loading hospitals...
           </div>
         ) : filtered.length === 0 && !error ? (
-          <div style={{ gridColumn: '1/-1' }}>
-            <div className="hp-no-results">
-              <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>No hospitals found</p>
-              <p style={{ fontSize: '13px', margin: 0 }}>Try selecting a different governorate</p>
-            </div>
+          <div className="hp-no-results">
+            <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>No hospitals found</p>
+            <p style={{ fontSize: '13px', margin: 0 }}>Try selecting a different governorate</p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {filtered.map((hospital, idx) => (
-              <motion.div
-                key={hospital.id}
-                className="hp-glass-deep hp-hospital-card"
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ delay: idx * 0.05, duration: 0.4, type: 'spring', stiffness: 300, damping: 30 }}
-                layout
-              >
-                <div className="hp-card-inner">
-                  {/* Hospital Icon */}
-                  <div className="hp-hospital-icon">
-                    <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#D32F2F' }}>
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 11h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2z"/>
-                    </svg>
-                  </div>
-
-                  {/* Hospital Name */}
-                  <h3 className="hp-hospital-name">{hospital.name}</h3>
-
-                  {/* Phone Number - Only show if exists */}
-                  {hospital.phone && hospital.phone.trim() !== '' && (
-                    <p className="hp-hospital-phone">
-                      <span className="hp-phone-icon">
-                        <svg viewBox="0 0 24 24" style={{ width: '100%', height: '100%', fill: 'currentColor' }}>
-                          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                        </svg>
-                      </span>
-                      {hospital.phone}
-                    </p>
-                  )}
-
-                  {/* Address */}
-                  <p className="hp-hospital-address">{hospital.address}</p>
-
-                  {/* City Badge */}
-                  <p className="hp-hospital-city">{hospital.city}</p>
-
-                  {/* Active Badge */}
-                  {hospital.active && (
-                    <div className="hp-badge">
-                      <span style={{ width: 6, height: 6, background: '#16a34a', borderRadius: '50%', display: 'inline-block' }}/>
-                      Active
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'clamp(16px,2.5vw,24px)' }}>
+            <AnimatePresence mode="popLayout">
+              {filtered.map((hospital, idx) => (
+                <motion.div
+                  key={hospital.id}
+                  className="hp-glass-deep hp-hospital-card"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ delay: idx * 0.05, duration: 0.4, type: 'spring', stiffness: 300, damping: 30 }}
+                  layout
+                  onClick={() => setSelectedHospital(hospital)}
+                >
+                  <div className="hp-card-inner">
+                    <div className="hp-hospital-icon">
+                      <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#D32F2F' }}>
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 11h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2z"/>
+                      </svg>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+
+                    <h3 className="hp-hospital-name">{hospital.name}</h3>
+
+                    {hospital.phone && hospital.phone.trim() !== '' && (
+                      <p className="hp-hospital-phone">
+                        <span className="hp-phone-icon">
+                          <svg viewBox="0 0 24 24" style={{ width: '100%', height: '100%', fill: 'currentColor' }}>
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                          </svg>
+                        </span>
+                        {hospital.phone}
+                      </p>
+                    )}
+
+                    <p className="hp-hospital-address">{hospital.address}</p>
+                    <p className="hp-hospital-city">{hospital.city}</p>
+
+                    {hospital.active && (
+                      <div className="hp-badge">
+                        <span style={{ width: 6, height: 6, background: '#16a34a', borderRadius: '50%', display: 'inline-block' }} />
+                        Active
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         )}
       </section>
-
-      {/* CTA SECTION */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={visible ? { opacity: 1, y: 0 } : {}}
