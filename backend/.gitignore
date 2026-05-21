@@ -1,3 +1,0 @@
-# Open backend/.gitignore and add:
-.env
-.env.local
