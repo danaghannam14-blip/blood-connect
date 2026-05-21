@@ -107,19 +107,6 @@ CREATE TABLE IF NOT EXISTS password_resets (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS appointments (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  donor_id INT NOT NULL,
-  hospital_id INT NOT NULL,
-  appointment_date DATE NOT NULL,
-  appointment_time TIME NOT NULL,
-  status ENUM('scheduled','completed','cancelled','missed') DEFAULT 'scheduled',
-  reminder_sent BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (donor_id) REFERENCES donors(id),
-  FOREIGN KEY (hospital_id) REFERENCES hospitals(id),
-  UNIQUE KEY no_overlap (hospital_id, appointment_date, appointment_time)
-);
 
 CREATE TABLE IF NOT EXISTS analytics_events (
   id INT AUTO_INCREMENT PRIMARY KEY,

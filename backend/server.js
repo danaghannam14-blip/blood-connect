@@ -41,11 +41,9 @@ const chatbotRoutes = require('./routes/chatbot');
 const idcheckRoutes = require('./routes/idcheck');
 const adminRoutes = require('./routes/admin');
 const passwordResetRoutes = require('./routes/passwordreset');
-const appointmentRoutes = require('./routes/appointments');
 const analyticsRoutes = require('./routes/analytics');
 
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/appointments', appointmentRoutes);
 app.use('/api/password', passwordResetRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/idcheck', idcheckRoutes);

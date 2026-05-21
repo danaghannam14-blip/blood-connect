@@ -219,7 +219,6 @@ function HospitalDashboard() {
   const navigate = useNavigate()
   const [hospital, setHospital] = useState(null)
   const [requests, setRequests] = useState([])
-  const [appointments, setAppointments] = useState([])
   const [bloodStock, setBloodStock] = useState({})
   const [stockMessage, setStockMessage] = useState('')
   const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
@@ -250,14 +249,12 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [reqRes, apptRes, stockRes, transfusionRes] = await Promise.all([
+      const [reqRes, stockRes, transfusionRes] = await Promise.all([
         axios.get(`${API}/api/requests/hospital/${hospital.id}`),
-        axios.get(`${API}/api/appointments/hospital/${hospital.id}`),
         axios.get(`${API}/api/hospitals/stock/${hospital.id}`),
         axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`)
       ])
       setRequests(reqRes.data)
-      setAppointments(apptRes.data)
       const stockMap = {}
       stockRes.data.forEach(s => { stockMap[s.blood_type] = s.units_available })
       setBloodStock(stockMap)
@@ -285,35 +282,19 @@ function HospitalDashboard() {
     } finally { setSubmitting(false) }
   }
 
- const handleDeleteRequest = async (requestId) => {
-  if (!window.confirm('Delete this blood request?')) return
-  try {
-    const response = await fetch(`${API}/api/requests/${requestId}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    if (response.ok) {
-      loadData()
+  const handleDeleteRequest = async (requestId) => {
+    if (!window.confirm('Delete this blood request?')) return
+    try {
+      const response = await fetch(`${API}/api/requests/${requestId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (response.ok) {
+        loadData()
+      }
+    } catch (error) {
+      console.error('Error deleting request:', error)
     }
-  } catch (error) {
-    console.error('Error deleting request:', error)
-  }
-}
-
-  const handleConfirmDonation = async (id, donorName) => {
-    if (!window.confirm(`Confirm that ${donorName} donated successfully?`)) return
-    try {
-      await axios.put(`${API}/api/appointments/confirm/${id}`)
-      loadData()
-    } catch (err) { console.log(err) }
-  }
-
-  const handleMissed = async (id) => {
-    if (!window.confirm('Mark this appointment as missed?')) return
-    try {
-      await axios.put(`${API}/api/appointments/missed/${id}`)
-      loadData()
-    } catch (err) { console.log(err) }
   }
 
   const handleSaveStock = async () => {
@@ -431,18 +412,11 @@ function HospitalDashboard() {
             delay={0.1}
           />
           <StatCard
-            icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#0EA5E9' }}><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm-5-5H7v5h7v-5z"/></svg>}
-            value={appointments.length}
-            label="Appointments"
-            color="#0EA5E9"
-            delay={0.2}
-          />
-          <StatCard
             icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>}
             value={fulfilledCount}
             label="Fulfilled"
             color="#22C55E"
-            delay={0.3}
+            delay={0.2}
           />
         </motion.div>
 
@@ -453,7 +427,7 @@ function HospitalDashboard() {
           transition={{ delay: 0.3 }}
           style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}
         >
-          {['requests', 'appointments', 'stock', 'transfusions', 'post'].map((t, i) => (
+          {['requests', 'stock', 'transfusions', 'post'].map((t, i) => (
             <motion.button
               key={t}
               whileHover={{ scale: 1.05 }}
@@ -469,7 +443,6 @@ function HospitalDashboard() {
               }}
             >
               {t === 'post' ? '+ Post Request' :
-               t === 'appointments' ? `Appointments${appointments.length > 0 ? ` (${appointments.length})` : ''}` :
                t === 'stock' ? 'Blood Stock' :
                t === 'transfusions' ? 'Blood Used' :
                'Requests'}
@@ -723,158 +696,6 @@ function HospitalDashboard() {
                           >
                             Delete
                           </motion.button>
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-
-          {/* APPOINTMENTS TAB */}
-          {activeTab === 'appointments' && (
-            <motion.div
-              key="appointments"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
-            >
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Donor Appointments</h2>
-              <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Confirm donations when donors arrive, or mark as missed if they don't show up.</p>
-
-              {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 12 }}>
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#dc2626', borderRadius: '50%' }} />
-                </div>
-              ) : appointments.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '48px 24px', position: 'relative', zIndex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: 'rgba(211,47,47,.4)', margin: 0 }}>No upcoming appointments yet.</p>
-                  <p style={{ fontSize: 12, color: 'rgba(211,47,47,.3)', margin: '8px 0 0', fontWeight: 600 }}>Donors will book appointments after you post a blood request.</p>
-                </div>
-              ) : (
-                <motion.div
-                  style={{ display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', zIndex: 1 }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ staggerChildren: 0.05 }}
-                >
-                  {appointments.map((a, i) => {
-                    const apptDate = new Date(a.appointment_date).toLocaleDateString('en-GB')
-                    const isToday = new Date(a.appointment_date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
-                    return (
-                      <motion.div
-                        key={a.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="hd-glass hd-card-hover"
-                        style={{
-                          borderRadius: 18,
-                          padding: 18,
-                          border: `2px solid ${isToday ? 'rgba(14,165,233,.4)' : 'rgba(211,47,47,.15)'}`,
-                          background: isToday ? 'rgba(14,165,233,.15)' : 'rgba(255,235,238,.3)',
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, background: isToday ? 'rgba(14,165,233,.2)' : 'rgba(211,47,47,.15)', borderRadius: '50%', filter: 'blur(30px)', pointerEvents: 'none' }} />
-                        
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                                <p style={{ fontWeight: 900, fontSize: 15, color: '#333', margin: 0 }}>{a.donor_name}</p>
-                                {isToday && (
-                                  <motion.span
-                                    animate={{ scale: [1, 1.05, 1] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                    style={{
-                                      fontSize: 10,
-                                      background: 'rgba(14,165,233,.2)',
-                                      color: '#0EA5E9',
-                                      padding: '4px 10px',
-                                      borderRadius: 8,
-                                      fontWeight: 900,
-                                      textTransform: 'uppercase',
-                                      letterSpacing: '.1em',
-                                    }}
-                                  >
-                                    Today
-                                  </motion.span>
-                                )}
-                              </div>
-                              <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '4px 0', fontWeight: 700 }}>Blood Type: <span style={{ color: '#dc2626', fontWeight: 900 }}>{a.donor_blood_type}</span></p>
-                              {a.donor_phone && <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '4px 0', fontWeight: 700 }}>Phone: {a.donor_phone}</p>}
-                              <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '6px 0 0', fontWeight: 700 }}>
-                                {apptDate} at {(() => {
-                                  const [h, m] = a.appointment_time.split(':')
-                                  const hour = parseInt(h)
-                                  const ampm = hour >= 12 ? 'PM' : 'AM'
-                                  const displayH = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
-                                  return `${displayH}:${m} ${ampm}`
-                                })()}
-                              </p>
-                            </div>
-                            <span style={{
-                              background: 'linear-gradient(135deg, #0EA5E9, #0EA5E940)',
-                              color: '#0EA5E9',
-                              fontSize: 10,
-                              fontWeight: 900,
-                              padding: '6px 12px',
-                              borderRadius: 9,
-                              textTransform: 'uppercase',
-                              letterSpacing: '.1em',
-                            }}>
-                              Scheduled
-                            </span>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => handleConfirmDonation(a.id, a.donor_name)}
-                              className="hd-btn"
-                              style={{
-                                background: 'linear-gradient(135deg, #22C55E, #22C55E80)',
-                                color: '#faf7f7',
-                                padding: 10,
-                                borderRadius: 12,
-                                fontSize: 11,
-                                fontWeight: 900,
-                                textTransform: 'uppercase',
-                                letterSpacing: '.1em',
-                                border: 'none',
-                                cursor: 'pointer',
-                                boxShadow: '0 8px 16px rgba(34,197,94,.3)',
-                              }}
-                            >
-                              Confirm Donation
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => handleMissed(a.id)}
-                              className="hd-btn hd-glass"
-                              style={{
-                                color: 'rgba(211,47,47,.6)',
-                                padding: 10,
-                                borderRadius: 12,
-                                fontSize: 11,
-                                fontWeight: 900,
-                                textTransform: 'uppercase',
-                                letterSpacing: '.1em',
-                                border: '2px solid rgba(211,47,47,.2)',
-                                background: 'rgba(255,235,238,.6)',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Donor Didn't Show
-                            </motion.button>
-                          </div>
                         </div>
                       </motion.div>
                     )

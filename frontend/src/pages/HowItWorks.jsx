@@ -222,11 +222,7 @@ function HowItWorks() {
           className="hiw-step-card"
         >
           <div className="hiw-step-number">3</div>
-          <h3>Schedule Donation</h3>
-          <p>
-            Book an appointment at your preferred hospital. 
-            Flexible scheduling around your calendar.
-          </p>
+         
         </motion.div>
 
         <motion.div

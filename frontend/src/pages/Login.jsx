@@ -388,7 +388,7 @@ function Login() {
 
             <div style={fadeUp(.2)}>
               <p style={{ fontSize:'clamp(13px,1.3vw,16px)', color:'rgba(211,47,47,.7)', fontWeight:600, maxWidth:480, lineHeight:1.65, margin:0 }}>
-                Access your dashboard to track donations, schedule appointments, and see your life-saving impact in real-time.
+                Access your dashboard to track donations,  and see your life-saving impact in real-time.
               </p>
             </div>
 

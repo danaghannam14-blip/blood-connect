@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
-import AppointmentBooker from '../components/AppointmentBooker'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 
@@ -167,7 +166,6 @@ function Dashboard() {
   const [donor, setDonor] = useState(null)
   const [inventory, setInventory] = useState([])
   const [notifications, setNotifications] = useState([])
-  const [appointments, setAppointments] = useState([])
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -177,7 +175,6 @@ function Dashboard() {
     setDonor(donorData)
     axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`).then(res => setInventory(res.data)).catch(console.log)
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
-    axios.get(`${API}/api/appointments/donor/${donorData.id}`).then(res => setAppointments(res.data)).catch(console.log)
     setTimeout(() => setVisible(true), 60)
   }, [])
 
@@ -236,8 +233,7 @@ function Dashboard() {
   const steps = [
     { id: 1, label: 'Health Screening', icon: '🩺', done: true },
     { id: 2, label: 'Hospital Matched', icon: '🏥', done: inventory.length > 0 },
-    { id: 3, label: 'Appointment Booked', icon: '📅', done: appointments.some(a => a.status === 'scheduled' || a.status === 'completed') },
-    { id: 4, label: 'Donation Complete', icon: '✅', done: totalDonations > 0 },
+    { id: 3, label: 'Donation Complete', icon: '✅', done: totalDonations > 0 },
   ]
 
   const fadeUp = (delay = 0) => ({
@@ -463,8 +459,8 @@ function Dashboard() {
           )}
         </motion.div>
 
-        {/* Appointment Booking */}
-        {!maxReached && !nextEligible && (
+        {/* Donation History */}
+        {hospitalRows.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
@@ -474,58 +470,14 @@ function Dashboard() {
           >
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
               <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>2</div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Book Your Donation Appointment</h3>
-            </div>
-            <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>Choose a hospital from the list above and pick a time. After your appointment, the hospital will confirm your donation.</p>
-            <motion.div initial={{ opacity: 0 }} animate={visible ? { opacity: 1 } : { opacity: 0 }} transition={{ delay: 0.6 }}>
-              <AppointmentBooker donor={donor} onAppointmentsChange={setAppointments} />
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Cooldown Message */}
-        {nextEligible && !maxReached && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="dd-glass"
-            style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,165,0,.3)', background:'rgba(255,165,0,.1)' }}
-          >
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:8 }}>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, background:'rgba(255,165,0,.3)' }}
-              >
-                2
-              </motion.div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Donation Cooldown Active</h3>
-            </div>
-            <p style={{ fontSize:12, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginTop:0, marginBottom:0 }}>You donated recently. You can book your next appointment from <strong>{nextEligible}</strong>.</p>
-          </motion.div>
-        )}
-
-        {/* Donation History */}
-        {hospitalRows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="dd-glass-deep dd-card-hover"
-            style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)' }}
-          >
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-              <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>3</div>
               <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Donation History</h3>
             </div>
-            <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>The hospital will confirm your donation after your appointment. You'll see it reflected here.</p>
+            <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>The hospital will confirm your donation after completion. You'll see it reflected here.</p>
 
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <AnimatePresence>
                 {hospitalRows.map((row, idx) => {
                   const unitsDonatedHere = row.donated_count
-                  const canDonateHere = !!row.pending_notif_id && !maxReached
                   return (
                     <motion.div
                       key={row.hospital_id}
@@ -571,16 +523,6 @@ function Dashboard() {
                           {unitsDonatedHere >= 2 && '2 units confirmed by hospital'}
                         </span>
                       </div>
-                      {canDonateHere && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="dd-glass"
-                          style={{ borderRadius:12, padding:10, fontSize:10, fontWeight:700, color:'#991b1b', border:'1px solid rgba(64,88,120,.2)', background:'rgba(153,27,27,.1)' }}
-                        >
-                          ⏳ Waiting for hospital to confirm your donation after your appointment.
-                        </motion.div>
-                      )}
                       {unitsDonatedHere >= 2 && (
                         <motion.p initial={{ scale: 0.8 }} animate={{ scale: 1 }} style={{ fontSize:11, fontWeight:900, color:'#22c55e', margin:'8px 0 0 0' }}>
                           ✅ Complete — 2 units donated!

@@ -237,7 +237,7 @@ function HospitalCard({ h, index, compatibleTypes }) {
             <span style={{ fontWeight:900, fontSize:13, color: index===0?'#faf7f7':'#991b1b' }}>#{index+1}</span>
           </div>
           <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ fontWeight:900, fontSize:'clamp(12px,1.2vw,14px)', color:'#dc2626', margin:0, overflow:'hidden', textOverflow:'ellipsis', #faf7f7Space:'nowrap' }}>{h.name}</p>
+            <p style={{ fontWeight:900, fontSize:'clamp(12px,1.2vw,14px)', color:'#dc2626', margin:0, overflow:'hidden', textOverflow:'ellipsis',  whiteSpace:'nowrap' }}>{h.name}</p>
             <p style={{ fontSize:11, color:'rgba(153,27,27,.7)', margin:'2px 0 0', fontWeight:600 }}>{h.address}</p>
             {h.distance != null && (
               <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:4 }}>

@@ -66,9 +66,7 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, ur
                       <p style="margin: 8px 0 0;"><strong>Blood Type:</strong> ${blood_type}</p>
                       <p style="margin: 8px 0 0;"><strong>Priority:</strong> ${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</p>
                     </div>
-                    <a href="https://bloodconnect-lb.vercel.app/donor/dashboard" style="background: ${urgencyColor}; color: #faf7f7; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
-                      Book Appointment
-                    </a>
+                    
                   </div>
                   <div style="background: #111; padding: 15px; text-align: center;">
                     <p style="color: #666; margin: 0; font-size: 12px;">© 2026 BloodConnect. Smart Donor Matching System.</p>

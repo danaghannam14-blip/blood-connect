@@ -792,7 +792,7 @@ function Chatbot() {
                     fontWeight: 700,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    #faf7f7Space: 'nowrap',
+                     whiteSpace: 'nowrap',
                   }}>
                     {isRecorded ? 'Done' : isActive ? 'Current' : 'Pending'}
                   </span>
