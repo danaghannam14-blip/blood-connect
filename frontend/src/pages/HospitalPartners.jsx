@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
+
 
 // Backend API URL - Smart detection
 const API_BASE_URL = window.location.hostname === 'localhost' 
@@ -651,7 +651,7 @@ function HospitalPartners() {
             </motion.button>
           </div>
 
-          <PremiumHamburgerMenu />
+          
         </div>
       </header>
 

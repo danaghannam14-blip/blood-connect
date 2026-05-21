@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { PremiumHamburgerMenu } from '../components/NavbarHamburger-Premium'
+
 
 function HowItWorks() {
   const navigate = useNavigate()
@@ -168,7 +168,7 @@ function HowItWorks() {
           <div className="hiw-logo-main">BloodConnect</div>
           <div className="hiw-logo-sub">Smart Donor Matching System</div>
         </div>
-        <PremiumHamburgerMenu />
+       
       </nav>
 
       {/* HERO */}
