@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 
-/* ─── Injected Styles ─────────────────────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
@@ -90,6 +89,25 @@ const STYLES = `
 
   .bc-input::placeholder { color:rgba(211,47,47,.35); }
   .bc-input:focus { border-color:rgba(211,47,47,.5); background:rgba(255,255,255,.72); box-shadow:0 8px 24px rgba(211,47,47,.12); transform:translateY(-2px); }
+
+  .bc-select {
+    width:100%;
+    padding:14px 18px;
+    border-radius:14px;
+    border:2px solid rgba(211,47,47,.15);
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(20px);
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:#D32F2F;
+    outline:none;
+    transition:all .28s cubic-bezier(.22,1,.36,1);
+    box-sizing:border-box;
+    cursor:pointer;
+  }
+
+  .bc-select:focus { border-color:rgba(211,47,47,.5); background:rgba(255,255,255,.72); box-shadow:0 8px 24px rgba(211,47,47,.12); transform:translateY(-2px); }
 
   .bc-btn {
     position:relative;
@@ -266,7 +284,7 @@ function DonorRegister() {
   const [currentStep, setCurrentStep] = useState(1)
   const [form, setForm] = useState({
     full_name: '', email: '', password: '', phone: '',
-    blood_type: '', date_of_birth: '', gender: 'Male'
+    blood_type: '', date_of_birth: '', gender: 'Male', governorate: ''
   })
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -279,6 +297,18 @@ function DonorRegister() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [visible, setVisible] = useState(false)
+
+  const GOVERNORATES = [
+    'Beirut',
+    'Mount Lebanon',
+    'North Lebanon',
+    'Keserwan-Jbeil',
+    'South Lebanon',
+    'Nabatiyeh',
+    'Beqaa',
+    'Baalbek-Hermel',
+    'Akkar'
+  ]
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 60)
@@ -378,6 +408,10 @@ function DonorRegister() {
       setError('Blood type could not be detected from ID.')
       return
     }
+    if (!form.governorate) {
+      setError('Please select your governorate.')
+      return
+    }
     setMessage('')
     setError('')
     setSubmitting(true)
@@ -416,15 +450,21 @@ function DonorRegister() {
         return
       }
     }
+    if (currentStep === 3) {
+      if (backStatus !== 'verified') {
+        setError('Please verify ID back first')
+        return
+      }
+    }
     setError('')
-    setCurrentStep(s => Math.min(s + 1, 3))
+    setCurrentStep(s => Math.min(s + 1, 4))
   }
 
   const prevStep = () => {
     setCurrentStep(s => Math.max(s - 1, 1))
   }
 
-  const progress = (currentStep / 3) * 100
+  const progress = (currentStep / 4) * 100
 
   return (
     <div className="bc-register-root">
@@ -469,6 +509,7 @@ function DonorRegister() {
                 { num: 1, label: 'Account' },
                 { num: 2, label: 'Age' },
                 { num: 3, label: 'Blood Type' },
+                { num: 4, label: 'Location' },
               ].map(step => (
                 <div key={step.num} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
                   <div className={`bc-step-indicator ${currentStep === step.num ? 'active' : currentStep > step.num ? 'completed' : 'inactive'}`}>
@@ -610,7 +651,6 @@ function DonorRegister() {
                     transition={{ duration: 0.3 }}
                     style={{ display:'flex', flexDirection:'column', gap:16 }}
                   >
-                    {/* ID FRONT BOX */}
                     <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                         <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -677,7 +717,6 @@ function DonorRegister() {
                       </button>
                     </div>
 
-                    {/* AGE RESULTS */}
                     {frontStatus === 'verified' && ageData.age && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -711,7 +750,6 @@ function DonorRegister() {
                     transition={{ duration: 0.3 }}
                     style={{ display:'flex', flexDirection:'column', gap:16 }}
                   >
-                    {/* ID BACK BOX */}
                     <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                         <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -778,7 +816,6 @@ function DonorRegister() {
                       </button>
                     </div>
 
-                    {/* BLOOD TYPE RESULTS */}
                     {backStatus === 'verified' && form.blood_type && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -799,6 +836,58 @@ function DonorRegister() {
                   </motion.div>
                 )}
 
+                {/* STEP 4: LOCATION (GOVERNORATE) */}
+                {currentStep === 4 && (
+                  <motion.div
+                    key="step4"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display:'flex', flexDirection:'column', gap:18 }}
+                  >
+                    <div>
+                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Select Your Governorate *</label>
+                      <select
+                        name="governorate"
+                        value={form.governorate}
+                        onChange={handleChange}
+                        className="bc-select"
+                        required
+                      >
+                        <option value="">Choose a governorate...</option>
+                        {GOVERNORATES.map(gov => (
+                          <option key={gov} value={gov}>{gov}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {form.governorate && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bc-glass"
+                        style={{ padding:20, borderRadius:14, background:'rgba(136,189,242,.15)', border:'2px solid rgba(64,88,120,.3)', textAlign:'center' }}
+                      >
+                        <p style={{ fontSize:13, fontWeight:700, color:'rgba(64,88,120,.8)', margin:'0 0 12px 0' }}>
+                          📍 Location Selected
+                        </p>
+                        <div style={{ textAlign:'center' }}>
+                          <p style={{ fontSize:24, fontWeight:900, color:'rgba(64,88,120,.9)', margin:0 }}>
+                            {form.governorate}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <div className="bc-glass" style={{ background:'rgba(136,189,242,.1)', border:'2px solid rgba(64,88,120,.2)', borderRadius:14, padding:16 }}>
+                      <p style={{ fontSize:12, color:'rgba(64,88,120,.7)', fontWeight:600, margin:0, lineHeight:1.6 }}>
+                        📋 Your location helps us connect you with the nearest blood banks and donation centers in your area.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
               </AnimatePresence>
 
               <div style={{ display:'flex', gap:12, marginTop:32 }}>
@@ -813,22 +902,22 @@ function DonorRegister() {
                   </button>
                 )}
                 
-                {currentStep < 3 ? (
+                {currentStep < 4 ? (
                   <button
                     type="button"
                     onClick={nextStep}
                     className="bc-btn bc-btn-primary"
                     style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900 }}
-                    disabled={currentStep === 2 && frontStatus !== 'verified'}
+                    disabled={(currentStep === 2 && frontStatus !== 'verified') || (currentStep === 3 && backStatus !== 'verified')}
                   >
                     Continue →
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    disabled={submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type}
+                    disabled={submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate}
                     className="bc-btn bc-btn-primary"
-                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type ? 0.6 : 1 }}
+                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate ? 0.6 : 1 }}
                   >
                     {submitting ? (
                       <>
