@@ -1005,7 +1005,7 @@ export default function Home() {
                       </div>
 
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, animation: 'float 3s ease-in-out infinite' }}>📊</div>
+                        <div style={{ fontSize: 20, animation: 'float 3s ease-in-out infinite' }}></div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(71,85,105,.6)', textTransform: 'uppercase', letterSpacing: '.08em', marginTop: 6 }}>
                           {stat.label}
                         </div>
