@@ -32,7 +32,7 @@ const STYLES = `
 
   .dd-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.35));
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.35));
     background-size:400% 400%;
     animation:dd-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -89,8 +89,8 @@ const STYLES = `
   .dd-btn:active { transform:scale(.97); }
 
   .dd-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
   .dd-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
@@ -99,7 +99,7 @@ const STYLES = `
     background:rgba(255,255,255,.5);
     backdrop-filter:blur(20px);
     border:2px solid rgba(211,47,47,.2) !important;
-    color:#D32F2F;
+    color:#dc2626;
   }
   .dd-btn-secondary:hover { background:rgba(255,255,255,.72);border-color:rgba(211,47,47,.42) !important; }
 
@@ -111,7 +111,7 @@ const STYLES = `
     background:rgba(255,255,255,.62);
     backdrop-filter:blur(40px);
     -webkit-backdrop-filter:blur(40px);
-    border-bottom:2px solid rgba#405878;
+    border-bottom:2px solid rgba#991b1b;
     box-shadow:0 4px 24px rgba(211,47,47,.06);
   }
 
@@ -270,7 +270,7 @@ function Dashboard() {
       >
         <div className="dd-nav-inner">
           <div style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-            <span style={{ fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:'#D32F2F', letterSpacing:'-.04em', fontFamily:"'Fraunces',serif" }}>
+            <span style={{ fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:'#dc2626', letterSpacing:'-.04em', fontFamily:"'Fraunces',serif" }}>
               BloodConnect
             </span>
             <span style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em' }}>Donor Portal</span>
@@ -299,15 +299,15 @@ function Dashboard() {
           style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)', display:'flex', justifyContent:'space-between', alignItems:'center' }}
         >
           <div>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.5vw,44px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1.1 }}>Welcome, {donor.full_name} 👋</h2>
-            <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, marginTop:8, marginBottom:0 }}>Blood Type: <span style={{ color:'#D32F2F', fontWeight:900 }}>{donor.blood_type}</span> · {donor.email}</p>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.5vw,44px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>Welcome, {donor.full_name} 👋</h2>
+            <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, marginTop:8, marginBottom:0 }}>Blood Type: <span style={{ color:'#dc2626', fontWeight:900 }}>{donor.blood_type}</span> · {donor.email}</p>
           </div>
           <motion.div
             whileHover={{ scale: 1.12 }}
             className="dd-glass"
             style={{ borderRadius:22, padding:'clamp(18px,2.5vw,32px)', textAlign:'center', border:'1px solid rgba(255,255,255,.72)', minWidth:'fit-content' }}
           >
-            <p style={{ fontSize:'clamp(28px,5vw,52px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1, textShadow:'0 4px 20px rgba(211,47,47,.2)' }}>{totalDonations * 3}</p>
+            <p style={{ fontSize:'clamp(28px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1, textShadow:'0 4px 20px rgba(211,47,47,.2)' }}>{totalDonations * 3}</p>
             <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em', marginTop:8, marginBottom:0 }}>Lives Saved</p>
           </motion.div>
         </motion.div>
@@ -349,7 +349,7 @@ function Dashboard() {
                     initial={{ scaleX: 0 }}
                     animate={visible ? { scaleX: 1 } : { scaleX: 0 }}
                     transition={{ delay: 0.3 + i * 0.1 }}
-                    style={{ position:'absolute', height:2, width:'clamp(20px,3vw,40px)', background: steps[i+1].done ? '#22c55e' : 'rgba#405878', left: `calc(50% + ${24 + i * 0}px)`, originX:0 }}
+                    style={{ position:'absolute', height:2, width:'clamp(20px,3vw,40px)', background: steps[i+1].done ? '#22c55e' : 'rgba#991b1b', left: `calc(50% + ${24 + i * 0}px)`, originX:0 }}
                   />
                 )}
               </motion.div>
@@ -369,11 +369,11 @@ function Dashboard() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(12px,1.8vw,20px)' }}>
             <motion.div whileHover={{ y: -4 }} className="dd-glass dd-card-hover" style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,255,255,.72)' }}>
               <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Can donate to</p>
-              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#D32F2F', margin:0 }}>{getCanDonateTo(donor.blood_type)}</p>
+              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>{getCanDonateTo(donor.blood_type)}</p>
             </motion.div>
             <motion.div whileHover={{ y: -4 }} className="dd-glass dd-card-hover" style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,255,255,.72)' }}>
               <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Total donations</p>
-              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#D32F2F', margin:0 }}>{totalDonations} unit{totalDonations !== 1 ? 's' : ''}</p>
+              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>{totalDonations} unit{totalDonations !== 1 ? 's' : ''}</p>
             </motion.div>
             {nextEligible ? (
               <motion.div
@@ -384,7 +384,7 @@ function Dashboard() {
                 style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,165,0,.3)', background:'rgba(255,165,0,.1)', gridColumn:'1 / -1' }}
               >
                 <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Next eligible donation date</p>
-                <p style={{ fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, color:'#D32F2F', margin:0 }}>📅 {nextEligible}</p>
+                <p style={{ fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>📅 {nextEligible}</p>
               </motion.div>
             ) : (
               <motion.div
@@ -411,7 +411,7 @@ function Dashboard() {
         >
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
             <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>1</div>
-            <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#D32F2F', margin:0 }}>Hospitals Requesting Your Blood Type</h3>
+            <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Hospitals Requesting Your Blood Type</h3>
           </div>
           {inventory.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={visible ? { opacity: 1 } : { opacity: 0 }} style={{ textAlign:'center', paddingY:32 }}>
@@ -436,12 +436,12 @@ function Dashboard() {
                     >
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:8 }}>
                         <div>
-                          <p style={{ fontSize:13, fontWeight:900, color:'#D32F2F', margin:0 }}>{item.hospital_name}</p>
+                          <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0 }}>{item.hospital_name}</p>
                           <p style={{ fontSize:11, color:'rgba(211,47,47,.65)', margin:'4px 0 0 0' }}>{item.hospital_address}</p>
                         </div>
                         <motion.span
                           whileHover={{ scale: 1.1 }}
-                          style={{ background:'#D32F2F', color:'white', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10 }}
+                          style={{ background:'#dc2626', color:'#faf7f7', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10 }}
                         >
                           {item.blood_type}
                         </motion.span>
@@ -454,7 +454,7 @@ function Dashboard() {
                         <span className="dd-stat-dot" style={{ width:8, height:8, background: URGENCY_CONFIG[item.urgency]?.dot || '#ff6b6b', animation:'dd-pulse 2s infinite' }}/>
                         <span style={{ fontWeight:700, color: URGENCY_CONFIG[item.urgency]?.text }}>{urgency.label}</span>
                       </motion.div>
-                      <p style={{ fontSize:11, fontWeight:900, color:'#D32F2F', margin:'8px 0 0 0' }}>🩸 Needs {item.quantity_needed} units</p>
+                      <p style={{ fontSize:11, fontWeight:900, color:'#dc2626', margin:'8px 0 0 0' }}>🩸 Needs {item.quantity_needed} units</p>
                     </motion.div>
                   )
                 })}
@@ -474,7 +474,7 @@ function Dashboard() {
           >
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
               <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>2</div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#D32F2F', margin:0 }}>Book Your Donation Appointment</h3>
+              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Book Your Donation Appointment</h3>
             </div>
             <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>Choose a hospital from the list above and pick a time. After your appointment, the hospital will confirm your donation.</p>
             <motion.div initial={{ opacity: 0 }} animate={visible ? { opacity: 1 } : { opacity: 0 }} transition={{ delay: 0.6 }}>
@@ -500,7 +500,7 @@ function Dashboard() {
               >
                 2
               </motion.div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#D32F2F', margin:0 }}>Donation Cooldown Active</h3>
+              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Donation Cooldown Active</h3>
             </div>
             <p style={{ fontSize:12, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginTop:0, marginBottom:0 }}>You donated recently. You can book your next appointment from <strong>{nextEligible}</strong>.</p>
           </motion.div>
@@ -517,7 +517,7 @@ function Dashboard() {
           >
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
               <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>3</div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#D32F2F', margin:0 }}>Donation History</h3>
+              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Donation History</h3>
             </div>
             <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>The hospital will confirm your donation after your appointment. You'll see it reflected here.</p>
 
@@ -538,13 +538,13 @@ function Dashboard() {
                     >
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:12 }}>
                         <div>
-                          <p style={{ fontSize:13, fontWeight:900, color:'#D32F2F', margin:0 }}>{row.hospital_name}</p>
+                          <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0 }}>{row.hospital_name}</p>
                           <p style={{ fontSize:11, color:'rgba(211,47,47,.65)', margin:'4px 0 2px 0' }}>{row.hospital_address}</p>
                           <p style={{ fontSize:10, color:'rgba(211,47,47,.4)', margin:0 }}>{new Date(row.created_at).toLocaleDateString()}</p>
                         </div>
                         <motion.span
                           whileHover={{ scale: 1.1 }}
-                          style={{ background:'rgba#405878', color:'#D32F2F', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
+                          style={{ background:'rgba#991b1b', color:'#dc2626', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
                         >
                           {row.blood_type}
                         </motion.span>
@@ -576,7 +576,7 @@ function Dashboard() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="dd-glass"
-                          style={{ borderRadius:12, padding:10, fontSize:10, fontWeight:700, color:'#405878', border:'1px solid rgba(64,88,120,.2)', background:'rgba(64,88,120,.1)' }}
+                          style={{ borderRadius:12, padding:10, fontSize:10, fontWeight:700, color:'#991b1b', border:'1px solid rgba(64,88,120,.2)', background:'rgba(153,27,27,.1)' }}
                         >
                           ⏳ Waiting for hospital to confirm your donation after your appointment.
                         </motion.div>
@@ -597,7 +597,7 @@ function Dashboard() {
                   className="dd-glass"
                   style={{ borderRadius:16, padding:16, border:'1px solid rgba(255,165,0,.3)', background:'rgba(255,165,0,.1)' }}
                 >
-                  <p style={{ fontSize:13, fontWeight:900, color:'#D32F2F', margin:'0 0 8px 0' }}>You've given your all — time to recharge. 🌿</p>
+                  <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:'0 0 8px 0' }}>You've given your all — time to recharge. 🌿</p>
                   <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', lineHeight:1.6, margin:0 }}>
                     💧 Drink extra water · 🥩 Eat iron-rich foods · 😴 Sleep well · 🚫 Skip intense workouts for 24 hours. Come back in 3 months!
                   </p>

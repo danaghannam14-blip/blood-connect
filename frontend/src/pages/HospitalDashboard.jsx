@@ -28,7 +28,7 @@ const STYLES = `
 
   .hd-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.25));
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.25));
     background-size:400% 400%;
     animation:bc-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -71,7 +71,7 @@ const STYLES = `
     background:rgba(255,255,255,.5);
     backdrop-filter:blur(20px);
     border:2px solid rgba(211,47,47,.15);
-    color:#D32F2F;
+    color:#dc2626;
     transition:all .28s cubic-bezier(.22,1,.36,1);
   }
 
@@ -99,8 +99,8 @@ const STYLES = `
   .hd-btn:active { transform:scale(.97); }
 
   .hd-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
 
@@ -112,15 +112,15 @@ const STYLES = `
   .hd-tab-btn {
     position:relative;overflow:hidden;
     background:rgba(255,255,255,.5);
-    border:2px solid rgba#405878;
-    color:#D32F2F;
+    border:2px solid rgba#991b1b;
+    color:#dc2626;
     font-weight:700;
     transition:all .28s cubic-bezier(.22,1,.36,1);
   }
 
   .hd-tab-btn.active {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     border-color:transparent;
     box-shadow:0 10px 28px rgba(211,47,47,.3);
   }
@@ -177,7 +177,7 @@ function ParticleField() {
 }
 
 /* ─── Stat Card ──────────────────────────────────────────── */
-function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
+function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -187,7 +187,7 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
       style={{
         borderRadius: '20px',
         padding: '24px',
-        border: '2px solid rgba#405878',
+        border: '2px solid rgba#991b1b',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -197,7 +197,7 @@ function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
         <div style={{
           width:56,
           height:56,
-          background:`rgba(${color === '#D32F2F' ? '211,47,47' : '14,165,233'},.1)`,
+          background:`rgba(${color === '#dc2626' ? '211,47,47' : '14,165,233'},.1)`,
           borderRadius:16,
           display:'flex',
           alignItems:'center',
@@ -388,17 +388,17 @@ function HospitalDashboard() {
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          borderBottom: '2px solid rgba#405878',
+          borderBottom: '2px solid rgba#991b1b',
           backdropFilter: 'blur(40px)',
         }}
       >
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg,#D32F2F,#ff6b6b)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: 22, boxShadow: '0 8px 24px rgba(211,47,47,.3)' }}>
+            <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#faf7f7', fontWeight: 900, fontSize: 22, boxShadow: '0 8px 24px rgba(211,47,47,.3)' }}>
               H
             </div>
             <div>
-              <h1 style={{ fontSize: 18, fontWeight: 900, color: '#D32F2F', margin: 0 }}>{hospital.name}</h1>
+              <h1 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }}>{hospital.name}</h1>
               <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '4px 0 0', fontWeight: 700, letterSpacing: '.1em' }}>{hospital.email}</p>
             </div>
           </div>
@@ -489,11 +489,11 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep hd-card-hover"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
             >
               <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
               
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Post Blood Request</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Post Blood Request</h2>
 
               {message && (
                 <motion.div
@@ -507,7 +507,7 @@ function HospitalDashboard() {
                     borderRadius: 14,
                     marginBottom: 20,
                     textAlign: 'center',
-                    color: message.startsWith('✅') ? '#22c55e' : '#D32F2F',
+                    color: message.startsWith('✅') ? '#22c55e' : '#dc2626',
                     fontWeight: 700,
                     fontSize: 13,
                   }}
@@ -564,7 +564,7 @@ function HospitalDashboard() {
                           borderRadius: 14,
                           border: `2px solid ${form.urgency === key ? val.color : 'rgba(211,47,47,.15)'}`,
                           background: form.urgency === key ? `linear-gradient(135deg, ${val.color}, ${val.color}40)` : undefined,
-                          color: form.urgency === key ? 'white' : val.color,
+                          color: form.urgency === key ? '#faf7f7' : val.color,
                           fontWeight: 900,
                           fontSize: 11,
                           textAlign: 'center',
@@ -600,7 +600,7 @@ function HospitalDashboard() {
                 >
                   {submitting ? (
                     <>
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: 18, height: 18, border: '3px solid rgba(255,255,255,.3)', borderTopColor: 'white', borderRadius: '50%' }} />
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: 18, height: 18, border: '3px solid rgba(255,255,255,.3)', borderTopColor: '#faf7f7', borderRadius: '50%' }} />
                       Posting...
                     </>
                   ) : (
@@ -620,13 +620,13 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Your Blood Requests</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Your Blood Requests</h2>
 
               {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 12 }}>
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#D32F2F', borderRadius: '50%' }} />
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#dc2626', borderRadius: '50%' }} />
                 </div>
               ) : requests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px 24px', position: 'relative', zIndex: 1 }}>
@@ -634,7 +634,7 @@ function HospitalDashboard() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={() => setActiveTab('post')}
-                    style={{ marginTop: 16, color: '#D32F2F', fontWeight: 900, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, textDecoration: 'underline', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                    style={{ marginTop: 16, color: '#dc2626', fontWeight: 900, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, textDecoration: 'underline', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     + Post your first request
                   </motion.button>
@@ -678,7 +678,7 @@ function HospitalDashboard() {
                                   padding: '6px 12px',
                                   borderRadius: 9,
                                   background: `linear-gradient(135deg, ${urgency.color}, ${urgency.color}80)`,
-                                  color: 'white',
+                                  color: '#faf7f7',
                                   textTransform: 'uppercase',
                                   letterSpacing: '.1em',
                                   display: 'inline-flex',
@@ -713,7 +713,7 @@ function HospitalDashboard() {
                             style={{
                               fontSize: 11,
                               fontWeight: 900,
-                              color: '#D32F2F',
+                              color: '#dc2626',
                               background: 'rgba(255,255,255,.7)',
                               padding: '8px 14px',
                               borderRadius: 10,
@@ -741,14 +741,14 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Donor Appointments</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Donor Appointments</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Confirm donations when donors arrive, or mark as missed if they don't show up.</p>
 
               {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 12 }}>
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#D32F2F', borderRadius: '50%' }} />
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#dc2626', borderRadius: '50%' }} />
                 </div>
               ) : appointments.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px 24px', position: 'relative', zIndex: 1 }}>
@@ -807,7 +807,7 @@ function HospitalDashboard() {
                                   </motion.span>
                                 )}
                               </div>
-                              <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '4px 0', fontWeight: 700 }}>Blood Type: <span style={{ color: '#D32F2F', fontWeight: 900 }}>{a.donor_blood_type}</span></p>
+                              <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '4px 0', fontWeight: 700 }}>Blood Type: <span style={{ color: '#dc2626', fontWeight: 900 }}>{a.donor_blood_type}</span></p>
                               {a.donor_phone && <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '4px 0', fontWeight: 700 }}>Phone: {a.donor_phone}</p>}
                               <p style={{ fontSize: 11, color: 'rgba(211,47,47,.6)', margin: '6px 0 0', fontWeight: 700 }}>
                                 {apptDate} at {(() => {
@@ -840,7 +840,7 @@ function HospitalDashboard() {
                               className="hd-btn"
                               style={{
                                 background: 'linear-gradient(135deg, #22C55E, #22C55E80)',
-                                color: 'white',
+                                color: '#faf7f7',
                                 padding: 10,
                                 borderRadius: 12,
                                 fontSize: 11,
@@ -893,9 +893,9 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Current Blood Stock</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Current Blood Stock</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 16px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Update your current blood inventory. This is visible to donors on the map.</p>
 
               {stockMessage && (
@@ -908,7 +908,7 @@ function HospitalDashboard() {
                     borderRadius: 14,
                     background: stockMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
                     border: `2px solid ${stockMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
-                    color: stockMessage.startsWith('✅') ? '#22c55e' : '#D32F2F',
+                    color: stockMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
                     fontWeight: 700,
                     fontSize: 13,
                     textAlign: 'center',
@@ -1000,9 +1000,9 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
             >
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Record Blood Usage</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Record Blood Usage</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>When a patient receives blood, record it here to keep stock accurate.</p>
 
               {transfusionMessage && (
@@ -1015,7 +1015,7 @@ function HospitalDashboard() {
                     borderRadius: 14,
                     background: transfusionMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
                     border: `2px solid ${transfusionMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
-                    color: transfusionMessage.startsWith('✅') ? '#22c55e' : '#D32F2F',
+                    color: transfusionMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
                     fontWeight: 700,
                     fontSize: 13,
                     textAlign: 'center',
@@ -1026,7 +1026,7 @@ function HospitalDashboard() {
               )}
 
               <div className="hd-glass" style={{ background: 'rgba(255,235,238,.4)', border: '2px solid rgba(211,47,47,.15)', borderRadius: 18, padding: 18, marginBottom: 24, position: 'relative', zIndex: 1 }}>
-                <p style={{ fontSize: 13, fontWeight: 900, color: '#D32F2F', margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '.1em' }}>Record New Transfusion</p>
+                <p style={{ fontSize: 13, fontWeight: 900, color: '#dc2626', margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '.1em' }}>Record New Transfusion</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>Blood Type Used</label>
@@ -1066,7 +1066,7 @@ function HospitalDashboard() {
                 </div>
               </div>
 
-              <p style={{ fontSize: 13, fontWeight: 900, color: '#D32F2F', margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '.1em', position: 'relative', zIndex: 1 }}>Recent Transfusions</p>
+              <p style={{ fontSize: 13, fontWeight: 900, color: '#dc2626', margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '.1em', position: 'relative', zIndex: 1 }}>Recent Transfusions</p>
               {transfusions.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'rgba(211,47,47,.4)', fontSize: 13, padding: '24px 16px', position: 'relative', zIndex: 1 }}>No transfusions recorded yet.</p>
               ) : (
@@ -1087,14 +1087,14 @@ function HospitalDashboard() {
                         borderRadius: 14,
                         padding: 12,
                         background: 'rgba(255,235,238,.4)',
-                        border: '2px solid rgba#405878',
+                        border: '2px solid rgba#991b1b',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                       }}
                     >
                       <div>
-                        <span style={{ color: '#D32F2F', fontWeight: 900, fontSize: 13 }}>{t.blood_type}</span>
+                        <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 13 }}>{t.blood_type}</span>
                         <span style={{ color: 'rgba(211,47,47,.5)', fontSize: 11, marginLeft: 12, fontWeight: 700 }}>{t.units} unit(s) used</span>
                         {t.notes && <p style={{ fontSize: 11, color: 'rgba(211,47,47,.4)', margin: '4px 0 0', fontWeight: 600 }}>{t.notes}</p>}
                       </div>
@@ -1114,10 +1114,10 @@ function HospitalDashboard() {
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
           transition={{ delay: 0.5 }}
           className="hd-glass-deep hd-card-hover"
-          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba#405878', position: 'relative', overflow: 'hidden' }}
+          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
-          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#D32F2F', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Change Password</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Change Password</h2>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <ChangePassword
               onSubmit={async (oldPass, newPass) => {

@@ -25,7 +25,7 @@ function NotFound() {
 
     .nf-root {
       min-height: 100vh;
-      background: linear-gradient(-45deg, #FFEBEE, #F8F9FA, #FFE5E8, rgba(64,88,120,0.18), #FFF5F7);
+      background: linear-gradient(-45deg, #f8f8f8, #efefef, #e8e8e8, rgba(64,88,120,0.18), #f2f2f2);
       background-size: 400% 400%;
       animation: nf-gradient 14s ease infinite;
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -83,8 +83,8 @@ function NotFound() {
     .nf-btn:active { transform: scale(0.97); }
 
     .nf-btn-primary {
-      background: linear-gradient(135deg, #D32F2F, #ff6b6b);
-      color: white;
+      background: linear-gradient(135deg, #dc2626, #ff6b6b);
+      color: #faf7f7;
       box-shadow: 0 12px 32px rgba(211,47,47,0.32);
     }
 
@@ -94,7 +94,7 @@ function NotFound() {
       background: rgba(255,255,255,0.5);
       backdrop-filter: blur(20px);
       border: 2px solid rgba(211,47,47,0.2) !important;
-      color: #D32F2F;
+      color: #dc2626;
     }
 
     .nf-btn-secondary:hover { background: rgba(255,255,255,0.72); border-color: rgba(211,47,47,0.42) !important; }
@@ -205,7 +205,7 @@ function NotFound() {
               style={{
                 fontSize: 'clamp(64px,14vw,140px)',
                 fontWeight: 900,
-                background: 'linear-gradient(135deg, #D32F2F, #ff6b6b)',
+                background: 'linear-gradient(135deg, #dc2626, #ff6b6b)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -249,17 +249,17 @@ function NotFound() {
           <defs>
             <linearGradient id="nfBloodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ff6b6b" />
-              <stop offset="50%" stopColor="#D32F2F" />
-              <stop offset="100%" stopColor="#b71c1c" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
             <linearGradient id="nfHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity=".6" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
+              <stop offset="0%" stopColor="#faf7f7" stopOpacity=".6" />
+              <stop offset="100%" stopColor="#faf7f7" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#nfBloodGrad)" />
           <ellipse cx="35" cy="70" rx="15" ry="20" fill="url(#nfHighlight)" />
-          <path d="M50 20 C50 20 80 65 80 85 C80 100 65 115 50 115 C35 115 20 100 20 85 C20 65 50 20 50 20 Z" fill="none" stroke="white" strokeWidth=".5" strokeOpacity=".3" />
+          <path d="M50 20 C50 20 80 65 80 85 C80 100 65 115 50 115 C35 115 20 100 20 85 C20 65 50 20 50 20 Z" fill="none" stroke="#faf7f7" strokeWidth=".5" strokeOpacity=".3" />
         </svg>
 
         {/* Glow */}
@@ -307,7 +307,7 @@ function NotFound() {
         className="nf-grid"
       >
         <div className="nf-glass-deep" style={{ borderRadius: 'clamp(32px,4vw,52px)', padding: 'clamp(32px,5vw,64px) clamp(24px,4vw,48px)', border: '2px solid rgba(211,47,47,0.12)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#D32F2F,#405878,transparent)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }} />
 
           {/* Floating orbs */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -348,7 +348,7 @@ function NotFound() {
                 fontFamily: 'Fraunces, serif',
                 fontSize: 'clamp(24px,5vw,48px)',
                 fontWeight: 900,
-                color: '#D32F2F',
+                color: '#dc2626',
                 margin: '0 0 12px',
                 lineHeight: 1.1,
               }}>
@@ -408,7 +408,7 @@ function NotFound() {
                   gap: 8,
                 }}
               >
-                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'white' }}>
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: '#faf7f7' }}>
                   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                 </svg>
                 Go Home
@@ -429,8 +429,8 @@ function NotFound() {
                   gap: 8,
                 }}
               >
-                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: '#D32F2F' }}>
-                  <path d="M19 12H5m7 7l-7-7 7-7" stroke="#D32F2F" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: '#dc2626' }}>
+                  <path d="M19 12H5m7 7l-7-7 7-7" stroke="#dc2626" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Go Back
               </motion.button>

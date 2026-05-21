@@ -36,7 +36,7 @@ const STYLES = `
 
   .rp-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.25));
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.25));
     background-size:400% 400%;
     animation:rp-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -95,7 +95,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     font-size:13px;
-    color:#D32F2F;
+    color:#dc2626;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
     box-sizing:border-box;
@@ -143,8 +143,8 @@ const STYLES = `
   .rp-btn:active:not(:disabled) { transform:scale(.97); }
 
   .rp-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
 
@@ -275,7 +275,7 @@ function AdvancedBackground() {
       >
         <defs>
           <linearGradient id="rpWaveGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#D32F2F" stopOpacity="0.4" />
+            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#ff6b6b" stopOpacity="0.05" />
           </linearGradient>
         </defs>
@@ -383,7 +383,7 @@ function ResetPassword() {
             style={{ maxWidth: 500, padding: 'clamp(28px,4vw,48px)', borderRadius: 'clamp(28px,4vw,44px)', textAlign: 'center' }}
           >
             <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: '#D32F2F', margin: '0 0 12px' }}>Invalid Reset Link</h2>
+            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: '#dc2626', margin: '0 0 12px' }}>Invalid Reset Link</h2>
             <p style={{ fontSize: 14, color: 'rgba(211,47,47,.65)', margin: '0 0 20px', lineHeight: 1.6 }}>
               The password reset link is missing or invalid. Please request a new one.
             </p>
@@ -425,13 +425,13 @@ function ResetPassword() {
                 transition={{ duration: 2, repeat: Infinity }}
                 style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(211,47,47,.2)' }}
               />
-              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px rgba(211,47,47,.4)' }}>
-                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'white' }}>
+              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px rgba(211,47,47,.4)' }}>
+                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'#faf7f7' }}>
                   <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1.1 }}>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
               Create New Password
             </h1>
             <p style={{ fontSize:'clamp(13px,1.3vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:700, marginTop:12, letterSpacing:'.04em' }}>
@@ -440,9 +440,9 @@ function ResetPassword() {
           </div>
 
           {/* Main Card */}
-          <div className="rp-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}>
+          <div className="rp-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#991b1b', position:'relative', overflow:'hidden' }}>
             
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#88bdf2,transparent)' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#88bdf2,transparent)' }}/>
             <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>
 
             <AnimatePresence mode="wait">
@@ -464,7 +464,7 @@ function ResetPassword() {
                       role="alert"
                       aria-live="polite"
                     >
-                      <p style={{ fontSize:13, fontWeight:700, color:'#D32F2F', margin:0 }}>⚠️ {error}</p>
+                      <p style={{ fontSize:13, fontWeight:700, color:'#dc2626', margin:0 }}>⚠️ {error}</p>
                     </motion.div>
                   )}
 
@@ -551,7 +551,7 @@ function ResetPassword() {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'white', borderRadius:'50%' }}
+                            style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                             aria-hidden="true"
                           />
                           Resetting...
@@ -593,7 +593,7 @@ function ResetPassword() {
                   </motion.div>
 
                   <div>
-                    <h3 style={{ fontSize:20, fontWeight:900, color:'#D32F2F', margin:'0 0 8px', fontFamily:"'Fraunces',serif" }}>Password Reset!</h3>
+                    <h3 style={{ fontSize:20, fontWeight:900, color:'#dc2626', margin:'0 0 8px', fontFamily:"'Fraunces',serif" }}>Password Reset!</h3>
                     <p style={{ fontSize:13, color:'rgba(211,47,47,.65)', fontWeight:600, margin:0, lineHeight:1.6 }}>
                       Your password has been successfully reset. Redirecting to login...
                     </p>
@@ -608,7 +608,7 @@ function ResetPassword() {
                     transition={{ duration: 3, ease: 'linear' }}
                     style={{
                       height: 2,
-                      background: 'linear-gradient(90deg, #D32F2F, #ff6b6b)',
+                      background: 'linear-gradient(90deg, #dc2626, #ff6b6b)',
                       borderRadius: 1,
                       width: '100%',
                     }}

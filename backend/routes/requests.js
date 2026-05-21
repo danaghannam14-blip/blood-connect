@@ -55,7 +55,7 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, ur
               htmlContent: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background-color: ${urgencyColor}; padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
+                    <h1 style="color: #faf7f7; margin: 0;">🩸 BloodConnect</h1>
                   </div>
                   <div style="padding: 30px; background: #fff;">
                     <h2 style="color: ${urgencyColor};">${urgencyLabel} Blood Request</h2>
@@ -66,7 +66,7 @@ const sendDonorNotifications = async (blood_type, hospital_name, hospital_id, ur
                       <p style="margin: 8px 0 0;"><strong>Blood Type:</strong> ${blood_type}</p>
                       <p style="margin: 8px 0 0;"><strong>Priority:</strong> ${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</p>
                     </div>
-                    <a href="https://bloodconnect-lb.vercel.app/donor/dashboard" style="background: ${urgencyColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                    <a href="https://bloodconnect-lb.vercel.app/donor/dashboard" style="background: ${urgencyColor}; color: #faf7f7; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
                       Book Appointment
                     </a>
                   </div>

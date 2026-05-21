@@ -70,7 +70,7 @@ const STYLES = `
 
   .em-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFE5E8,rgba(64,88,120,.18),#FFF5F7);
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#e8e8e8,rgba(153,27,27,.18),#f2f2f2);
     background-size:400% 400%;
     animation:em-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -99,24 +99,24 @@ const STYLES = `
   .em-btn:hover::after { width:320px; height:320px; }
   .em-btn:hover  { transform:translateY(-3px) scale(1.05); }
   .em-btn:active { transform:scale(.97); }
-  .em-btn-primary { background:linear-gradient(135deg,#D32F2F,#ff6b6b); color:white; box-shadow:0 12px 32px rgba(211,47,47,.32); }
+  .em-btn-primary { background:linear-gradient(135deg,#dc2626,#ff6b6b); color:#faf7f7; box-shadow:0 12px 32px rgba(211,47,47,.32); }
   .em-btn-primary:hover { box-shadow:0 20px 52px rgba(211,47,47,.48); }
   .em-btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
 
-  .em-input { width:100%; padding:16px 22px; border-radius:18px; border:2px solid rgba(211,47,47,.15); background:rgba(255,255,255,.5); backdrop-filter:blur(20px); font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:14px; color:#D32F2F; outline:none; transition:all .28s cubic-bezier(.22,1,.36,1); box-sizing:border-box; }
+  .em-input { width:100%; padding:16px 22px; border-radius:18px; border:2px solid rgba(211,47,47,.15); background:rgba(255,255,255,.5); backdrop-filter:blur(20px); font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:14px; color:#dc2626; outline:none; transition:all .28s cubic-bezier(.22,1,.36,1); box-sizing:border-box; }
   .em-input::placeholder { color:rgba(211,47,47,.35); }
   .em-input:focus { border-color:rgba(211,47,47,.5); background:rgba(255,255,255,.72); box-shadow:0 8px 28px rgba(211,47,47,.14); transform:translateY(-2px); }
 
   .em-blood-chip { cursor:pointer; border:2px solid rgba(211,47,47,.18); background:rgba(255,255,255,.5); backdrop-filter:blur(10px); font-weight:900; font-size:clamp(15px,1.8vw,20px); color:rgba(211,47,47,.55); border-radius:18px; padding:16px 10px; transition:all .25s cubic-bezier(.34,1.56,.64,1); font-family:'Plus Jakarta Sans',sans-serif; position:relative; overflow:hidden; }
   .em-blood-chip:hover { transform:translateY(-4px) scale(1.07); box-shadow:0 10px 28px rgba(211,47,47,.18); border-color:rgba(211,47,47,.45); }
-  .em-blood-chip.selected { background:linear-gradient(135deg,#D32F2F,#ff6b6b); color:white; border-color:transparent; box-shadow:0 12px 32px rgba(211,47,47,.42); transform:scale(1.1); }
+  .em-blood-chip.selected { background:linear-gradient(135deg,#dc2626,#ff6b6b); color:#faf7f7; border-color:transparent; box-shadow:0 12px 32px rgba(211,47,47,.42); transform:scale(1.1); }
   .em-blood-chip.selected::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent); animation:em-shimmer 1.5s ease infinite; }
 
   .em-card-hover { transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s; }
   .em-card-hover:hover { transform:translateY(-5px) scale(1.01); box-shadow:0 24px 60px rgba(211,47,47,.16) !important; }
 
   .em-toggle-btn { flex:1; padding:14px 18px; border-radius:16px; font-size:14px; font-weight:900; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; border:none; transition:all .25s cubic-bezier(.34,1.56,.64,1); }
-  .em-toggle-btn.active { background:linear-gradient(135deg,#D32F2F,#ff6b6b); color:white; box-shadow:0 10px 28px rgba(211,47,47,.32); }
+  .em-toggle-btn.active { background:linear-gradient(135deg,#dc2626,#ff6b6b); color:#faf7f7; box-shadow:0 10px 28px rgba(211,47,47,.32); }
   .em-toggle-btn.inactive { background:rgba(255,255,255,.5); backdrop-filter:blur(10px); color:rgba(211,47,47,.6); border:2px solid rgba(211,47,47,.12); }
   .em-toggle-btn.inactive:hover { background:rgba(255,255,255,.75); border-color:rgba(211,47,47,.28); }
 
@@ -124,7 +124,7 @@ const STYLES = `
   .em-stat-float-b { animation:em-float-c 4s ease-in-out infinite; }
 
   .em-ticker-wrap { overflow:hidden; flex:1; }
-  .em-ticker-inner { display:flex; gap:52px; animation:em-ticker 30s linear infinite; white-space:nowrap; width:max-content; }
+  .em-ticker-inner { display:flex; gap:52px; animation:em-ticker 30s linear infinite; #faf7f7-space:nowrap; width:max-content; }
 
   @media(max-width:960px){
     .em-sel-grid { grid-template-columns:1fr !important; }
@@ -145,7 +145,7 @@ function ParticleField() {
     id:i, w:Math.random()*5+2, left:Math.random()*100, top:Math.random()*100,
     dur:(Math.random()*4+3).toFixed(1), delay:-(Math.random()*5).toFixed(1),
     px:((Math.random()*22-11).toFixed(0))+'px',
-    color: i%3===0?'rgba(211,47,47,.4)':i%3===1?'rgba(64,88,120,.5)':'rgba(255,235,238,.75)',
+    color: i%3===0?'rgba(211,47,47,.4)':i%3===1?'rgba(153,27,27,.5)':'rgba(255,235,238,.75)',
   }))
   return (
     <div style={{ position:'fixed', inset:0, overflow:'hidden', pointerEvents:'none', zIndex:0 }}>
@@ -167,9 +167,9 @@ function Orbs({ set }) {
 function LiveTicker() {
   const items = ['🔴 Tripoli — O- critically needed','🟡 Beirut — A+ supply stable','🔴 Baalbek — B+ urgent request','🟢 Sidon — AB+ available','🔴 Zahle — O+ shortage alert','🟢 Jounieh — All types available','🔴 Tyre — AB- emergency request']
   return (
-    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(64,88,120,.07))', borderTop:'1px solid rgba#405878', borderBottom:'1px solid rgba#405878', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
+    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(153,27,27,.07))', borderTop:'1px solid rgba#991b1b', borderBottom:'1px solid rgba#991b1b', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
       <div style={{ display:'flex', alignItems:'center' }}>
-        <div style={{ background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', color:'white', padding:'4px 18px', fontSize:10, fontWeight:900, letterSpacing:'.22em', textTransform:'uppercase', flexShrink:0, marginRight:24, borderRadius:'0 8px 8px 0' }}>LIVE</div>
+        <div style={{ background:'linear-gradient(135deg,#dc2626,#ff6b6b)', color:'#faf7f7', padding:'4px 18px', fontSize:10, fontWeight:900, letterSpacing:'.22em', textTransform:'uppercase', flexShrink:0, marginRight:24, borderRadius:'0 8px 8px 0' }}>LIVE</div>
         <div className="em-ticker-wrap">
           <div className="em-ticker-inner">
             {[...items,...items].map((item,i) => (
@@ -192,22 +192,22 @@ function BloodDropHero({ bloodType }) {
         <div key={i} style={{ position:'absolute', borderRadius:'50%', width:`${pct}%`, height:`${pct}%`, border:`2px solid rgba(211,47,47,${.08+i*.07})`, animation:`em-spin-${i%2===0?'slow':'r'} ${22+i*8}s linear infinite` }}/>
       ))}
       {[0,1,2].map(i => (
-        <div key={i} style={{ position:'absolute', width:13, height:13, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b6b,#D32F2F)', animation:`em-orbit${i===1?'2':''} ${5+i*2}s linear infinite`, animationDelay:`${i*1.6}s`, top:'50%', left:'50%', marginTop:-6.5, marginLeft:-6.5, boxShadow:'0 0 12px rgba(211,47,47,.6)' }}/>
+        <div key={i} style={{ position:'absolute', width:13, height:13, borderRadius:'50%', background:'linear-gradient(135deg,#ff6b6b,#dc2626)', animation:`em-orbit${i===1?'2':''} ${5+i*2}s linear infinite`, animationDelay:`${i*1.6}s`, top:'50%', left:'50%', marginTop:-6.5, marginLeft:-6.5, boxShadow:'0 0 12px rgba(211,47,47,.6)' }}/>
       ))}
       <div style={{ position:'relative', zIndex:2, animation:'em-drop-bob 3.2s ease-in-out infinite' }}>
         <svg viewBox="0 0 100 130" style={{ width:'clamp(110px,13vw,170px)', height:'auto', filter:'drop-shadow(0 16px 40px rgba(211,47,47,.5))' }}>
           <defs>
             <linearGradient id="emDropGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ff8a80"/><stop offset="50%" stopColor="#D32F2F"/><stop offset="100%" stopColor="#b71c1c"/>
+              <stop offset="0%" stopColor="#ff8a80"/><stop offset="50%" stopColor="#dc2626"/><stop offset="100%" stopColor="#7f1d1d"/>
             </linearGradient>
             <linearGradient id="emHL2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity=".65"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+              <stop offset="0%" stopColor="#faf7f7" stopOpacity=".65"/><stop offset="100%" stopColor="#faf7f7" stopOpacity="0"/>
             </linearGradient>
           </defs>
           <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#emDropGrad2)"/>
           <ellipse cx="33" cy="68" rx="16" ry="22" fill="url(#emHL2)"/>
           <path d="M50 18 C50 18 82 66 82 85 C82 103 68 118 50 118 C32 118 18 103 18 85 C18 66 50 18 50 18 Z" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="1.5"/>
-          {bloodType && <text x="50" y="92" textAnchor="middle" fill="white" fontSize="20" fontWeight="900" fontFamily="Plus Jakarta Sans,sans-serif" opacity=".95">{bloodType}</text>}
+          {bloodType && <text x="50" y="92" textAnchor="middle" fill="#faf7f7" fontSize="20" fontWeight="900" fontFamily="Plus Jakarta Sans,sans-serif" opacity=".95">{bloodType}</text>}
         </svg>
       </div>
       <div style={{ position:'absolute', bottom:'8%', left:'5%', right:'5%' }}>
@@ -227,22 +227,22 @@ function HospitalCard({ h, index, compatibleTypes }) {
       initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }}
       transition={{ delay:index*0.055, duration:.45, type:'spring' }}
       className="em-glass em-card-hover"
-      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba#405878', position:'relative', overflow:'hidden', marginBottom:10 }}
+      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba#991b1b', position:'relative', overflow:'hidden', marginBottom:10 }}
     >
-      {index===0 && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#D32F2F,transparent)' }}/>}
+      {index===0 && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>}
       {index===0 && <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10 }}>
         <div style={{ display:'flex', alignItems:'flex-start', gap:10, flex:1, minWidth:0 }}>
-          <div style={{ width:40, height:40, borderRadius:12, flexShrink:0, background: index===0?'linear-gradient(135deg,#D32F2F,#ff6b6b)':'rgba(64,88,120,.1)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: index===0?'0 8px 20px rgba(211,47,47,.35)':'none' }}>
-            <span style={{ fontWeight:900, fontSize:13, color: index===0?'white':'#405878' }}>#{index+1}</span>
+          <div style={{ width:40, height:40, borderRadius:12, flexShrink:0, background: index===0?'linear-gradient(135deg,#dc2626,#ff6b6b)':'rgba(153,27,27,.1)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow: index===0?'0 8px 20px rgba(211,47,47,.35)':'none' }}>
+            <span style={{ fontWeight:900, fontSize:13, color: index===0?'#faf7f7':'#991b1b' }}>#{index+1}</span>
           </div>
           <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ fontWeight:900, fontSize:'clamp(12px,1.2vw,14px)', color:'#D32F2F', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{h.name}</p>
-            <p style={{ fontSize:11, color:'rgba(64,88,120,.7)', margin:'2px 0 0', fontWeight:600 }}>{h.address}</p>
+            <p style={{ fontWeight:900, fontSize:'clamp(12px,1.2vw,14px)', color:'#dc2626', margin:0, overflow:'hidden', textOverflow:'ellipsis', #faf7f7Space:'nowrap' }}>{h.name}</p>
+            <p style={{ fontSize:11, color:'rgba(153,27,27,.7)', margin:'2px 0 0', fontWeight:600 }}>{h.address}</p>
             {h.distance != null && (
               <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:4 }}>
-                <div style={{ width:7, height:7, borderRadius:'50%', background: index===0?'#D32F2F':'#405878', boxShadow:`0 0 8px ${index===0?'#D32F2F':'#405878'}`, animation:'em-pulse 1.5s infinite' }}/>
-                <span style={{ fontSize:11, fontWeight:900, color: index===0?'#D32F2F':'#405878' }}>{h.distance.toFixed(1)} km away</span>
+                <div style={{ width:7, height:7, borderRadius:'50%', background: index===0?'#dc2626':'#991b1b', boxShadow:`0 0 8px ${index===0?'#dc2626':'#991b1b'}`, animation:'em-pulse 1.5s infinite' }}/>
+                <span style={{ fontSize:11, fontWeight:900, color: index===0?'#dc2626':'#991b1b' }}>{h.distance.toFixed(1)} km away</span>
               </div>
             )}
           </div>
@@ -250,7 +250,7 @@ function HospitalCard({ h, index, compatibleTypes }) {
         <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer"
           className="em-btn em-btn-primary"
           style={{ padding:'7px 14px', borderRadius:11, fontSize:11, fontWeight:900, textDecoration:'none', display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
-          <svg viewBox="0 0 24 24" style={{ width:12, height:12, fill:'white' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <svg viewBox="0 0 24 24" style={{ width:12, height:12, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           Directions
         </a>
       </div>
@@ -344,16 +344,16 @@ function Emergency() {
           <div style={fadeUp(0)}>
             <div className="em-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 20px', borderRadius:9999, border:'1px solid rgba(211,47,47,.18)', width:'fit-content' }}>
               <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
-                <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#D32F2F', opacity:.75, animation:'em-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
-                <span style={{ position:'relative', width:12, height:12, borderRadius:'50%', background:'#D32F2F', boxShadow:'0 0 12px #D32F2F', display:'inline-flex' }}/>
+                <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#dc2626', opacity:.75, animation:'em-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
+                <span style={{ position:'relative', width:12, height:12, borderRadius:'50%', background:'#dc2626', boxShadow:'0 0 12px #dc2626', display:'inline-flex' }}/>
               </span>
-              <span style={{ color:'#D32F2F', fontWeight:900, fontSize:10, letterSpacing:'.2em', textTransform:'uppercase' }}>EMERGENCY MATCHING ACTIVE</span>
+              <span style={{ color:'#dc2626', fontWeight:900, fontSize:10, letterSpacing:'.2em', textTransform:'uppercase' }}>EMERGENCY MATCHING ACTIVE</span>
             </div>
           </div>
 
           <div style={fadeUp(.1)}>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:'#D32F2F', margin:0 }}>
-              Find Blood.<br/><em style={{ color:'#405878', fontStyle:'italic' }}>Save a Life.</em>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5.5vw,72px)', lineHeight:.93, fontWeight:900, color:'#dc2626', margin:0 }}>
+              Find Blood.<br/><em style={{ color:'#991b1b', fontStyle:'italic' }}>Save a Life.</em>
             </h1>
           </div>
 
@@ -369,11 +369,11 @@ function Emergency() {
               <BloodDropHero bloodType={patientBloodType} />
               <div className="em-stat-float-a em-glass" style={{ position:'absolute', top:'6%', right:'4%', borderRadius:18, padding:'12px 16px', border:'2px solid rgba(211,47,47,.15)', minWidth:120 }}>
                 <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:0 }}>RESPONSE TIME</p>
-                <p style={{ fontSize:22, fontWeight:900, color:'#D32F2F', margin:'4px 0 0' }}>8.4<span style={{ fontSize:11, opacity:.6 }}>min</span></p>
+                <p style={{ fontSize:22, fontWeight:900, color:'#dc2626', margin:'4px 0 0' }}>8.4<span style={{ fontSize:11, opacity:.6 }}>min</span></p>
               </div>
               <div className="em-stat-float-b em-glass" style={{ position:'absolute', bottom:'6%', left:'4%', borderRadius:18, padding:'10px 14px', border:'2px solid rgba(64,88,120,.2)', minWidth:100 }}>
-                <p style={{ fontSize:8, fontWeight:900, color:'rgba(64,88,120,.5)', letterSpacing:'.2em', textTransform:'uppercase', margin:0 }}>HOSPITALS</p>
-                <p style={{ fontSize:20, fontWeight:900, color:'#405878', margin:'3px 0 0' }}>142+</p>
+                <p style={{ fontSize:8, fontWeight:900, color:'rgba(153,27,27,.5)', letterSpacing:'.2em', textTransform:'uppercase', margin:0 }}>HOSPITALS</p>
+                <p style={{ fontSize:20, fontWeight:900, color:'#991b1b', margin:'3px 0 0' }}>142+</p>
               </div>
             </div>
           </div>
@@ -388,7 +388,7 @@ function Emergency() {
                   {[{ label:'Population', val:fact.pop }, { label:'Donates to', val:fact.donate }, { label:'Special', val:fact.special }].map(({ label, val }) => (
                     <div key={label}>
                       <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.35)', letterSpacing:'.15em', textTransform:'uppercase', margin:'0 0 3px' }}>{label}</p>
-                      <p style={{ fontSize:12, fontWeight:900, color:'#D32F2F', margin:0 }}>{val}</p>
+                      <p style={{ fontSize:12, fontWeight:900, color:'#dc2626', margin:0 }}>{val}</p>
                     </div>
                   ))}
                 </div>
@@ -400,21 +400,21 @@ function Emergency() {
         {/* RIGHT form */}
         <motion.div initial={{ opacity:0, x:40 }} animate={{ opacity:1, x:0 }} transition={{ duration:.7, type:'spring', delay:.1 }}>
           <div className="em-glass-deep" style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#405878,transparent)' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
             <div style={{ position:'absolute', top:-50, right:-50, width:180, height:180, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>
 
             <motion.div initial={{ scale:.7, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:.3, type:'spring', stiffness:180 }}
               style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
               <div style={{ position:'relative', width:76, height:76 }}>
                 <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(211,47,47,.12)', animation:'em-ping 2s infinite' }}/>
-                <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(211,47,47,.45)' }}>
-                  <svg viewBox="0 0 100 130" style={{ width:34, height:34, fill:'white' }}><path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/></svg>
+                <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(211,47,47,.45)' }}>
+                  <svg viewBox="0 0 100 130" style={{ width:34, height:34, fill:'#faf7f7' }}><path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/></svg>
                 </div>
               </div>
             </motion.div>
 
             <div style={{ textAlign:'center', marginBottom:26 }}>
-              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#D32F2F', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Finder</h2>
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Finder</h2>
               <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>What is the patient's blood type? We'll show only hospitals that have compatible blood available.</p>
             </div>
 
@@ -431,10 +431,10 @@ function Emergency() {
               {patientBloodType && (
                 <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} style={{ overflow:'hidden', marginBottom:20 }}>
                   <div className="em-glass" style={{ background:'rgba(255,235,238,.5)', border:'2px solid rgba(211,47,47,.15)', borderRadius:18, padding:'14px 18px' }}>
-                    <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em', margin:'0 0 10px' }}>Compatible for <span style={{ color:'#D32F2F' }}>{patientBloodType}</span> patient</p>
+                    <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em', margin:'0 0 10px' }}>Compatible for <span style={{ color:'#dc2626' }}>{patientBloodType}</span> patient</p>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                       {compatibleBloodForPatient[patientBloodType].map(bt => (
-                        <span key={bt} style={{ background:'rgba#405878', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                        <span key={bt} style={{ background:'rgba#991b1b', color:'#dc2626', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
                       ))}
                     </div>
                   </div>
@@ -445,13 +445,13 @@ function Emergency() {
             <button onClick={() => patientBloodType && setBloodTypeSelected(true)} disabled={!patientBloodType}
               className="em-btn em-btn-primary"
               style={{ width:'100%', padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
-              <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'white' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
               Find Compatible Hospitals 🚨
             </button>
 
             <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:20 }}>
               {['A+','O-','B+','AB+'].map((t,i) => (
-                <div key={t} className="em-glass" style={{ width:36, height:36, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, color:'#D32F2F', border:'2px solid rgba(211,47,47,.18)', marginLeft:i===0?0:-9, zIndex:4-i }}>{t}</div>
+                <div key={t} className="em-glass" style={{ width:36, height:36, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, color:'#dc2626', border:'2px solid rgba(211,47,47,.18)', marginLeft:i===0?0:-9, zIndex:4-i }}>{t}</div>
               ))}
               <span style={{ marginLeft:8, fontSize:9, fontWeight:900, color:'rgba(211,47,47,.45)', textTransform:'uppercase', letterSpacing:'.16em', display:'flex', alignItems:'center' }}>Network Live</span>
             </div>
@@ -467,7 +467,7 @@ function Emergency() {
       <ParticleField />
       <motion.div initial={{ opacity:0, scale:.9 }} animate={{ opacity:1, scale:1 }} className="em-glass-deep"
         style={{ borderRadius:36, padding:52, textAlign:'center', border:'2px solid rgba(211,47,47,.12)', position:'relative', zIndex:10 }}>
-        <div style={{ width:56, height:56, border:'4px solid rgba(211,47,47,.15)', borderTopColor:'#D32F2F', borderRadius:'50%', animation:'em-spin 1s linear infinite', margin:'0 auto 20px' }}/>
+        <div style={{ width:56, height:56, border:'4px solid rgba(211,47,47,.15)', borderTopColor:'#dc2626', borderRadius:'50%', animation:'em-spin 1s linear infinite', margin:'0 auto 20px' }}/>
         <p style={{ color:'rgba(211,47,47,.7)', fontWeight:700, margin:0, fontSize:15 }}>Getting your location...</p>
       </motion.div>
     </div>
@@ -479,7 +479,7 @@ function Emergency() {
       <ParticleField />
       <Orbs set={[
         { t:'3%', l:'3%', w:'min(380px,32vw)', c:'rgba(211,47,47,.12)', d:'0s' },
-        { b:'5%', r:'5%', w:'min(430px,36vw)', c:'rgba(64,88,120,.11)', d:'-3s' },
+        { b:'5%', r:'5%', w:'min(430px,36vw)', c:'rgba(153,27,27,.11)', d:'-3s' },
         { t:'45%', l:'42%', w:'min(280px,24vw)', c:'rgba(255,235,238,.4)', d:'-5s' },
       ]}/>
 
@@ -491,22 +491,22 @@ function Emergency() {
         <motion.div initial={{ opacity:0, y:-18 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5 }}
           className="em-glass-deep"
           style={{ borderRadius:'clamp(20px,2.5vw,32px)', padding:'clamp(14px,1.8vw,22px) clamp(18px,2.2vw,28px)', border:'2px solid rgba(211,47,47,.12)', marginBottom:14, position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#405878,transparent)' }}/>
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
 
           <div style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', gap:'clamp(10px,1.8vw,24px)' }} className="em-header-grid">
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <div style={{ position:'relative', width:50, height:50, flexShrink:0 }}>
                 <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(211,47,47,.15)', animation:'em-ping 2s infinite' }}/>
-                <div style={{ width:50, height:50, borderRadius:'50%', background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 28px rgba(211,47,47,.4)' }}>
+                <div style={{ width:50, height:50, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 28px rgba(211,47,47,.4)' }}>
                   <span style={{ fontSize:22 }}>🚨</span>
                 </div>
               </div>
               <div>
-                <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(15px,2vw,22px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1.1 }}>Emergency — Find Hospital</h1>
+                <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(15px,2vw,22px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>Emergency — Find Hospital</h1>
                 {patientBloodType && (
                   <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'3px 0 0', fontWeight:700 }}>
                     Compatible blood for{' '}
-                    <span style={{ color:'#D32F2F', fontWeight:900, background:'rgba#405878', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
+                    <span style={{ color:'#dc2626', fontWeight:900, background:'rgba#991b1b', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
                   </p>
                 )}
               </div>
@@ -522,7 +522,7 @@ function Emergency() {
                 <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.18em', textTransform:'uppercase', margin:0 }}>{filteredHospitals.length} FOUND</p>
               </div>
               <button onClick={() => { setBloodTypeSelected(false); setPatientBloodType('') }}
-                className="em-btn em-glass" style={{ padding:'10px 16px', borderRadius:13, fontSize:11, fontWeight:900, color:'#D32F2F', border:'2px solid rgba(211,47,47,.15)' }}>
+                className="em-btn em-glass" style={{ padding:'10px 16px', borderRadius:13, fontSize:11, fontWeight:900, color:'#dc2626', border:'2px solid rgba(211,47,47,.15)' }}>
                 Change
               </button>
             </div>
@@ -534,12 +534,12 @@ function Emergency() {
 
           {/* LEFT — list */}
           <motion.div initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }} transition={{ delay:.1, duration:.5 }}>
-            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba#405878', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba#991b1b', marginBottom:12 }}>
               <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap?'active':'inactive'}`}>📋 Hospital List</button>
               <button onClick={() => setShowMap(true)}  className={`em-toggle-btn ${showMap?'active':'inactive'}`}>🗺️ Map View</button>
             </div>
 
-            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba#405878', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba#991b1b', marginBottom:12 }}>
               <span style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>Stock level</span>
               <div style={{ display:'flex', gap:14 }}>
                 {[{ c:'#ea580c', l:'Low (≤5)' }, { c:'#16a34a', l:'Available' }].map(({ c, l }) => (
@@ -554,14 +554,14 @@ function Emergency() {
             <div style={{ maxHeight:'calc(100vh - 310px)', overflowY:'auto', paddingRight:2 }}>
               {loadingHospitals ? (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'52px 0', gap:14 }}>
-                  <div style={{ width:50, height:50, border:'4px solid rgba(211,47,47,.12)', borderTopColor:'#D32F2F', borderRadius:'50%', animation:'em-spin 1s linear infinite' }}/>
+                  <div style={{ width:50, height:50, border:'4px solid rgba(211,47,47,.12)', borderTopColor:'#dc2626', borderRadius:'50%', animation:'em-spin 1s linear infinite' }}/>
                   <p style={{ color:'rgba(211,47,47,.5)', fontWeight:700, margin:0, fontSize:13 }}>Finding hospitals...</p>
                 </div>
               ) : filteredHospitals.length === 0 ? (
                 <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="em-glass"
-                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba#405878' }}>
+                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba#991b1b' }}>
                   <div style={{ fontSize:42, marginBottom:12 }}>😔</div>
-                  <p style={{ fontWeight:900, color:'#D32F2F', fontSize:14, margin:'0 0 6px' }}>No hospitals found</p>
+                  <p style={{ fontWeight:900, color:'#dc2626', fontSize:14, margin:'0 0 6px' }}>No hospitals found</p>
                   <p style={{ fontSize:12, color:'rgba(211,47,47,.5)', fontWeight:600, margin:0, lineHeight:1.6 }}>Try searching a different location or call hospitals directly.</p>
                 </motion.div>
               ) : filteredHospitals.map((h,i) => <HospitalCard key={h.id} h={h} index={i} compatibleTypes={compatibleTypes}/>)}
@@ -574,7 +574,7 @@ function Emergency() {
               {!showMap ? (
                 <motion.div key="info" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}>
                   <div className="em-glass-deep" style={{ borderRadius:28, border:'2px solid rgba(211,47,47,.12)', overflow:'hidden', position:'relative' }}>
-                    <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#405878,transparent)' }}/>
+                    <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#991b1b,transparent)' }}/>
                     <div style={{ height:'clamp(190px,21vw,270px)', position:'relative' }}>
                       <BloodDropHero bloodType={patientBloodType} />
                     </div>
@@ -585,22 +585,22 @@ function Emergency() {
                         { label:'Compatible Types', val:compatibleTypes.length, icon:'🩸' },
                         { label:'Network Status', val:'LIVE', icon:'📡' },
                       ].map(({ label, val, icon }) => (
-                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba#405878' }}>
+                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba#991b1b' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
                             <span style={{ fontSize:16 }}>{icon}</span>
                             <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.18em', margin:0 }}>{label}</p>
                           </div>
-                          <p style={{ fontSize:'clamp(16px,1.9vw,22px)', fontWeight:900, color:'#D32F2F', margin:0 }}>{val}</p>
+                          <p style={{ fontSize:'clamp(16px,1.9vw,22px)', fontWeight:900, color:'#dc2626', margin:0 }}>{val}</p>
                         </div>
                       ))}
                     </div>
                     {patientBloodType && (
                       <div style={{ padding:'0 clamp(14px,1.8vw,24px) clamp(14px,1.8vw,22px)' }}>
-                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba#405878' }}>
+                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba#991b1b' }}>
                           <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px' }}>Compatible donor types</p>
                           <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                             {compatibleTypes.map(bt => (
-                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba#405878,rgba(64,88,120,.07))', color:'#D32F2F', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba#991b1b,rgba(153,27,27,.07))', color:'#dc2626', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
                             ))}
                           </div>
                         </div>
@@ -610,7 +610,7 @@ function Emergency() {
                 </motion.div>
               ) : (
                 <motion.div key="map" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
-                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba#405878', height:'calc(100vh - 260px)' }}>
+                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba#991b1b', height:'calc(100vh - 260px)' }}>
                   {userLocation && (
                     <MapContainer center={userLocation} zoom={13} style={{ height:'100%', width:'100%' }}>
                       <RecenterMap center={mapCenter||userLocation} />
@@ -634,7 +634,7 @@ function Emergency() {
                               <div style={{ display:'flex', flexWrap:'wrap', gap:2, marginBottom:6 }}>
                                 {compatibleTypes.filter(bt => (h.blood_stock?.[bt]??0)>0).map(bt => {
                                   const u=h.blood_stock?.[bt]??0
-                                  return <span key={bt} style={{ fontSize:10, padding:'1px 4px', borderRadius:4, fontWeight:'bold', background:u<=5?'#ffedd5':'#dcfce7', color:u<=5?'#ea580c':'#16a34a' }}>{bt}: {u}</span>
+                                  return <span key={bt} style={{ fontSize:10, padding:'1px 4px', borderRadius:4, fontWeight:'bold', background:u<=5?'rgba(110,32,22,.12)':'#dcfce7', color:u<=5?'#ea580c':'#16a34a' }}>{bt}: {u}</span>
                                 })}
                               </div>
                               <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color:'#dc2626', fontSize:12, fontWeight:'bold' }}>Get Directions →</a>

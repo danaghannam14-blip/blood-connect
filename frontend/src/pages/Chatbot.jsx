@@ -197,7 +197,7 @@ const STYLES = `
   .cb-btn-cta {
     background: linear-gradient(135deg, #D12A23, #E63946);
     border: none;
-    color: white;
+    color: #faf7f7;
     box-shadow: 0 16px 48px rgba(209, 42, 35, 0.35);
     font-weight: 800;
   }
@@ -792,7 +792,7 @@ function Chatbot() {
                     fontWeight: 700,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    #faf7f7Space: 'nowrap',
                   }}>
                     {isRecorded ? 'Done' : isActive ? 'Current' : 'Pending'}
                   </span>

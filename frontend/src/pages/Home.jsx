@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import lebanonMap from '../assets/bcc.png'
@@ -26,6 +26,8 @@ const MODERN_STYLES = `
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
+  @keyframes glow-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(220,38,38,.2); } 50% { box-shadow: 0 12px 30px rgba(220,38,38,.3); } }
+  @keyframes glow-pulse-lg { 0%,100% { box-shadow: 0 8px 24px rgba(220,38,38,.2); } 50% { box-shadow: 0 16px 40px rgba(220,38,38,.35); } }
 
   .bc-root {
     min-height:100vh;
@@ -90,7 +92,7 @@ const MODERN_STYLES = `
 
   .bc-btn-primary {
     background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
-    color:white;
+    color:#faf7f7;
     box-shadow:0 10px 30px rgba(220,38,38,.35);
     border:1px solid rgba(255,255,255,.15);
   }
@@ -135,7 +137,7 @@ const MODERN_STYLES = `
     width:clamp(56px,4vw,64px);height:clamp(56px,4vw,64px);
     border-radius:50%;
     background:linear-gradient(135deg,#dc2626,#991b1b);
-    color:white;border:none;
+    color:#faf7f7;border:none;
     box-shadow:0 16px 48px rgba(220,38,38,.4);
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;outline:none;
@@ -157,6 +159,14 @@ const MODERN_STYLES = `
   .bc-card-hover:hover {
     transform:translateY(-8px) scale(1.02);
     box-shadow:0 32px 80px rgba(220,38,38,.2) !important;
+  }
+
+  .glow-pulse {
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+
+  .glow-pulse-lg {
+    animation: glow-pulse-lg 2.5s ease-in-out infinite;
   }
 
   footer {
@@ -186,7 +196,6 @@ function AnimatedBackgroundOrbs() {
     { size: 'min(280px,26vw)', color: 'rgba(180,180,180,.06)', bottom: '15%', right: '-5%', duration: 9 },
   ]
 
-  // Floating dots
   const dots = Array.from({ length: 12 }, (_, i) => ({
     id: i,
     size: Math.random() * 8 + 3,
@@ -198,7 +207,6 @@ function AnimatedBackgroundOrbs() {
 
   return (
     <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      {/* Large background orbs */}
       {orbs.map((orb, i) => (
         <motion.div
           key={`orb-${i}`}
@@ -217,7 +225,6 @@ function AnimatedBackgroundOrbs() {
         />
       ))}
 
-      {/* Floating dots */}
       {dots.map((dot) => (
         <motion.div
           key={`dot-${dot.id}`}
@@ -248,94 +255,326 @@ function AnimatedBackgroundOrbs() {
   )
 }
 
+// ✅ ModernBloodDrop DEFINED HERE (BEFORE Home component)
 function ModernBloodDrop() {
+  const containerRef = useRef(null)
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    // Load Three.js from CDN
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+    script.async = true
+
+    script.onload = () => {
+      initScene()
+    }
+
+    document.head.appendChild(script)
+
+    return () => {
+      if (script.parentNode) {
+        document.head.removeChild(script)
+      }
+    }
+  }, [])
+
+  const initScene = () => {
+    if (!canvasRef.current || !window.THREE) return
+
+    const THREE = window.THREE
+    const canvas = canvasRef.current
+    const container = containerRef.current
+
+    // Scene setup
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x260105)
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000
+    )
+    camera.position.z = 3
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
+    renderer.setSize(container.clientWidth, container.clientHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.shadowMap.enabled = true
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+    scene.add(ambientLight)
+
+    const pointLight1 = new THREE.PointLight(0xff4444, 1.5, 100)
+    pointLight1.position.set(5, 5, 5)
+    pointLight1.castShadow = true
+    scene.add(pointLight1)
+
+    const pointLight2 = new THREE.PointLight(0x4a9eff, 0.8, 100)
+    pointLight2.position.set(-5, 3, 5)
+    scene.add(pointLight2)
+
+    // Create main blood sphere
+    const sphereGeometry = new THREE.SphereGeometry(0.8, 64, 64)
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+      color: 0xcc0000,
+      metalness: 0.2,
+      roughness: 0.5,
+      emissive: 0x660000,
+      emissiveIntensity: 0.3,
+    })
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    sphere.castShadow = true
+    sphere.receiveShadow = true
+    scene.add(sphere)
+
+    // Create floating particles
+    const particles = []
+    const particleGeometry = new THREE.SphereGeometry(0.05, 16, 16)
+    const particleMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff5555,
+      metalness: 0.4,
+      roughness: 0.3,
+      emissive: 0xff2222,
+      emissiveIntensity: 0.5,
+    })
+
+    for (let i = 0; i < 30; i++) {
+      const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone())
+      particle.position.set(
+        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 6
+      )
+      particle.userData = {
+        velocity: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02
+        ),
+        life: Math.random(),
+      }
+      scene.add(particle)
+      particles.push(particle)
+    }
+
+    // Create vein lines
+    const lineGroup = new THREE.Group()
+    for (let i = 0; i < 6; i++) {
+      const points = [
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(
+          Math.cos((i * Math.PI * 2) / 6) * 0.5,
+          Math.sin((i * Math.PI * 2) / 6) * 0.5,
+          0.3
+        ),
+        new THREE.Vector3(
+          Math.cos((i * Math.PI * 2) / 6) * 1.2,
+          Math.sin((i * Math.PI * 2) / 6) * 1.2,
+          0.8
+        ),
+      ]
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const material = new THREE.LineBasicMaterial({
+        color: 0xff6b6b,
+        linewidth: 2,
+        transparent: true,
+        opacity: 0.6,
+      })
+      const line = new THREE.Line(geometry, material)
+      lineGroup.add(line)
+    }
+    scene.add(lineGroup)
+
+    // Animation loop
+    let animationId = null
+    const clock = new THREE.Clock()
+    let time = 0
+
+    const animate = () => {
+      animationId = requestAnimationFrame(animate)
+      time += clock.getDelta()
+
+      // Rotate sphere
+      sphere.rotation.x += 0.001
+      sphere.rotation.y += 0.0015
+
+      // Pulse sphere
+      const scale = 1 + Math.sin(time * 2) * 0.08
+      sphere.scale.set(scale, scale, scale)
+
+      // Animate particles
+      particles.forEach((particle) => {
+        particle.position.add(particle.userData.velocity)
+        particle.userData.life += 0.01
+
+        if (particle.userData.life > 1) {
+          particle.userData.life = 0
+          particle.position.set(
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4
+          )
+        }
+
+        const visibility = Math.cos(particle.userData.life * Math.PI)
+        particle.material.opacity = Math.max(0, visibility * 0.6)
+      })
+
+      // Rotate vein lines
+      lineGroup.rotation.z += 0.003
+      lineGroup.children.forEach((line, i) => {
+        const pulse = Math.sin(time * 1.5 + i) * 0.3 + 0.6
+        line.material.opacity = pulse * 0.6
+      })
+
+      // Camera movement
+      camera.position.x = Math.sin(time * 0.3) * 0.5
+      camera.position.y = Math.cos(time * 0.25) * 0.3
+      camera.lookAt(0, 0, 0)
+
+      // Dynamic lighting
+      pointLight1.intensity = 1.5 + Math.sin(time * 1.3) * 0.4
+
+      renderer.render(scene, camera)
+    }
+
+    animate()
+
+    // Handle resize
+    const handleResize = () => {
+      const width = container.clientWidth
+      const height = container.clientHeight
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      renderer.setSize(width, height)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (animationId) cancelAnimationFrame(animationId)
+      renderer.dispose()
+    }
+  }
+
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       style={{
         position: 'relative',
         width: '100%',
         height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        background: 'linear-gradient(135deg, rgba(10,10,10,0.95) 0%, rgba(15,15,25,0.95) 100%)',
+        borderRadius: '12px',
+        overflow: 'hidden',
       }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8 }}
     >
-      {[100, 140, 180].map((size, i) => (
-        <motion.div
-          key={i}
-          style={{
-            position: 'absolute',
-            width: `${size}%`,
-            height: `${size}%`,
-            borderRadius: '50%',
-            border: `1px solid rgba(220,38,38,${0.12 - i * 0.03})`,
-          }}
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 20 + i * 5,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        />
-      ))}
-
-      <motion.div
+      <canvas
+        ref={canvasRef}
         style={{
-          position: 'relative',
-          width: 180,
-          height: 230,
+          display: 'block',
+          width: '100%',
+          height: '100%',
         }}
-        animate={{ y: [0, -12, 0], rotateZ: [0, 2, -2, 0] }}
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          ease: 'easeInOut',
+      />
+
+      {/* HUD Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '24px',
         }}
       >
-        <svg viewBox="0 0 100 130" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 18px 36px rgba(220,38,38,.35))' }}>
-          <defs>
-            <linearGradient id="modernBlood" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#dc2626" />
-              <stop offset="50%" stopColor="#991b1b" />
-              <stop offset="100%" stopColor="#7f1d1d" />
-            </linearGradient>
-          </defs>
-          <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#modernBlood)" opacity="0.95" />
-          <motion.ellipse cx="32" cy="65" rx="16" ry="22" fill="white" opacity="0.18" animate={{ cx: [32, 36, 32] }} transition={{ duration: 2.8, repeat: Infinity }} />
-        </svg>
-      </motion.div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            <p
+              style={{
+                fontSize: '9px',
+                letterSpacing: '2px',
+                color: '#dc2626',
+                fontWeight: 900,
+                margin: 0,
+                textTransform: 'uppercase',
+              }}
+            >
+              Core Flow Active
+            </p>
+            <p
+              style={{
+                fontSize: '16px',
+                fontWeight: 300,
+                color: '#fff',
+                margin: '4px 0 0',
+              }}
+            >
+              Biometric Sync
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p
+              style={{
+                fontSize: '8px',
+                color: 'rgba(255,255,255,0.4)',
+                margin: 0,
+              }}
+            >
+              REF_ID
+            </p>
+            <p
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#dc2626',
+                margin: '2px 0 0',
+              }}
+            >
+              #BC-9921
+            </p>
+          </div>
+        </div>
 
-      {[...Array(5)].map((_, i) => (
+        {/* Bottom status */}
         <motion.div
-          key={`particle-${i}`}
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 2, repeat: Infinity }}
           style={{
-            position: 'absolute',
-            width: 10,
-            height: 10,
-            background: 'rgba(220,38,38,.5)',
-            borderRadius: '50%',
+            fontSize: '10px',
+            color: '#4ade80',
+            fontWeight: 600,
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
           }}
-          animate={{
-            y: [-60, 30],
-            x: [Math.cos(i * Math.PI / 2.5) * 70, Math.cos(i * Math.PI / 2.5) * 35],
-            opacity: [1, 0],
-            scale: [1, 0.4],
-          }}
-          transition={{
-            duration: 2.8,
-            delay: i * 0.18,
-            repeat: Infinity,
-            ease: 'easeOut',
-          }}
-        />
-      ))}
-    </motion.div>
+        >
+          ● SYSTEM ONLINE
+        </motion.div>
+      </div>
+
+      {/* Vignette */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background: 'radial-gradient(circle, transparent 30%, rgba(0,0,0,0.6) 100%)',
+        }}
+      />
+    </div>
   )
 }
 
+// ✅ Home component defined AFTER ModernBloodDrop
 export default function Home() {
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
@@ -396,7 +635,6 @@ export default function Home() {
     <div className="bc-root">
       <AnimatedBackgroundOrbs />
 
-      {/* Navigation */}
       <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
         <div className="bc-nav-inner">
           <motion.div
@@ -433,102 +671,86 @@ export default function Home() {
                   </linearGradient>
                 </defs>
                 <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
-                <ellipse cx="32" cy="65" rx="16" ry="22" fill="white" opacity="0.2" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
               </svg>
             </motion.div>
             <div>
               <motion.div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }} animate={{ letterSpacing: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity }}>
                 BloodConnect
               </motion.div>
-             </div>
+            </div>
           </motion.div>
 
           <div style={{ flex: 1 }} />
-<div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              onClick={() => go('/emergency')}
+              className="bc-btn bc-btn-primary"
+              whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '13px 26px',
+                borderRadius: 24,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <motion.span
+                animate={{ scale: [1, 1.4, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
+                ●
+              </motion.span>
+              Emergency
+            </motion.button>
 
-  {/* Emergency */}
-  <motion.button
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.6, delay: 0.2 }}
-    onClick={() => go('/emergency')}
-    className="bc-btn bc-btn-primary"
-    whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
-    whileTap={{ scale: 0.92 }}
-    style={{
-      padding: '13px 26px',
-      borderRadius: 24,
-      fontSize: 13,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-    }}
-  >
-    <motion.span
-      animate={{ scale: [1, 1.4, 1] }}
-      transition={{ repeat: Infinity, duration: 1.5 }}
-    >
-      ●
-    </motion.span>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              onClick={() => go('/how-it-works')}
+              className="bc-btn bc-btn-secondary"
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '13px 24px',
+                borderRadius: 24,
+                fontSize: 13,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              ⚙ How It Works
+            </motion.button>
 
-    Emergency
-  </motion.button>
-
-  {/* How It Works */}
-  <motion.button
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.6, delay: 0.3 }}
-    onClick={() => go('/how-it-works')}
-    className="bc-btn bc-btn-secondary"
-    whileHover={{
-      scale: 1.06,
-      y: -2,
-    }}
-    whileTap={{ scale: 0.92 }}
-    style={{
-      padding: '13px 24px',
-      borderRadius: 24,
-      fontSize: 13,
-      fontWeight: 700,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-    }}
-  >
-    ⚙
-    How It Works
-  </motion.button>
-
-  {/* Impact */}
-  <motion.button
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.6, delay: 0.4 }}
-    onClick={() => go('/impact')}
-    className="bc-btn bc-btn-secondary"
-    whileHover={{
-      scale: 1.06,
-      y: -2,
-    }}
-    whileTap={{ scale: 0.92 }}
-    style={{
-      padding: '13px 24px',
-      borderRadius: 24,
-      fontSize: 13,
-      fontWeight: 700,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-    }}
-  >
-    ❤
-    Impact
-  </motion.button>
-
-</div>
-         
-         
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              onClick={() => go('/impact')}
+              className="bc-btn bc-btn-secondary"
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '13px 24px',
+                borderRadius: 24,
+                fontSize: 13,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              ❤ Impact
+            </motion.button>
+          </div>
         </div>
       </header>
 
@@ -695,7 +917,7 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="bc-glass-deep bc-card-hover"
+              className="bc-glass-deep bc-card-hover glow-pulse"
               style={{
                 position: 'absolute',
                 top: '-8%',
@@ -710,13 +932,9 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.2 }}
               viewport={{ once: true }}
               whileHover={{ y: -16, scale: 1.05 }}
-              animate={{ boxShadow: ['0 8px 20px rgba(220,38,38,.2)', '0 12px 30px rgba(220,38,38,.3)', '0 8px 20px rgba(220,38,38,.2)'] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  {/* Heart Icon */}
                   <motion.div
                     style={{
                       width: 50,
@@ -731,7 +949,6 @@ export default function Home() {
                       flexShrink: 0,
                     }}
                   >
-                    {/* Center dot */}
                     <motion.div
                       style={{
                         width: 10,
@@ -749,7 +966,6 @@ export default function Home() {
                       }}
                     />
                     
-                    {/* Pulse ring 1 */}
                     <motion.div
                       style={{
                         position: 'absolute',
@@ -768,7 +984,6 @@ export default function Home() {
                       }}
                     />
                     
-                    {/* Pulse ring 2 */}
                     <motion.div
                       style={{
                         position: 'absolute',
@@ -801,7 +1016,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Heartbeat Line */}
                 <div style={{ height: 40, display: 'flex', alignItems: 'center', position: 'relative' }}>
                   <svg
                     style={{ width: '100%', height: '100%', position: 'absolute' }}
@@ -837,7 +1051,6 @@ export default function Home() {
                   </svg>
                 </div>
 
-                {/* Status Info */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <motion.div
                     style={{
@@ -858,7 +1071,7 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="bc-glass-deep"
+              className="bc-glass-deep glow-pulse-lg"
               style={{
                 position: 'absolute',
                 bottom: '-8%',
@@ -876,8 +1089,6 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.3 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.15 }}
-              animate={{ boxShadow: ['0 8px 24px rgba(220,38,38,.2)', '0 16px 40px rgba(220,38,38,.35)', '0 8px 24px rgba(220,38,38,.2)'] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
             >
               <div style={{ textAlign: 'center' }}>
                 <motion.div
@@ -902,6 +1113,7 @@ export default function Home() {
               gridTemplateColumns: '1fr 1fr',
               gap: 32,
               alignItems: 'stretch',
+              height: '400px',
             }}
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -988,7 +1200,7 @@ export default function Home() {
                         overflow: 'hidden',
                         border: `1px solid ${stat.color}`,
                         position: 'relative',
-                        minHeight: 'clamp(160px,45vh,280px)',
+                        minHeight: 'clamp(100px,30vh,180px)',
                       }}>
                         <motion.div
                           animate={{ height: `${heightPercent}%` }}
@@ -1036,7 +1248,6 @@ export default function Home() {
                     textDecoration: 'none',
                   }}
                 >
-                  
                   <span>Visit Our Center in Hamra</span>
                   <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                     →
@@ -1047,8 +1258,10 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* Compatibility Matrix */}
-        <CompatibilityMatrix />
+        {/* Compatibility Matrix - with proper spacing */}
+        <section style={{ marginTop: '150px' }}>
+          <CompatibilityMatrix />
+        </section>
 
       </main>
 
@@ -1113,14 +1326,13 @@ export default function Home() {
       {/* FAB */}
       <motion.div className="bc-fab-wrap" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 1 }}>
         <div className="bc-fab-ring" style={{ opacity: 0.5 }} />
-
         <motion.button
           className="bc-fab"
           onClick={() => go('/emergency')}
           whileHover={{ scale: 1.2, boxShadow: '0 24px 80px rgba(220,38,38,.7)' }}
           whileTap={{ scale: 0.9 }}
         >
-          !
+          
         </motion.button>
       </motion.div>
     </div>

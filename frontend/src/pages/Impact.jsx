@@ -13,7 +13,7 @@ function Impact() {
 
     .imp-root {
       min-height:100vh;
-      background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.35));
+      background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.35));
       background-size:400% 400%;
       animation:gradient 14s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
@@ -34,7 +34,7 @@ function Impact() {
     }
 
     .imp-logo-main {
-      font-size:16px;font-weight:900;color:#D32F2F;
+      font-size:16px;font-weight:900;color:#dc2626;
     }
 
     .imp-logo-sub {
@@ -52,7 +52,7 @@ function Impact() {
       font-family:'Fraunces',serif;
       font-size:56px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 24px;
       line-height:1.1;
     }
@@ -86,14 +86,14 @@ function Impact() {
 
     .imp-stat-card:hover {
       transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba#405878;
+      box-shadow:0 20px 40px rgba#991b1b;
     }
 
     .imp-stat-number {
       font-family:'Fraunces',serif;
       font-size:48px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 8px;
       animation:pulse-number 2s ease-in-out infinite;
     }
@@ -123,7 +123,7 @@ function Impact() {
       font-family:'Fraunces',serif;
       font-size:36px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       text-align:center;
       margin:0 0 60px;
     }
@@ -145,14 +145,14 @@ function Impact() {
 
     .imp-story-card:hover {
       transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba#405878;
+      box-shadow:0 20px 40px rgba#991b1b;
     }
 
     .imp-story-card h3 {
       font-family:'Fraunces',serif;
       font-size:18px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 12px;
     }
 
@@ -174,13 +174,13 @@ function Impact() {
       font-family:'Fraunces',serif;
       font-size:36px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 20px;
     }
 
     .imp-cta-btn {
-      background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-      color:white;
+      background:linear-gradient(135deg,#dc2626,#ff6b6b);
+      color:#faf7f7;
       border:none;
       padding:16px 48px;
       border-radius:24px;

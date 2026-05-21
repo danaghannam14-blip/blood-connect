@@ -23,7 +23,7 @@ const STYLES = `
 
   .bc-register-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFE5E8,rgba(136,189,242,.25),#FFF5F7);
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#e8e8e8,rgba(136,189,242,.25),#f2f2f2);
     background-size:400% 400%;
     animation:bc-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -81,7 +81,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     font-size:13px;
-    color:#D32F2F;
+    color:#dc2626;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
     box-sizing:border-box;
@@ -100,7 +100,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     font-size:13px;
-    color:#D32F2F;
+    color:#dc2626;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
     box-sizing:border-box;
@@ -137,8 +137,8 @@ const STYLES = `
   .bc-btn:active { transform:scale(.97); }
 
   .bc-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
   .bc-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
@@ -156,8 +156,8 @@ const STYLES = `
   }
 
   .bc-step-indicator.active {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 8px 24px rgba(211,47,47,.4);
     transform:scale(1.15);
   }
@@ -183,7 +183,7 @@ const STYLES = `
   }
 
   .bc-upload-zone:hover {
-    border-color:#D32F2F;
+    border-color:#dc2626;
     background:rgba(255,235,238,.5);
     transform:translateY(-2px);
   }
@@ -198,7 +198,7 @@ const STYLES = `
 
   .bc-progress-fill {
     height:100%;
-    background:linear-gradient(90deg,#D32F2F,#ff6b6b,#88bdf2);
+    background:linear-gradient(90deg,#dc2626,#ff6b6b,#88bdf2);
     background-size:200% 100%;
     animation:bc-shimmer 2s linear infinite;
     border-radius:999px;
@@ -486,13 +486,13 @@ function DonorRegister() {
               style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:80, height:80, marginBottom:16, position:'relative' }}
             >
               <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(211,47,47,.15)', animation:'bc-ping 2s infinite' }}/>
-              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'white' }}>
+              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'#faf7f7' }}>
                   <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1.1 }}>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
               Join the Heroes
             </h1>
             <p style={{ fontSize:'clamp(13px,1.3vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:700, marginTop:12, letterSpacing:'.04em' }}>
@@ -515,7 +515,7 @@ function DonorRegister() {
                   <div className={`bc-step-indicator ${currentStep === step.num ? 'active' : currentStep > step.num ? 'completed' : 'inactive'}`}>
                     {currentStep > step.num ? '✓' : step.num}
                   </div>
-                  <span style={{ fontSize:10, fontWeight:900, color: currentStep >= step.num ? '#D32F2F' : 'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>
+                  <span style={{ fontSize:10, fontWeight:900, color: currentStep >= step.num ? '#dc2626' : 'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>
                     {step.label}
                   </span>
                 </div>
@@ -525,7 +525,7 @@ function DonorRegister() {
 
           <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba(64,88,120,.2)', position:'relative', overflow:'hidden' }}>
             
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#88bdf2,transparent)' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#88bdf2,transparent)' }}/>
 
             <AnimatePresence>
               {message && (
@@ -547,7 +547,7 @@ function DonorRegister() {
                   className="bc-glass"
                   style={{ background:'rgba(255,235,238,.8)', border:'2px solid rgba(211,47,47,.4)', padding:14, borderRadius:16, marginBottom:20, textAlign:'center' }}
                 >
-                  <p style={{ fontSize:13, fontWeight:700, color:'#D32F2F', margin:0 }}>{error}</p>
+                  <p style={{ fontSize:13, fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -653,13 +653,13 @@ function DonorRegister() {
                   >
                     <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'white' }}>
+                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'#faf7f7' }}>
                             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                           </svg>
                         </div>
                         <div>
-                          <h3 style={{ fontSize:16, fontWeight:900, color:'#D32F2F', margin:0 }}>ID Front</h3>
+                          <h3 style={{ fontSize:16, fontWeight:900, color:'#dc2626', margin:0 }}>ID Front</h3>
                           <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'4px 0 0', fontWeight:600 }}>Verify your age</p>
                         </div>
                       </div>
@@ -673,10 +673,10 @@ function DonorRegister() {
                         />
                         {frontFile ? (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#D32F2F', marginBottom:8 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#dc2626', marginBottom:8 }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
                             </svg>
-                            <p style={{ fontSize:13, fontWeight:900, color:'#D32F2F', margin:0, textAlign:'center' }}>{frontFile.name}</p>
+                            <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0, textAlign:'center' }}>{frontFile.name}</p>
                             <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:4 }}>Tap to change</p>
                           </>
                         ) : (
@@ -684,7 +684,7 @@ function DonorRegister() {
                             <svg viewBox="0 0 24 24" style={{ width:56, height:56, fill:'rgba(211,47,47,.4)', marginBottom:12 }}>
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
-                            <p style={{ fontSize:14, fontWeight:900, color:'#D32F2F', margin:0 }}>Upload ID Front</p>
+                            <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:0 }}>Upload ID Front</p>
                             <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:6 }}>Show your face & age</p>
                           </>
                         )}
@@ -702,13 +702,13 @@ function DonorRegister() {
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'white', borderRadius:'50%' }}
+                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                             />
                             Scanning...
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'white' }}>
+                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}>
                               <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                             </svg>
                             Scan Front
@@ -752,13 +752,13 @@ function DonorRegister() {
                   >
                     <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'white' }}>
+                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'#faf7f7' }}>
                             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                           </svg>
                         </div>
                         <div>
-                          <h3 style={{ fontSize:16, fontWeight:900, color:'#D32F2F', margin:0 }}>ID Back</h3>
+                          <h3 style={{ fontSize:16, fontWeight:900, color:'#dc2626', margin:0 }}>ID Back</h3>
                           <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'4px 0 0', fontWeight:600 }}>Extract blood type</p>
                         </div>
                       </div>
@@ -772,10 +772,10 @@ function DonorRegister() {
                         />
                         {backFile ? (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#D32F2F', marginBottom:8 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#dc2626', marginBottom:8 }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
                             </svg>
-                            <p style={{ fontSize:13, fontWeight:900, color:'#D32F2F', margin:0, textAlign:'center' }}>{backFile.name}</p>
+                            <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0, textAlign:'center' }}>{backFile.name}</p>
                             <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:4 }}>Tap to change</p>
                           </>
                         ) : (
@@ -783,7 +783,7 @@ function DonorRegister() {
                             <svg viewBox="0 0 24 24" style={{ width:56, height:56, fill:'rgba(211,47,47,.4)', marginBottom:12 }}>
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
-                            <p style={{ fontSize:14, fontWeight:900, color:'#D32F2F', margin:0 }}>Upload ID Back</p>
+                            <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:0 }}>Upload ID Back</p>
                             <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:6 }}>Show blood type & info</p>
                           </>
                         )}
@@ -801,13 +801,13 @@ function DonorRegister() {
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'white', borderRadius:'50%' }}
+                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                             />
                             Scanning...
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'white' }}>
+                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}>
                               <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                             </svg>
                             Scan Back
@@ -825,7 +825,7 @@ function DonorRegister() {
                         <p style={{ fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, margin:'0 0 16px 0', textTransform:'uppercase', letterSpacing:'.15em' }}>
                           🩸 Blood Type
                         </p>
-                        <p style={{ fontSize:56, fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1 }}>
+                        <p style={{ fontSize:56, fontWeight:900, color:'#dc2626', margin:0, lineHeight:1 }}>
                           {form.blood_type}
                         </p>
                         <p style={{ fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, margin:'8px 0 0 0', textTransform:'uppercase', letterSpacing:'.1em' }}>
@@ -881,7 +881,7 @@ function DonorRegister() {
                     )}
 
                     <div className="bc-glass" style={{ background:'rgba(136,189,242,.1)', border:'2px solid rgba(64,88,120,.2)', borderRadius:14, padding:16 }}>
-                      <p style={{ fontSize:12, color:'rgba(64,88,120,.7)', fontWeight:600, margin:0, lineHeight:1.6 }}>
+                      <p style={{ fontSize:12, color:'rgba(153,27,27,.7)', fontWeight:600, margin:0, lineHeight:1.6 }}>
                         📋 Your location helps us connect you with the nearest blood banks and donation centers in your area.
                       </p>
                     </div>
@@ -896,7 +896,7 @@ function DonorRegister() {
                     type="button"
                     onClick={prevStep}
                     className="bc-btn"
-                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, background:'rgba(255,255,255,.6)', color:'#D32F2F', border:'2px solid rgba(211,47,47,.2)' }}
+                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, background:'rgba(255,255,255,.6)', color:'#dc2626', border:'2px solid rgba(211,47,47,.2)' }}
                   >
                     ← Back
                   </button>
@@ -924,7 +924,7 @@ function DonorRegister() {
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'white', borderRadius:'50%' }}
+                          style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                         />
                         Creating Account...
                       </>
@@ -938,7 +938,7 @@ function DonorRegister() {
 
             <p style={{ textAlign:'center', fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, marginTop:24, marginBottom:0 }}>
               Already have an account?{' '}
-              <span onClick={() => navigate('/login')} style={{ color:'#D32F2F', cursor:'pointer', fontWeight:900, textDecoration:'underline' }}>
+              <span onClick={() => navigate('/login')} style={{ color:'#dc2626', cursor:'pointer', fontWeight:900, textDecoration:'underline' }}>
                 Sign In
               </span>
             </p>

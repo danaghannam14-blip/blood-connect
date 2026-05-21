@@ -51,7 +51,7 @@ router.post('/forgot', (req, res) => {
     html, body { width: 100%; height: 100%; }
     body { 
       font-family: 'Plus Jakarta Sans', sans-serif; 
-      background: linear-gradient(-45deg, #FFEBEE 0%, #F8F9FA 25%, #FFEBEE 50%, rgba(14,165,233,.35) 75%, #FFF5F7 100%);
+      background: linear-gradient(-45deg, #f8f8f8 0%, #efefef 25%, #f8f8f8 50%, rgba(14,165,233,.35) 75%, #f2f2f2 100%);
       background-size: 400% 400%;
       animation: bgGradient 15s ease infinite;
       min-height: 100vh;
@@ -87,7 +87,7 @@ router.post('/forgot', (req, res) => {
     
     /* HEADER WITH ANIMATED BACKGROUND */
     .header { 
-      background: linear-gradient(135deg, #D32F2F 0%, #ff6b6b 50%, #ff8a80 100%);
+      background: linear-gradient(135deg, #dc2626 0%, #ff6b6b 50%, #ff8a80 100%);
       background-size: 300% 300%;
       animation: bgGradient 8s ease infinite;
       padding: 56px 40px;
@@ -151,7 +151,7 @@ router.post('/forgot', (req, res) => {
     }
     
     .header h1 { 
-      color: white; 
+      color: #faf7f7; 
       font-size: 32px; 
       font-weight: 900; 
       margin: 0;
@@ -226,7 +226,7 @@ router.post('/forgot', (req, res) => {
     .badge {
       display: inline-block;
       background: rgba(211,47,47,0.15);
-      color: #D32F2F;
+      color: #dc2626;
       padding: 7px 16px;
       border-radius: 24px;
       font-size: 11px;
@@ -239,7 +239,7 @@ router.post('/forgot', (req, res) => {
     }
     
     h2 { 
-      color: #D32F2F; 
+      color: #dc2626; 
       font-size: 26px; 
       font-weight: 900; 
       margin: 0 0 10px;
@@ -307,7 +307,7 @@ router.post('/forgot', (req, res) => {
     }
     
     .alert-text h3 { 
-      color: #D32F2F; 
+      color: #dc2626; 
       font-size: 13px; 
       font-weight: 900;
       margin: 0 0 6px;
@@ -325,8 +325,8 @@ router.post('/forgot', (req, res) => {
     /* CTA BUTTON */
     .cta-button {
       display: inline-block;
-      background: linear-gradient(135deg, #D32F2F 0%, #ff6b6b 100%);
-      color: white;
+      background: linear-gradient(135deg, #dc2626 0%, #ff6b6b 100%);
+      color: #faf7f7;
       text-decoration: none;
       padding: 16px 52px;
       border-radius: 18px;
@@ -385,7 +385,7 @@ router.post('/forgot', (req, res) => {
     
     .link-text {
       font-size: 12px;
-      color: #D32F2F;
+      color: #dc2626;
       font-family: 'Courier New', monospace;
       word-break: break-all;
       line-height: 1.6;
@@ -415,7 +415,7 @@ router.post('/forgot', (req, res) => {
     }
     
     .footer h3 {
-      color: white;
+      color: #faf7f7;
       font-size: 18px;
       font-weight: 900;
       margin: 0 0 8px;
@@ -543,7 +543,7 @@ router.post('/forgot', (req, res) => {
 
       <!-- FOOTER -->
       <div class="footer">
-        <h1 style="color: white; font-size: 20px; margin: 0 0 8px; font-family: 'Fraunces', serif;">BloodConnect</h1>
+        <h1 style="color: #faf7f7; font-size: 20px; margin: 0 0 8px; font-family: 'Fraunces', serif;">BloodConnect</h1>
         <p>Smart Donor Matching System</p>
         <div class="footer-links">
           <a href="${API}">Website</a>

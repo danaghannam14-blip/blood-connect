@@ -81,7 +81,7 @@ const STYLES = `
 
   .ad-btn-primary {
     background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
-    color:white;
+    color:#faf7f7;
     box-shadow:0 10px 30px rgba(220,38,38,.35);
     border:1px solid rgba(255,255,255,.15);
   }
@@ -148,7 +148,7 @@ const STYLES = `
 
   .ad-tab-btn.active {
     background:linear-gradient(135deg,#dc2626,#991b1b);
-    color:white;
+    color:#faf7f7;
     border-color:transparent;
     box-shadow:0 10px 28px rgba(220,38,38,.3);
   }
@@ -467,7 +467,7 @@ function Admin() {
                   </linearGradient>
                 </defs>
                 <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
-                <ellipse cx="32" cy="65" rx="16" ry="22" fill="white" opacity="0.2" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
               </svg>
             </motion.div>
             

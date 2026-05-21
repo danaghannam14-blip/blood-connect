@@ -25,7 +25,7 @@ const STYLES = `
 
   .bc-login-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(64,88,120,.2));
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(64,88,120,.2));
     background-size:400% 400%;
     animation:bc-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -81,7 +81,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     font-size:clamp(13px,1.2vw,15px);
-    color:#D32F2F;
+    color:#dc2626;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
     box-shadow:inset 0 2px 8px rgba(211,47,47,.04);
@@ -123,8 +123,8 @@ const STYLES = `
   .bc-btn:active { transform:scale(.97); }
 
   .bc-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
   .bc-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
@@ -200,16 +200,16 @@ function BloodDropMini() {
           <defs>
             <linearGradient id="bcBloodGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ff6b6b"/>
-              <stop offset="50%" stopColor="#D32F2F"/>
-              <stop offset="100%" stopColor="#b71c1c"/>
+              <stop offset="50%" stopColor="#dc2626"/>
+              <stop offset="100%" stopColor="#7f1d1d"/>
             </linearGradient>
             <linearGradient id="bcHighlightLogin" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity=".7"/>
-              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+              <stop offset="0%" stopColor="#faf7f7" stopOpacity=".7"/>
+              <stop offset="100%" stopColor="#faf7f7" stopOpacity="0"/>
             </linearGradient>
             <radialGradient id="bcDropGlow" cx="30%" cy="30%">
-              <stop offset="0%" stopColor="white" stopOpacity=".4"/>
-              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+              <stop offset="0%" stopColor="#faf7f7" stopOpacity=".4"/>
+              <stop offset="100%" stopColor="#faf7f7" stopOpacity="0"/>
             </radialGradient>
           </defs>
           <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#bcBloodGradLogin)"/>
@@ -225,18 +225,18 @@ function BloodDropMini() {
 }
 
 /* ─── Stat Card ──────────────────────────────────────────── */
-function StatCard({ icon, value, label, color = '#D32F2F', delay = 0 }) {
+function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay, duration: 0.5, type: 'spring' }}
       className="bc-glass bc-card-hover"
-      style={{ borderRadius:'clamp(18px,2.5vw,28px)', padding:'clamp(16px,2vw,24px)', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}
+      style={{ borderRadius:'clamp(18px,2.5vw,28px)', padding:'clamp(16px,2vw,24px)', border:'2px solid rgba#991b1b', position:'relative', overflow:'hidden' }}
     >
       <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.5)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>
       <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative', zIndex:1 }}>
-        <div style={{ width:48, height:48, background:`rgba(${color === '#D32F2F' ? '211,47,47' : '64,88,120'},.1)`, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        <div style={{ width:48, height:48, background:`rgba(${color === '#dc2626' ? '211,47,47' : '64,88,120'},.1)`, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           {icon}
         </div>
         <div>
@@ -371,18 +371,18 @@ function Login() {
             <div style={fadeUp(0)}>
               <div className="bc-glass" style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 20px', borderRadius:9999, width:'fit-content', border:'1px solid rgba(211,47,47,.15)' }}>
                 <span style={{ position:'relative', display:'inline-flex', width:12, height:12 }}>
-                  <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#D32F2F', opacity:.75, animation:'bc-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
-                  <span style={{ position:'relative', display:'inline-flex', width:12, height:12, borderRadius:'50%', background:'#D32F2F', boxShadow:'0 0 12px #D32F2F' }}/>
+                  <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#dc2626', opacity:.75, animation:'bc-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }}/>
+                  <span style={{ position:'relative', display:'inline-flex', width:12, height:12, borderRadius:'50%', background:'#dc2626', boxShadow:'0 0 12px #dc2626' }}/>
                 </span>
-                <span style={{ color:'#D32F2F', fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>ENCRYPTED LOGIN</span>
+                <span style={{ color:'#dc2626', fontWeight:900, fontSize:'clamp(8px,.85vw,10px)', letterSpacing:'.2em', textTransform:'uppercase' }}>ENCRYPTED LOGIN</span>
               </div>
             </div>
 
             {/* Title */}
             <div style={fadeUp(.1)}>
-              <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5vw,64px)', lineHeight:.95, fontWeight:900, color:'#D32F2F', margin:0 }}>
+              <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(36px,5vw,64px)', lineHeight:.95, fontWeight:900, color:'#dc2626', margin:0 }}>
                 Welcome Back,<br/>
-                <em style={{ color:'#405878', fontStyle:'italic' }}>Hero</em>
+                <em style={{ color:'#991b1b', fontStyle:'italic' }}>Hero</em>
               </h1>
             </div>
 
@@ -405,16 +405,16 @@ function Login() {
             {/* Stats Grid */}
             <div style={{ ...fadeUp(.3), display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(12px,1.5vw,18px)' }}>
               <StatCard
-                icon={<svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#D32F2F' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>}
+                icon={<svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#dc2626' }}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>}
                 value="24k+"
                 label="Active Users"
                 delay={0.4}
               />
               <StatCard
-                icon={<svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#405878' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>}
+                icon={<svg viewBox="0 0 24 24" style={{ width:22, height:22, fill:'#991b1b' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>}
                 value="142"
                 label="Lives Saved Today"
-                color="#405878"
+                color="#991b1b"
                 delay={0.5}
               />
             </div>
@@ -423,7 +423,7 @@ function Login() {
             <div style={{ ...fadeUp(.4), display:'flex', alignItems:'center', gap:16, paddingTop:8 }}>
               <div style={{ display:'flex' }}>
                 {['A+','O-','B+','AB+'].map((t, i) => (
-                  <div key={t} className="bc-glass" style={{ width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#D32F2F', marginLeft: i === 0 ? 0 : -12, zIndex:4 - i, boxShadow:'0 4px 12px rgba#405878' }}>{t}</div>
+                  <div key={t} className="bc-glass" style={{ width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid rgba(211,47,47,.2)', fontWeight:900, fontSize:11, color:'#dc2626', marginLeft: i === 0 ? 0 : -12, zIndex:4 - i, boxShadow:'0 4px 12px rgba#991b1b' }}>{t}</div>
                 ))}
               </div>
               <span style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em' }}>Network Match Active</span>
@@ -435,7 +435,7 @@ function Login() {
             <div className="bc-glass-deep bc-card-hover" style={{ borderRadius:'clamp(32px,4vw,48px)', padding:'clamp(32px,4.5vw,56px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden' }}>
               
               {/* Top gradient accent */}
-              <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#D32F2F,transparent)' }}/>
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>
 
               {/* Floating orb inside card */}
               <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>
@@ -447,7 +447,7 @@ function Login() {
 
               {/* Title */}
               <div style={{ textAlign:'center', marginBottom:'clamp(24px,3.5vw,36px)' }}>
-                <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(26px,3.5vw,38px)', fontWeight:900, color:'#D32F2F', margin:'0 0 8px', lineHeight:1.1 }}>Welcome Back</h2>
+                <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(26px,3.5vw,38px)', fontWeight:900, color:'#dc2626', margin:'0 0 8px', lineHeight:1.1 }}>Welcome Back</h2>
                 <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:700, margin:0, letterSpacing:'.06em' }}>Sign in to your account</p>
               </div>
 
@@ -461,7 +461,7 @@ function Login() {
                     style={{ marginBottom:'clamp(16px,2vw,24px)', overflow:'hidden' }}
                   >
                     <div className="bc-glass" style={{ background:'rgba(255,235,238,.7)', border:'2px solid rgba(211,47,47,.3)', padding:'12px 18px', borderRadius:14, textAlign:'center' }}>
-                      <p style={{ fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, color:'#D32F2F', margin:0 }}>{error}</p>
+                      <p style={{ fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
                     </div>
                   </motion.div>
                 )}
@@ -515,7 +515,7 @@ function Login() {
                   <button 
                     type="button" 
                     onClick={() => navigate('/forgot-password')}
-                    style={{ background:'none', border:'none', color:'#D32F2F', fontSize:11, fontWeight:700, cursor:'pointer', textDecoration:'underline', fontFamily:"'Plus Jakarta Sans',sans-serif" }}
+                    style={{ background:'none', border:'none', color:'#dc2626', fontSize:11, fontWeight:700, cursor:'pointer', textDecoration:'underline', fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                   >
                     Forgot password?
                   </button>
@@ -532,7 +532,7 @@ function Login() {
                     {isLoading ? (
                       <>
                         <svg viewBox="0 0 24 24" style={{ width:18, height:18, animation:'bc-spin8 1s linear infinite' }}>
-                          <circle cx="12" cy="12" r="10" fill="none" stroke="white" strokeWidth="3" strokeDasharray="50" strokeLinecap="round"/>
+                          <circle cx="12" cy="12" r="10" fill="none" stroke="#faf7f7" strokeWidth="3" strokeDasharray="50" strokeLinecap="round"/>
                         </svg>
                         Signing in...
                       </>
@@ -555,7 +555,7 @@ function Login() {
                 {/* Register */}
                 <p style={{ textAlign:'center', fontSize:'clamp(12px,1.1vw,14px)', color:'rgba(211,47,47,.65)', fontWeight:700, margin:0 }}>
                   Don't have an account?{' '}
-                  <span onClick={() => navigate('/donor/register')} style={{ color:'#D32F2F', cursor:'pointer', fontWeight:900, textDecoration:'underline' }}>
+                  <span onClick={() => navigate('/donor/register')} style={{ color:'#dc2626', cursor:'pointer', fontWeight:900, textDecoration:'underline' }}>
                     Register as Donor
                   </span>
                 </p>
@@ -563,7 +563,7 @@ function Login() {
 
               {/* Emergency Link */}
               <div style={{ marginTop:'clamp(16px,2vw,24px)', textAlign:'center' }}>
-                <button onClick={() => navigate('/emergency')} style={{ background:'none', border:'none', color:'#D32F2F', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                <button onClick={() => navigate('/emergency')} style={{ background:'none', border:'none', color:'#dc2626', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
                   🚨 Emergency? Find nearest hospital
                 </button>
               </div>

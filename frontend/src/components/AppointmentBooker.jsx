@@ -167,8 +167,8 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
                   onClick={() => setForm({ ...form, hospital_id: h.id.toString(), time: '' })}
                   className={`w-full text-left px-4 py-3 rounded-xl border transition-all
                     ${form.hospital_id === h.id.toString()
-                      ? 'bg-red-600 border-red-600 text-white'
-                      : 'bg-white border-gray-200 hover:border-red-300 text-gray-800'}`}>
+                      ? 'bg-red-600 border-red-600 text-#faf7f7'
+                      : 'bg-#faf7f7 border-gray-200 hover:border-red-300 text-gray-800'}`}>
                   <p className="font-semibold text-sm">{h.name}</p>
                   <p className={`text-xs mt-0.5 ${form.hospital_id === h.id.toString() ? 'text-red-200' : 'text-red-500'}`}>
                     🩸 Needs {h.quantity_needed} units of {h.blood_type}
@@ -196,7 +196,7 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
           {form.hospital_id && form.date && (
             <div>
               <label className="text-xs text-gray-500 font-medium mb-2 block">Choose Your Time</label>
-              <div className="bg-white border rounded-xl p-4">
+              <div className="bg-#faf7f7 border rounded-xl p-4">
                 <div className="flex items-center justify-center gap-3">
 
                   {/* Hour */}
@@ -260,7 +260,7 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
                 </div>
 
                 <button type="button" onClick={handleSetTime}
-                  className="w-full mt-4 bg-red-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-red-700">
+                  className="w-full mt-4 bg-red-600 text-#faf7f7 py-2 rounded-xl text-sm font-semibold hover:bg-red-700">
                   Set This Time
                 </button>
 
@@ -284,7 +284,7 @@ function AppointmentBooker({ donor, onAppointmentsChange }) {
               Cancel
             </button>
             <button type="submit" disabled={submitting || !form.time || !form.hospital_id}
-              className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+              className="flex-1 bg-red-600 text-#faf7f7 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
               {submitting ? 'Booking...' : 'Confirm Booking'}
             </button>
           </div>

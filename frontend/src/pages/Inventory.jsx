@@ -17,7 +17,7 @@ function Inventory() {
   }, [])
 
   const statusConfig = {
-    critical: { label: 'Critical', bg: 'rgba(211,47,47,0.1)', border: 'rgba(211,47,47,0.3)', text: '#D32F2F', dot: '#D32F2F', glow: 'rgba(211,47,47,0.4)' },
+    critical: { label: 'Critical', bg: 'rgba(211,47,47,0.1)', border: 'rgba(211,47,47,0.3)', text: '#dc2626', dot: '#dc2626', glow: 'rgba(211,47,47,0.4)' },
     low: { label: 'Low', bg: 'rgba(234,88,12,0.1)', border: 'rgba(234,88,12,0.3)', text: '#ea580c', dot: '#ea580c', glow: 'rgba(234,88,12,0.4)' },
     available: { label: 'Available', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.3)', text: '#16a34a', dot: '#16a34a', glow: 'rgba(34,197,94,0.4)' }
   }
@@ -36,7 +36,7 @@ function Inventory() {
 
     .inv-root {
       min-height: 100vh;
-      background: linear-gradient(-45deg, #FFEBEE, #F8F9FA, #FFE5E8, rgba(64,88,120,0.18), #FFF5F7);
+      background: linear-gradient(-45deg, #f8f8f8, #efefef, #e8e8e8, rgba(64,88,120,0.18), #f2f2f2);
       background-size: 400% 400%;
       animation: inv-gradient 14s ease infinite;
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -91,8 +91,8 @@ function Inventory() {
     .inv-btn:active { transform: scale(0.97); }
 
     .inv-btn-primary {
-      background: linear-gradient(135deg, #D32F2F, #ff6b6b);
-      color: white;
+      background: linear-gradient(135deg, #dc2626, #ff6b6b);
+      color: #faf7f7;
       box-shadow: 0 12px 32px rgba(211,47,47,0.32);
     }
 
@@ -255,7 +255,7 @@ function Inventory() {
           style={{
             width: 64,
             height: 80,
-            background: 'linear-gradient(135deg, #ff6b6b, #D32F2F)',
+            background: 'linear-gradient(135deg, #ff6b6b, #dc2626)',
             borderRadius: '50% 50% 50% 0',
             boxShadow: '0 12px 24px rgba(211,47,47,0.4)',
             filter: 'drop-shadow(0 0 20px rgba(211,47,47,0.3))',
@@ -317,7 +317,7 @@ function Inventory() {
             style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
-            <span style={{ fontSize: 'clamp(16px,1.8vw,22px)', fontWeight: 800, color: '#D32F2F', fontFamily: 'Plus Jakarta Sans' }}>
+            <span style={{ fontSize: 'clamp(16px,1.8vw,22px)', fontWeight: 800, color: '#dc2626', fontFamily: 'Plus Jakarta Sans' }}>
               BloodConnect
             </span>
           </motion.div>
@@ -354,7 +354,7 @@ function Inventory() {
           style={{ marginBottom: 'clamp(40px,6vw,80px)' }}
         >
           <div className="inv-glass-deep" style={{ borderRadius: 'clamp(28px,4vw,44px)', padding: 'clamp(28px,4vw,52px)', border: '2px solid rgba(211,47,47,0.12)', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#D32F2F,#405878,transparent)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }} />
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,5vw,80px)', alignItems: 'center' }}>
               {/* Left */}
@@ -367,17 +367,17 @@ function Inventory() {
                 <div style={fadeUp(0)}>
                   <div className="inv-glass" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 20px', borderRadius: 9999, width: 'fit-content', border: '1px solid rgba(211,47,47,0.18)' }}>
                     <span style={{ position: 'relative', display: 'inline-flex', width: 12, height: 12 }}>
-                      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#D32F2F', opacity: 0.75, animation: 'inv-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }} />
-                      <span style={{ position: 'relative', width: 12, height: 12, borderRadius: '50%', background: '#D32F2F', boxShadow: '0 0 12px #D32F2F', display: 'inline-flex' }} />
+                      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#dc2626', opacity: 0.75, animation: 'inv-ping 1.2s cubic-bezier(0,0,.2,1) infinite' }} />
+                      <span style={{ position: 'relative', width: 12, height: 12, borderRadius: '50%', background: '#dc2626', boxShadow: '0 0 12px #dc2626', display: 'inline-flex' }} />
                     </span>
-                    <span style={{ color: '#D32F2F', fontWeight: 900, fontSize: 'clamp(8px,.85vw,10px)', letterSpacing: '.2em', textTransform: 'uppercase' }}>Live Inventory Status</span>
+                    <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 'clamp(8px,.85vw,10px)', letterSpacing: '.2em', textTransform: 'uppercase' }}>Live Inventory Status</span>
                   </div>
                 </div>
 
                 <div style={fadeUp(0.1)}>
-                  <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(36px,5.5vw,72px)', lineHeight: 0.93, fontWeight: 900, color: '#D32F2F', margin: 0 }}>
+                  <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(36px,5.5vw,72px)', lineHeight: 0.93, fontWeight: 900, color: '#dc2626', margin: 0 }}>
                     Blood<br />
-                    <em style={{ color: '#405878', fontStyle: 'italic' }}>Availability Map</em>
+                    <em style={{ color: '#991b1b', fontStyle: 'italic' }}>Availability Map</em>
                   </h1>
                 </div>
 
@@ -428,7 +428,7 @@ function Inventory() {
           style={{ marginBottom: 'clamp(44px,6vw,100px)' }}
         >
           <div style={{ marginBottom: 'clamp(20px,3vw,32px)' }}>
-            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(24px,3.8vw,46px)', fontWeight: 900, color: '#D32F2F', margin: 0 }}>Current Supply Status</h2>
+            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(24px,3.8vw,46px)', fontWeight: 900, color: '#dc2626', margin: 0 }}>Current Supply Status</h2>
             <p style={{ fontSize: 'clamp(12px,1.2vw,15px)', color: 'rgba(211,47,47,0.65)', fontWeight: 600, marginTop: 8 }}>Updated in real-time across all centers</p>
           </div>
 
@@ -442,7 +442,7 @@ function Inventory() {
                   height: 56,
                   borderRadius: '50%',
                   border: '4px solid rgba(211,47,47,0.15)',
-                  borderTopColor: '#D32F2F',
+                  borderTopColor: '#dc2626',
                 }}
               />
             </div>
@@ -485,7 +485,7 @@ function Inventory() {
                         style={{
                           fontSize: 'clamp(32px,4vw,48px)',
                           fontWeight: 900,
-                          color: '#D32F2F',
+                          color: '#dc2626',
                           margin: 0,
                           position: 'relative',
                           zIndex: 1,
@@ -563,7 +563,7 @@ function Inventory() {
             <div style={{ position: 'absolute', left: -40, top: 0, width: 180, height: 180, background: 'rgba(255,235,238,0.7)', borderRadius: '50%', filter: 'blur(50px)', opacity: 0.6, pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', right: -40, bottom: -20, width: 150, height: 150, background: 'rgba(64,88,120,0.3)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
-            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(26px,5.5vw,62px)', fontWeight: 900, color: '#D32F2F', position: 'relative', zIndex: 1, lineHeight: 1.1, margin: 0 }}>See a critical need?</h2>
+            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(26px,5.5vw,62px)', fontWeight: 900, color: '#dc2626', position: 'relative', zIndex: 1, lineHeight: 1.1, margin: 0 }}>See a critical need?</h2>
             <p style={{ fontSize: 'clamp(12px,1.4vw,16px)', color: 'rgba(211,47,47,0.65)', fontWeight: 600, margin: 'clamp(12px,1.8vw,24px) auto 0', maxWidth: 520, position: 'relative', zIndex: 1, lineHeight: 1.65 }}>
               Your donation can save up to three lives. Register now and become part of Lebanon's most innovative blood donation network.
             </p>
@@ -589,7 +589,7 @@ function Inventory() {
               }}
             >
               Register as Donor
-              <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: 'white' }}>
+              <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: '#faf7f7' }}>
                 <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" />
               </svg>
             </motion.button>

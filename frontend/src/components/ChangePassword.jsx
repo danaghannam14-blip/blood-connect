@@ -38,7 +38,7 @@ function ChangePassword({ onSubmit }) {
         onChange={e => setForm({...form, confirm_password: e.target.value})}
         className="border rounded-lg p-3 focus:outline-none text-sm" required />
       <button type="submit"
-        className="bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 text-sm">
+        className="bg-red-600 text-#faf7f7 py-3 rounded-lg font-semibold hover:bg-red-700 text-sm">
         Change Password
       </button>
     </form>

@@ -17,7 +17,7 @@ const sendThankYouEmail = async (donorName, donorEmail, hospitalName) => {
       htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #dc2626; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">🩸 BloodConnect</h1>
+            <h1 style="color: #faf7f7; margin: 0;">🩸 BloodConnect</h1>
           </div>
           <div style="padding: 30px; background: #fff;">
             <h2 style="color: #dc2626;">Thank You for Donating! 🦸</h2>
@@ -35,7 +35,7 @@ const sendThankYouEmail = async (donorName, donorEmail, hospitalName) => {
             </ul>
             <p>You can donate again in <strong>56 days</strong>. We'll be counting on you!</p>
             <a href="https://bloodconnect-lb.vercel.app/donor/dashboard"
-               style="background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
+               style="background: #dc2626; color: #faf7f7; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">
               View Your Dashboard
             </a>
             <p style="color: #666; margin-top: 20px; font-size: 14px;">

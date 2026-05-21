@@ -12,7 +12,7 @@ function HowItWorks() {
 
     .hiw-root {
       min-height:100vh;
-      background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFEBEE,rgba(14,165,233,.35));
+      background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.35));
       background-size:400% 400%;
       animation:gradient 14s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
@@ -33,7 +33,7 @@ function HowItWorks() {
     }
 
     .hiw-logo-main {
-      font-size:16px;font-weight:900;color:#D32F2F;
+      font-size:16px;font-weight:900;color:#dc2626;
     }
 
     .hiw-logo-sub {
@@ -51,7 +51,7 @@ function HowItWorks() {
       font-family:'Fraunces',serif;
       font-size:56px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 24px;
       line-height:1.1;
     }
@@ -85,13 +85,13 @@ function HowItWorks() {
 
     .hiw-step-card:hover {
       transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba#405878;
+      box-shadow:0 20px 40px rgba#991b1b;
     }
 
     .hiw-step-number {
       width:60px;height:60px;
-      background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-      color:white;
+      background:linear-gradient(135deg,#dc2626,#ff6b6b);
+      color:#faf7f7;
       border-radius:50%;
       display:flex;align-items:center;justify-content:center;
       font-size:28px;font-weight:900;
@@ -102,7 +102,7 @@ function HowItWorks() {
       font-family:'Fraunces',serif;
       font-size:20px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 12px;
     }
 
@@ -124,13 +124,13 @@ function HowItWorks() {
       font-family:'Fraunces',serif;
       font-size:36px;
       font-weight:900;
-      color:#D32F2F;
+      color:#dc2626;
       margin:0 0 20px;
     }
 
     .hiw-cta-btn {
-      background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-      color:white;
+      background:linear-gradient(135deg,#dc2626,#ff6b6b);
+      color:#faf7f7;
       border:none;
       padding:16px 48px;
       border-radius:24px;

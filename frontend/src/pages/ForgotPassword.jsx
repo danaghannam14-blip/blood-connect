@@ -22,7 +22,7 @@ const STYLES = `
 
   .bc-register-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#FFEBEE,#F8F9FA,#FFE5E8,rgba(136,189,242,.25),#FFF5F7);
+    background:linear-gradient(-45deg,#f8f8f8,#efefef,#e8e8e8,rgba(136,189,242,.25),#f2f2f2);
     background-size:400% 400%;
     animation:bc-gradient 14s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -95,7 +95,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     font-size:13px;
-    color:#D32F2F;
+    color:#dc2626;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
     box-sizing:border-box;
@@ -138,8 +138,8 @@ const STYLES = `
   .bc-btn:active { transform:scale(.97); }
 
   .bc-btn-primary {
-    background:linear-gradient(135deg,#D32F2F,#ff6b6b);
-    color:white;
+    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    color:#faf7f7;
     box-shadow:0 12px 32px rgba(211,47,47,.32);
   }
   .bc-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
@@ -217,7 +217,7 @@ function AnimatedBackground() {
             top:0,
             width:2,
             height:'100vh',
-            background:'linear-gradient(180deg,transparent,rgba#405878,transparent,rgba(136,189,242,.1),transparent)',
+            background:'linear-gradient(180deg,transparent,rgba#991b1b,transparent,rgba(136,189,242,.1),transparent)',
             animation:`bc-dna-spin ${25 + i * 5}s linear infinite`,
             animationDelay:`-${i * 8}s`,
           }}
@@ -225,7 +225,7 @@ function AnimatedBackground() {
       ))}
 
       <svg viewBox="0 0 1200 200" style={{ position:'fixed', top:'15%', left:0, width:'100%', height:'200px', opacity:.15, zIndex:-1 }}>
-        <path d="M0,100 L200,100 L220,60 L240,140 L260,100 L1200,100" stroke="#D32F2F" strokeWidth="3" fill="none" strokeLinecap="round">
+        <path d="M0,100 L200,100 L220,60 L240,140 L260,100 L1200,100" stroke="#dc2626" strokeWidth="3" fill="none" strokeLinecap="round">
           <animate attributeName="stroke-dashoffset" from="0" to="2400" dur="3s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values=".3;.6;.3" dur="1.5s" repeatCount="indefinite"/>
         </path>
@@ -261,7 +261,7 @@ function AnimatedBackground() {
           </path>
           <defs>
             <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#D32F2F" stopOpacity=".2"/>
+              <stop offset="0%" stopColor="#dc2626" stopOpacity=".2"/>
               <stop offset="100%" stopColor="#ff6b6b" stopOpacity=".05"/>
             </linearGradient>
             <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -333,13 +333,13 @@ function ForgotPassword() {
               style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:80, height:80, marginBottom:16, position:'relative' }}
             >
               <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(211,47,47,.15)', animation:'bc-ping 2s infinite' }}/>
-              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#D32F2F,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'white' }}>
+              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'#faf7f7' }}>
                   <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#D32F2F', margin:0, lineHeight:1.1 }}>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
               Reset Password
             </h1>
             <p style={{ fontSize:'clamp(13px,1.3vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:700, marginTop:12, letterSpacing:'.04em' }}>
@@ -348,9 +348,9 @@ function ForgotPassword() {
           </div>
 
           {/* Main Card */}
-          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#405878', position:'relative', overflow:'hidden' }}>
+          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#991b1b', position:'relative', overflow:'hidden' }}>
             
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#D32F2F,#88bdf2,transparent)' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#88bdf2,transparent)' }}/>
             <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>
 
             <AnimatePresence mode="wait">
@@ -370,7 +370,7 @@ function ForgotPassword() {
                       className="bc-glass"
                       style={{ background:'rgba(255,235,238,.8)', border:'2px solid rgba(211,47,47,.4)', padding:14, borderRadius:16, marginBottom:20, textAlign:'center' }}
                     >
-                      <p style={{ fontSize:13, fontWeight:700, color:'#D32F2F', margin:0 }}>{error}</p>
+                      <p style={{ fontSize:13, fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
                     </motion.div>
                   )}
 
@@ -414,7 +414,7 @@ function ForgotPassword() {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'white', borderRadius:'50%' }}
+                            style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                           />
                           Sending Link...
                         </>
@@ -434,7 +434,7 @@ function ForgotPassword() {
                         borderRadius:14,
                         fontSize:13,
                         fontWeight:700,
-                        color:'#D32F2F',
+                        color:'#dc2626',
                         background:'rgba(255,255,255,.5)',
                         border:'2px solid rgba(211,47,47,.2)',
                         display:'flex',
@@ -475,7 +475,7 @@ function ForgotPassword() {
                   </motion.div>
 
                   <div>
-                    <h3 style={{ fontSize:20, fontWeight:900, color:'#D32F2F', margin:'0 0 8px', fontFamily:"'Fraunces',serif" }}>Check Your Email</h3>
+                    <h3 style={{ fontSize:20, fontWeight:900, color:'#dc2626', margin:'0 0 8px', fontFamily:"'Fraunces',serif" }}>Check Your Email</h3>
                     <p style={{ fontSize:13, color:'rgba(211,47,47,.65)', fontWeight:600, margin:0, lineHeight:1.6 }}>
                       We've sent a password reset link to your email. Click it to create a new password.
                     </p>
@@ -496,7 +496,7 @@ function ForgotPassword() {
                       borderRadius:14,
                       fontSize:13,
                       fontWeight:700,
-                      color:'#D32F2F',
+                      color:'#dc2626',
                       background:'rgba(255,255,255,.5)',
                       border:'2px solid rgba(211,47,47,.2)',
                       width:'100%',
