@@ -1,3 +1,6 @@
+// This file creates all tables - run it ONCE to initialize the database
+// Command: node setup-database.js
+
 require('dotenv').config()
 const mysql = require('mysql2')
 
@@ -29,6 +32,7 @@ CREATE TABLE IF NOT EXISTS donors (
   date_of_birth DATE,
   gender VARCHAR(10),
   address VARCHAR(255),
+  governorate VARCHAR(50),
   is_eligible BOOLEAN DEFAULT FALSE,
   last_donation_date DATE DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,6 +44,7 @@ CREATE TABLE IF NOT EXISTS hospitals (
   email VARCHAR(255) UNIQUE,
   password VARCHAR(255),
   address VARCHAR(255),
+  governorate VARCHAR(50),
   latitude DECIMAL(10,7),
   longitude DECIMAL(10,7),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -107,7 +112,6 @@ CREATE TABLE IF NOT EXISTS password_resets (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE IF NOT EXISTS analytics_events (
   id INT AUTO_INCREMENT PRIMARY KEY,
   event_type VARCHAR(50) NOT NULL,
@@ -115,24 +119,57 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   INDEX idx_event_type (event_type),
   INDEX idx_created_at (created_at)
 );
+
+CREATE TABLE IF NOT EXISTS emergency_blood_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  blood_type VARCHAR(3) NOT NULL,
+  governorate VARCHAR(50) NOT NULL,
+  patient_email VARCHAR(255) NOT NULL,
+  status ENUM('pending', 'fulfilled', 'cancelled') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status (status),
+  INDEX idx_blood_type (blood_type),
+  INDEX idx_governorate (governorate)
+);
+
+CREATE TABLE IF NOT EXISTS emergency_donations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  request_id INT NOT NULL,
+  donor_id INT NOT NULL,
+  donation_location ENUM('hospital', 'center') DEFAULT 'center',
+  hospital_id INT,
+  hospital_name VARCHAR(255),
+  donation_status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+  confirmed_by VARCHAR(255),
+  confirmed_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (request_id) REFERENCES emergency_blood_requests(id) ON DELETE CASCADE,
+  FOREIGN KEY (donor_id) REFERENCES donors(id) ON DELETE CASCADE,
+  FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE SET NULL,
+  INDEX idx_request (request_id),
+  INDEX idx_donor (donor_id),
+  INDEX idx_status (donation_status)
+);
 `
 
 conn.connect(err => {
   if (err) { console.error('Connection failed:', err.message); process.exit(1) }
-  console.log('Connected to Aiven!')
+  console.log('✅ Connected to Aiven!')
 
   const statements = tables.split(';').map(s => s.trim()).filter(s => s.length > 0)
 
   let i = 0
   const runNext = () => {
     if (i >= statements.length) {
-      console.log('✅ All tables created!')
+      console.log('✅ All tables created successfully!')
       conn.end()
       process.exit(0)
     }
     conn.query(statements[i] + ';', (err) => {
-      if (err) console.log(`Error on statement ${i}:`, err.message)
-      else console.log(`✅ Statement ${i + 1} done`)
+      if (err) console.log(`Error on table ${i}:`, err.message)
+      else console.log(`✅ Table ${i + 1} created`)
       i++
       runNext()
     })

@@ -33,16 +33,20 @@ app.use((req, res, next) => {
 });
 
 // Routes
+const requestsRoute = require('./routes/requests');
+const bloodRequestsRoute = require('./routes/blood-requests');
 const donorRoutes = require('./routes/donors');
 const hospitalsRoutes = require('./routes/hospitals');
 const inventoryRoutes = require('./routes/inventory');
-const requestRoutes = require('./routes/requests');
 const chatbotRoutes = require('./routes/chatbot');
 const idcheckRoutes = require('./routes/idcheck');
 const adminRoutes = require('./routes/admin');
 const passwordResetRoutes = require('./routes/passwordreset');
 const analyticsRoutes = require('./routes/analytics');
 
+// Register routes
+app.use('/api/requests', requestsRoute);
+app.use('/api/blood-requests', bloodRequestsRoute);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/password', passwordResetRoutes);
 app.use('/api/admin', adminRoutes);
@@ -50,7 +54,6 @@ app.use('/api/idcheck', idcheckRoutes);
 app.use('/api/donors', donorRoutes);
 app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/inventory', inventoryRoutes);
-app.use('/api/requests', requestRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 // Health check

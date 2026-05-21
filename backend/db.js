@@ -1,22 +1,26 @@
-const mysql = require('mysql2');
+require('dotenv').config()
+const mysql = require('mysql2')
 
-const url = new URL(process.env.MYSQL_PUBLIC_URL);
+const pool = mysql.createPool({
+  host: 'mysql-16d1c321-blood-bank2026.k.aivencloud.com',
+  port: 18083,
+  user: 'avnadmin',
+  password: process.env.AIVEN_PASSWORD,
+  database: 'defaultdb',
+  ssl: { rejectUnauthorized: false },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+})
 
-const db = mysql.createConnection({
-  host: url.hostname,
-  port: parseInt(url.port),
-  user: url.username,
-  password: url.password,
-  database: url.pathname.slice(1),
-  ssl: { rejectUnauthorized: false }
-});
+const db = pool.promise()
 
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err.message);
-    return;
-  }
-  console.log('Connected to Aiven MySQL database');
-});
+pool.on('error', (err) => {
+  console.error('❌ Database pool error:', err.message)
+})
 
-module.exports = db;
+pool.on('connection', () => {
+  console.log('✅ Database connected')
+})
+
+module.exports = pool

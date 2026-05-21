@@ -23,6 +23,7 @@ function RecenterMap({ center }) {
 }
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+const GOVERNORATES = ['Beirut', 'Mount Lebanon', 'North', 'South', 'Bekaa', 'Nabatieh']
 
 const compatibleBloodForPatient = {
   'A+':  ['A+', 'A-', 'O+', 'O-'],
@@ -124,7 +125,7 @@ const STYLES = `
   .em-stat-float-b { animation:em-float-c 4s ease-in-out infinite; }
 
   .em-ticker-wrap { overflow:hidden; flex:1; }
-  .em-ticker-inner { display:flex; gap:52px; animation:em-ticker 30s linear infinite; #faf7f7-space:nowrap; width:max-content; }
+  .em-ticker-inner { display:flex; gap:52px; animation:em-ticker 30s linear infinite; white-space:nowrap; width:max-content; }
 
   @media(max-width:960px){
     .em-sel-grid { grid-template-columns:1fr !important; }
@@ -167,7 +168,7 @@ function Orbs({ set }) {
 function LiveTicker() {
   const items = ['🔴 Tripoli — O- critically needed','🟡 Beirut — A+ supply stable','🔴 Baalbek — B+ urgent request','🟢 Sidon — AB+ available','🔴 Zahle — O+ shortage alert','🟢 Jounieh — All types available','🔴 Tyre — AB- emergency request']
   return (
-    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(153,27,27,.07))', borderTop:'1px solid rgba#991b1b', borderBottom:'1px solid rgba#991b1b', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
+    <div style={{ background:'linear-gradient(135deg,rgba(211,47,47,.07),rgba(153,27,27,.07))', borderTop:'1px solid rgba(211,47,47,.15)', borderBottom:'1px solid rgba(211,47,47,.15)', padding:'9px 0', overflow:'hidden', position:'relative', zIndex:20 }}>
       <div style={{ display:'flex', alignItems:'center' }}>
         <div style={{ background:'linear-gradient(135deg,#dc2626,#ff6b6b)', color:'#faf7f7', padding:'4px 18px', fontSize:10, fontWeight:900, letterSpacing:'.22em', textTransform:'uppercase', flexShrink:0, marginRight:24, borderRadius:'0 8px 8px 0' }}>LIVE</div>
         <div className="em-ticker-wrap">
@@ -227,7 +228,7 @@ function HospitalCard({ h, index, compatibleTypes }) {
       initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }}
       transition={{ delay:index*0.055, duration:.45, type:'spring' }}
       className="em-glass em-card-hover"
-      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba#991b1b', position:'relative', overflow:'hidden', marginBottom:10 }}
+      style={{ borderRadius:22, padding:'clamp(13px,1.5vw,18px)', border: index===0?'2px solid rgba(211,47,47,.35)':'2px solid rgba(211,47,47,.15)', position:'relative', overflow:'hidden', marginBottom:10 }}
     >
       {index===0 && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>}
       {index===0 && <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, background:'rgba(255,235,238,.7)', borderRadius:'50%', filter:'blur(30px)', pointerEvents:'none' }}/>}
@@ -276,6 +277,17 @@ function Emergency() {
   const [mapCenter, setMapCenter] = useState(null)
   const [loadingHospitals, setLoadingHospitals] = useState(false)
   const [visible, setVisible] = useState(false)
+  
+  // NEW: Emergency case registration states
+  const [showEmergencyForm, setShowEmergencyForm] = useState(false)
+  const [emergencyFormData, setEmergencyFormData] = useState({
+    patientName: '',
+    patientEmail: '',
+    governorate: '',
+    urgency: 'urgent',
+  })
+  const [emergencyLoading, setEmergencyLoading] = useState(false)
+  const [emergencyMessage, setEmergencyMessage] = useState('')
 
   useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
 
@@ -283,6 +295,62 @@ function Emergency() {
     const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180
     const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+  }
+
+  // NEW: Handle emergency form submission
+  const handleEmergencyFormSubmit = async () => {
+    if (!emergencyFormData.patientName.trim()) {
+      setEmergencyMessage('Please enter patient name')
+      return
+    }
+    if (!emergencyFormData.patientEmail.trim() || !/\S+@\S+\.\S+/.test(emergencyFormData.patientEmail)) {
+      setEmergencyMessage('Please enter a valid email')
+      return
+    }
+    if (!patientBloodType) {
+      setEmergencyMessage('Please select blood type')
+      return
+    }
+    if (!emergencyFormData.governorate) {
+      setEmergencyMessage('Please select governorate')
+      return
+    }
+
+    setEmergencyLoading(true)
+    setEmergencyMessage('')
+
+    try {
+      const response = await fetch('https://blood-bank-eqyr.onrender.com/api/blood-requests/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blood_type: patientBloodType,
+          quantity_needed: 2,
+          urgency: emergencyFormData.urgency,
+          hospital_id: 1,
+          patient_name: emergencyFormData.patientName,
+          patient_email: emergencyFormData.patientEmail,
+          governorate: emergencyFormData.governorate,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setEmergencyMessage('✅ Emergency request created! Donors are being notified...')
+        setTimeout(() => {
+          setShowEmergencyForm(false)
+          setEmergencyFormData({ patientName: '', patientEmail: '', governorate: '', urgency: 'urgent' })
+          setPatientBloodType('')
+        }, 2000)
+      } else {
+        setEmergencyMessage(`Error: ${data.message}`)
+      }
+    } catch (error) {
+      setEmergencyMessage(`Error: ${error.message}`)
+    } finally {
+      setEmergencyLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -322,6 +390,142 @@ function Emergency() {
   const fact = patientBloodType ? BLOOD_FACTS[patientBloodType] : null
 
   const fadeUp = (delay=0) => ({ opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(24px)', transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s` })
+
+  /* ════════ EMERGENCY CASE FORM SCREEN ════════ */
+  if (showEmergencyForm) return (
+    <div className="em-root">
+      <ParticleField />
+      <Orbs set={[
+        { t:'4%', l:'4%', w:'min(500px,42vw)', c:'rgba(211,47,47,.18)', d:'0s' },
+        { b:'8%', r:'6%', w:'min(560px,46vw)', c:'rgba(64,88,120,.14)', d:'-3s' },
+        { t:'40%', r:'12%', w:'min(340px,30vw)', c:'rgba(255,235,238,.55)', d:'-6s' },
+      ]}/>
+
+      <div style={{ position:'relative', zIndex:10, maxWidth:700, margin:'0 auto', padding:'clamp(40px,5vw,80px) clamp(16px,3.5vw,44px)', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <motion.div
+          initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
+          className="em-glass-deep"
+          style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden', width:'100%' }}>
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
+
+          <motion.div initial={{ scale:.7, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:.3, type:'spring', stiffness:180 }} style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
+            <div style={{ position:'relative', width:76, height:76 }}>
+              <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(211,47,47,.12)', animation:'em-ping 2s infinite' }}/>
+              <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(211,47,47,.45)' }}>
+                <svg viewBox="0 0 100 130" style={{ width:34, height:34, fill:'#faf7f7' }}><path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/></svg>
+              </div>
+            </div>
+          </motion.div>
+
+          <div style={{ textAlign:'center', marginBottom:26 }}>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Request</h2>
+            <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>Enter patient information to request blood and notify donors</p>
+          </div>
+
+          {/* Patient Name */}
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Name *</label>
+            <input
+              type="text"
+              value={emergencyFormData.patientName}
+              onChange={(e) => setEmergencyFormData({...emergencyFormData, patientName: e.target.value})}
+              placeholder="Enter patient full name"
+              className="em-input"
+              disabled={emergencyLoading}
+            />
+          </div>
+
+          {/* Patient Email */}
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Email *</label>
+            <input
+              type="email"
+              value={emergencyFormData.patientEmail}
+              onChange={(e) => setEmergencyFormData({...emergencyFormData, patientEmail: e.target.value})}
+              placeholder="patient@example.com"
+              className="em-input"
+              disabled={emergencyLoading}
+            />
+          </div>
+
+          {/* Blood Type */}
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Blood Type Needed *</label>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+              {BLOOD_TYPES.map((bt,i) => (
+                <motion.button key={bt} initial={{ opacity:0, scale:.8 }} animate={{ opacity:1, scale:1 }} transition={{ delay:.15+i*.05, type:'spring' }}
+                  onClick={() => setPatientBloodType(bt)} className={`em-blood-chip${patientBloodType===bt?' selected':''}`}
+                  disabled={emergencyLoading}>
+                  {bt}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Governorate */}
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Governorate *</label>
+            <select
+              value={emergencyFormData.governorate}
+              onChange={(e) => setEmergencyFormData({...emergencyFormData, governorate: e.target.value})}
+              className="em-input"
+              disabled={emergencyLoading}
+              style={{ appearance:'none', cursor:'pointer' }}>
+              <option value="">Select governorate</option>
+              {GOVERNORATES.map(gov => (
+                <option key={gov} value={gov}>{gov}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Urgency */}
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Urgency Level</label>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+              {['low', 'medium', 'urgent', 'critical'].map(level => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setEmergencyFormData({...emergencyFormData, urgency: level})}
+                  disabled={emergencyLoading}
+                  className={`em-blood-chip ${emergencyFormData.urgency === level ? 'selected' : ''}`}
+                  style={{ fontSize:'12px', padding:'10px' }}>
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Message */}
+          {emergencyMessage && (
+            <motion.div
+              initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+              style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('Error') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('Error') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('Error') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
+              {emergencyMessage}
+            </motion.div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            onClick={handleEmergencyFormSubmit}
+            disabled={emergencyLoading}
+            className="em-btn em-btn-primary"
+            style={{ width:'100%', padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:12 }}>
+            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            {emergencyLoading ? 'Creating Request...' : '🚨 Create Emergency Request'}
+          </button>
+
+          {/* Back Button */}
+          <button
+            onClick={() => setShowEmergencyForm(false)}
+            className="em-btn"
+            style={{ width:'100%', padding:'12px', borderRadius:16, fontSize:13, fontWeight:900, background:'rgba(255,255,255,.6)', border:'2px solid rgba(211,47,47,.2)', color:'#dc2626', cursor:'pointer', transition:'all 0.25s' }}>
+            ← Back to Hospital Search
+          </button>
+        </motion.div>
+      </div>
+    </div>
+  )
 
   /* ════════ BLOOD TYPE SELECTION SCREEN ════════ */
   if (!bloodTypeSelected) return (
@@ -414,7 +618,7 @@ function Emergency() {
             </motion.div>
 
             <div style={{ textAlign:'center', marginBottom:26 }}>
-              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Finder</h2>
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Hospital Blood Finder</h2>
               <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>What is the patient's blood type? We'll show only hospitals that have compatible blood available.</p>
             </div>
 
@@ -434,7 +638,7 @@ function Emergency() {
                     <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.18em', margin:'0 0 10px' }}>Compatible for <span style={{ color:'#dc2626' }}>{patientBloodType}</span> patient</p>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                       {compatibleBloodForPatient[patientBloodType].map(bt => (
-                        <span key={bt} style={{ background:'rgba#991b1b', color:'#dc2626', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                        <span key={bt} style={{ background:'rgba(153,27,27,.08)', color:'#dc2626', fontSize:12, fontWeight:900, padding:'4px 12px', borderRadius:9, border:'1px solid rgba(211,47,47,.2)' }}>{bt}</span>
                       ))}
                     </div>
                   </div>
@@ -442,12 +646,21 @@ function Emergency() {
               )}
             </AnimatePresence>
 
-            <button onClick={() => patientBloodType && setBloodTypeSelected(true)} disabled={!patientBloodType}
-              className="em-btn em-btn-primary"
-              style={{ width:'100%', padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
-              <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-              Find Compatible Hospitals 🚨
-            </button>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
+              <button onClick={() => patientBloodType && setBloodTypeSelected(true)} disabled={!patientBloodType}
+                className="em-btn em-btn-primary"
+                style={{ padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
+                <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Find Hospitals 🚨
+              </button>
+              
+              <button onClick={() => setShowEmergencyForm(true)}
+                className="em-btn em-btn-primary"
+                style={{ padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'linear-gradient(135deg,#22c55e,#4ade80)' }}>
+                <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/></svg>
+                Request Blood 🩸
+              </button>
+            </div>
 
             <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:20 }}>
               {['A+','O-','B+','AB+'].map((t,i) => (
@@ -506,7 +719,7 @@ function Emergency() {
                 {patientBloodType && (
                   <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'3px 0 0', fontWeight:700 }}>
                     Compatible blood for{' '}
-                    <span style={{ color:'#dc2626', fontWeight:900, background:'rgba#991b1b', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
+                    <span style={{ color:'#dc2626', fontWeight:900, background:'rgba(153,27,27,.08)', padding:'1px 7px', borderRadius:6 }}>{patientBloodType}</span>{' '}patient
                   </p>
                 )}
               </div>
@@ -534,12 +747,12 @@ function Emergency() {
 
           {/* LEFT — list */}
           <motion.div initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }} transition={{ delay:.1, duration:.5 }}>
-            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba#991b1b', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba(211,47,47,.15)', marginBottom:12 }}>
               <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap?'active':'inactive'}`}>📋 Hospital List</button>
               <button onClick={() => setShowMap(true)}  className={`em-toggle-btn ${showMap?'active':'inactive'}`}>🗺️ Map View</button>
             </div>
 
-            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba#991b1b', marginBottom:12 }}>
+            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba(211,47,47,.15)', marginBottom:12 }}>
               <span style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>Stock level</span>
               <div style={{ display:'flex', gap:14 }}>
                 {[{ c:'#ea580c', l:'Low (≤5)' }, { c:'#16a34a', l:'Available' }].map(({ c, l }) => (
@@ -559,7 +772,7 @@ function Emergency() {
                 </div>
               ) : filteredHospitals.length === 0 ? (
                 <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="em-glass"
-                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba#991b1b' }}>
+                  style={{ borderRadius:22, padding:'36px 24px', textAlign:'center', border:'2px solid rgba(211,47,47,.15)' }}>
                   <div style={{ fontSize:42, marginBottom:12 }}>😔</div>
                   <p style={{ fontWeight:900, color:'#dc2626', fontSize:14, margin:'0 0 6px' }}>No hospitals found</p>
                   <p style={{ fontSize:12, color:'rgba(211,47,47,.5)', fontWeight:600, margin:0, lineHeight:1.6 }}>Try searching a different location or call hospitals directly.</p>
@@ -585,7 +798,7 @@ function Emergency() {
                         { label:'Compatible Types', val:compatibleTypes.length, icon:'🩸' },
                         { label:'Network Status', val:'LIVE', icon:'📡' },
                       ].map(({ label, val, icon }) => (
-                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba#991b1b' }}>
+                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius:16, padding:'12px 14px', border:'2px solid rgba(211,47,47,.15)' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
                             <span style={{ fontSize:16 }}>{icon}</span>
                             <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.18em', margin:0 }}>{label}</p>
@@ -596,11 +809,11 @@ function Emergency() {
                     </div>
                     {patientBloodType && (
                       <div style={{ padding:'0 clamp(14px,1.8vw,24px) clamp(14px,1.8vw,22px)' }}>
-                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba#991b1b' }}>
+                        <div className="em-glass" style={{ borderRadius:16, padding:'12px 16px', border:'2px solid rgba(211,47,47,.15)' }}>
                           <p style={{ fontSize:9, fontWeight:900, color:'rgba(211,47,47,.4)', letterSpacing:'.2em', textTransform:'uppercase', margin:'0 0 10px' }}>Compatible donor types</p>
                           <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                             {compatibleTypes.map(bt => (
-                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba#991b1b,rgba(153,27,27,.07))', color:'#dc2626', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
+                              <span key={bt} style={{ background:'linear-gradient(135deg,rgba(153,27,27,.15),rgba(153,27,27,.07))', color:'#dc2626', fontSize:12, fontWeight:900, padding:'5px 13px', borderRadius:9, border:'1.5px solid rgba(211,47,47,.2)' }}>{bt}</span>
                             ))}
                           </div>
                         </div>
@@ -610,7 +823,7 @@ function Emergency() {
                 </motion.div>
               ) : (
                 <motion.div key="map" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
-                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba#991b1b', height:'calc(100vh - 260px)' }}>
+                  style={{ borderRadius:28, overflow:'hidden', border:'2px solid rgba(211,47,47,.15)', boxShadow:'0 24px 60px rgba(211,47,47,.08)', height:'calc(100vh - 260px)' }}>
                   {userLocation && (
                     <MapContainer center={userLocation} zoom={13} style={{ height:'100%', width:'100%' }}>
                       <RecenterMap center={mapCenter||userLocation} />

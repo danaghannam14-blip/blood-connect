@@ -19,22 +19,22 @@ const getCompatibleDonors = (bloodType) => {
 };
 
 // Send email notification to donors
-const sendDonorNotification = async (donor, bloodType, hospitalName, governorate) => {
+const sendDonorNotification = async (donor, bloodType, patientEmail, governorate) => {
   try {
     const emailContent = `
-      <h2>🩸 Blood Donation Request</h2>
-      <p>A hospital needs blood urgently!</p>
+      <h2>🩸 Emergency Blood Request</h2>
+      <p>An emergency blood donation is needed!</p>
       <p><strong>Blood Type Needed:</strong> ${bloodType}</p>
-      <p><strong>Hospital:</strong> ${hospitalName}</p>
       <p><strong>Location:</strong> ${governorate}</p>
+      <p><strong>Patient Contact:</strong> ${patientEmail}</p>
       <p>Please respond as soon as possible if you can donate.</p>
-      <p>Login to your account to confirm your donation.</p>
+      <p>Login to your account to confirm your donation location.</p>
     `;
 
     await axios.post('https://api.brevo.com/v3/smtp/email', {
       to: [{ email: donor.email, name: donor.full_name }],
       sender: { email: 'noreply@bloodconnect.com', name: 'BloodConnect' },
-      subject: `🩸 URGENT: ${bloodType} Blood Type Needed at ${hospitalName}`,
+      subject: `🩸 URGENT: ${bloodType} Blood Type Needed in ${governorate}`,
       htmlContent: emailContent
     }, {
       headers: {
@@ -49,29 +49,29 @@ const sendDonorNotification = async (donor, bloodType, hospitalName, governorate
   }
 };
 
-// CREATE HOSPITAL BLOOD REQUEST
+// CREATE EMERGENCY BLOOD REQUEST
 router.post('/create', async (req, res) => {
   try {
-    const { bloodType, governorate, hospitalId, hospitalName, quantity_needed, urgency } = req.body;
+    const { bloodType, governorate, patientEmail } = req.body;
 
-    if (!bloodType || !governorate || !hospitalId || !hospitalName) {
-      return res.status(400).json({ message: 'Blood type, governorate, hospital ID, and hospital name are required' });
+    if (!bloodType || !governorate || !patientEmail) {
+      return res.status(400).json({ message: 'Blood type, governorate, and patient email are required' });
     }
 
-    // Insert into blood_requests table
+    // Insert into emergency_blood_requests table
     const sql = `
-      INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed, status, urgency, created_at)
-      VALUES (?, ?, ?, 'pending', ?, NOW())
+      INSERT INTO emergency_blood_requests (blood_type, governorate, patient_email, status, created_at)
+      VALUES (?, ?, ?, 'pending', NOW())
     `;
 
-    db.query(sql, [hospitalId, bloodType, quantity_needed || 1, urgency || 'urgent'], async (err, result) => {
+    db.query(sql, [bloodType, governorate, patientEmail], async (err, result) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ message: 'Error creating blood request', error: err.message });
       }
 
       const requestId = result.insertId;
-      console.log(`📝 Blood request created: ID ${requestId}`);
+      console.log(`📝 Emergency blood request created: ID ${requestId}`);
 
       // Get compatible donors from the same governorate
       const compatibleBloodTypes = getCompatibleDonors(bloodType);
@@ -96,7 +96,7 @@ router.post('/create', async (req, res) => {
         // Send notifications to all compatible donors
         let notificationCount = 0;
         for (const donor of donors) {
-          await sendDonorNotification(donor, bloodType, hospitalName, governorate);
+          await sendDonorNotification(donor, bloodType, patientEmail, governorate);
           notificationCount++;
         }
 
@@ -113,14 +113,9 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// GET ALL BLOOD REQUESTS
+// GET ALL EMERGENCY BLOOD REQUESTS
 router.get('/', (req, res) => {
-  const sql = `
-    SELECT br.*, h.name as hospital_name, h.address as hospital_address
-    FROM blood_requests br
-    LEFT JOIN hospitals h ON br.hospital_id = h.id
-    ORDER BY br.created_at DESC
-  `;
+  const sql = 'SELECT * FROM emergency_blood_requests ORDER BY created_at DESC';
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching blood requests:', err);
@@ -130,15 +125,10 @@ router.get('/', (req, res) => {
   });
 });
 
-// GET BLOOD REQUEST BY ID
+// GET EMERGENCY BLOOD REQUEST BY ID
 router.get('/:id', (req, res) => {
   const { id } = req.params;
-  const sql = `
-    SELECT br.*, h.name as hospital_name, h.address as hospital_address
-    FROM blood_requests br
-    LEFT JOIN hospitals h ON br.hospital_id = h.id
-    WHERE br.id = ?
-  `;
+  const sql = 'SELECT * FROM emergency_blood_requests WHERE id = ?';
   db.query(sql, [id], (err, results) => {
     if (err) {
       console.error('Error fetching blood request:', err);
@@ -151,24 +141,7 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// GET PENDING REQUESTS FOR A HOSPITAL
-router.get('/hospital/:hospitalId', (req, res) => {
-  const { hospitalId } = req.params;
-  const sql = `
-    SELECT * FROM blood_requests 
-    WHERE hospital_id = ? AND status = 'pending'
-    ORDER BY urgency DESC, created_at DESC
-  `;
-  db.query(sql, [hospitalId], (err, results) => {
-    if (err) {
-      console.error('Error fetching requests:', err);
-      return res.status(500).json({ message: 'Error fetching requests' });
-    }
-    res.json(results);
-  });
-});
-
-// UPDATE BLOOD REQUEST STATUS
+// UPDATE EMERGENCY BLOOD REQUEST STATUS
 router.put('/:id/status', (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -177,26 +150,13 @@ router.put('/:id/status', (req, res) => {
     return res.status(400).json({ message: 'Status is required' });
   }
 
-  const sql = 'UPDATE blood_requests SET status = ?, updated_at = NOW() WHERE id = ?';
+  const sql = 'UPDATE emergency_blood_requests SET status = ? WHERE id = ?';
   db.query(sql, [status, id], (err) => {
     if (err) {
       console.error('Error updating blood request:', err);
       return res.status(500).json({ message: 'Error updating blood request' });
     }
     res.json({ message: 'Blood request status updated successfully' });
-  });
-});
-
-// DELETE BLOOD REQUEST
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  const sql = 'DELETE FROM blood_requests WHERE id = ?';
-  db.query(sql, [id], (err) => {
-    if (err) {
-      console.error('Error deleting blood request:', err);
-      return res.status(500).json({ message: 'Error deleting blood request' });
-    }
-    res.json({ message: 'Blood request deleted successfully' });
   });
 });
 
