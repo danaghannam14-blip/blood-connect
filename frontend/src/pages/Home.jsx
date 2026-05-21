@@ -1036,7 +1036,7 @@ export default function Home() {
                     textDecoration: 'none',
                   }}
                 >
-                  📍
+                  
                   <span>Visit Our Center in Hamra</span>
                   <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                     →
