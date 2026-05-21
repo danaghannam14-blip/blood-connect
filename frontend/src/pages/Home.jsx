@@ -823,7 +823,7 @@ export default function Home() {
                 color: '#6e2016',
                 margin: 0,
               }}>
-                Connected by
+                Connected by  Blood,
                 <motion.span
                   style={{
                     display: 'block',
@@ -835,7 +835,7 @@ export default function Home() {
                   animate={{ opacity: [0.6, 1, 0.6] }}
                   transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  Blood, United by Hope
+                 United by Hope
                 </motion.span>
               </h1>
             </motion.div>
