@@ -579,8 +579,7 @@ export default function Home() {
               </div>
 
               <div style={{ marginTop:'clamp(12px,1.5vw,20px)', paddingTop:'clamp(12px,1.5vw,20px)', borderTop:'2px solid rgba(211,47,47,.15)' }}>
-                <a href="https://www.google.com/maps/place/33.896527,35.483139/@33.896527,35.483139,18z" target="_blank" rel="noopener noreferrer"
-                  className="bc-btn bc-btn-primary"
+               <a href="https://www.google.com/maps/place/33.896529,35.483715/@33.896529,35.483715,18z"
                   style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', borderRadius:16, fontSize:'clamp(10px,1.1vw,12px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:8, textDecoration:'none' }}>
                   <span>📍</span>
                   <span>Visit Our Center - Hamra</span>
