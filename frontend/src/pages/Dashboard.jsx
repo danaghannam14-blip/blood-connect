@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ✅ Auto-detect API URL based on environment
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+// ✅ WORKS ON BOTH LOCALHOST AND PRODUCTION
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://blood-bank-eqyr.onrender.com'
-
-const API = 'https://blood-bank-eqyr.onrender.com'
-const API_LOCAL = API_BASE_URL
 
 const URGENCY_CONFIG = {
   critical: { label: 'Critical', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
@@ -189,7 +186,7 @@ function Dashboard() {
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
     
     // ✅ Load emergency notifications from LOCAL backend
-    axios.get(`${API_LOCAL}/api/blood-requests/donor/${donorData.id}`)
+    axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
       .then(res => {
         console.log('Emergency notifications:', res.data)
         setEmergencyNotifications(res.data || [])
@@ -216,13 +213,13 @@ function Dashboard() {
   const handleDonateAtCenter = async (notificationId) => {
     setConfirmingId(notificationId)
     try {
-      const response = await axios.post(`${API_LOCAL}/api/blood-requests/donor-confirm-donation`, {
+      const response = await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'center'
       })
       alert('✅ Center donation confirmed! Patient will be notified.')
       // Refresh emergency notifications
-      const res = await axios.get(`${API_LOCAL}/api/blood-requests/donor/${donor.id}`)
+      const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
       setEmergencyNotifications(res.data || [])
       setExpandedNotif(null)
     } catch (err) {
@@ -236,14 +233,14 @@ function Dashboard() {
   const handleDonateAtHospital = async (notificationId, hospitalId) => {
     setConfirmingId(notificationId)
     try {
-      const response = await axios.post(`${API_LOCAL}/api/blood-requests/donor-confirm-donation`, {
+      const response = await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'hospital',
         hospital_id: hospitalId
       })
       alert('✅ Hospital donation confirmed! Patient will be notified.')
       // Refresh emergency notifications
-      const res = await axios.get(`${API_LOCAL}/api/blood-requests/donor/${donor.id}`)
+      const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
       setEmergencyNotifications(res.data || [])
       setShowHospitalSelect(null)
       setExpandedNotif(null)
