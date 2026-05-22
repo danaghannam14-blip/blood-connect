@@ -1229,7 +1229,7 @@ export default function Home() {
 
               <div style={{ marginTop: 12, paddingTop: 20, borderTop: '1px solid rgba(91,115,151,.1)' }}>
                 <motion.a
-                  href="https://www.google.com/maps/place/33.896529,35.483715/@33.896529,35.483715,18z"
+                  href="https://www.google.com/maps/place/BloodConnect/@33.896303,35.4830185,17z/data=!3m1!4b1!4m6!3m5!1s0x151f1700556b765f:0x7b13b4102e84e328!8m2!3d33.896303!4d35.4830185!16s%2Fg%2F11njy2j9_g?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDUxNy4wIKXMDSoASAFQAw%3D%3D"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bc-btn bc-btn-primary"
