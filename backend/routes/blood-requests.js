@@ -55,9 +55,24 @@ const sendDonorEmail = async (donor, bloodType, governorate, requestId) => {
 // Send email to patient when donation confirmed
 const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, donationLocation, hospitalName) => {
   try {
-    const locationText = donationLocation === 'hospital' 
-      ? `<p><strong>🏥 Hospital:</strong> ${hospitalName}</p>` 
-      : `<p><strong>🩸 Our Center:</strong> BloodConnect Center, Beirut</p>`;
+    let locationText = '';
+
+    if (donationLocation === 'hospital') {
+      locationText = `
+        <p><strong>🏥 Hospital:</strong> ${hospitalName}</p>
+        <p style="color: #666; font-size: 12px; margin-top: 8px;">
+          This hospital is in your governorate. Please contact them to arrange the blood pickup or delivery.
+        </p>
+      `;
+    } else {
+      locationText = `
+        <p><strong>🩸 Center:</strong> BloodConnect Hamra Center</p>
+        <p><strong>📍 Address:</strong> Hamra, Beirut</p>
+        <p style="color: #666; font-size: 12px; margin-top: 8px;">
+          Please visit our center to pick up the blood. Operating hours: 8AM - 6PM daily.
+        </p>
+      `;
+    }
 
     const emailContent = `
       <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
@@ -66,7 +81,7 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
       <p><strong>Donor:</strong> ${donorName}</p>
       ${locationText}
       <p style="color: #666; font-size: 12px; margin-top: 16px;">
-        Please contact the hospital or center to arrange pickup or delivery. Thank you!
+        Thank you for using BloodConnect! 🙏
       </p>
     `;
 

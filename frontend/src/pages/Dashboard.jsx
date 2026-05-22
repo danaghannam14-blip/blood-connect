@@ -439,22 +439,24 @@ function Dashboard() {
                   </p>
 
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDonateAtCenter(notif.notification_id)
-                      }}
-                      disabled={confirmingId === notif.notification_id}
-                      style={{
-                        background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                        color:'#fff', border:'none', padding:'10px 14px', borderRadius:8,
-                        fontWeight:900, fontSize:12, cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
-                        opacity: confirmingId === notif.notification_id ? 0.7 : 1
-                      }}
-                    >
-                      {confirmingId === notif.notification_id ? '⏳ Confirming...' : '🩸 Donate at Our Center'}
-                    </motion.button>
+                    {donor?.governorate === 'Beirut' && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDonateAtCenter(notif.notification_id)
+                        }}
+                        disabled={confirmingId === notif.notification_id}
+                        style={{
+                          background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                          color:'#fff', border:'none', padding:'10px 14px', borderRadius:8,
+                          fontWeight:900, fontSize:12, cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
+                          opacity: confirmingId === notif.notification_id ? 0.7 : 1
+                        }}
+                      >
+                        {confirmingId === notif.notification_id ? '⏳ Confirming...' : '🩸 Donate at Our Center'}
+                      </motion.button>
+                    )}
 
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -481,7 +483,9 @@ function Dashboard() {
                           exit={{ opacity: 0, height: 0 }}
                           style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8 }}
                         >
-                          {hospitals.map(hospital => (
+                          {hospitals
+                            .filter(h => h.governorate === donor?.governorate)
+                            .map(hospital => (
                             <motion.button
                               key={hospital.id}
                               whileHover={{ scale: 1.02 }}
@@ -500,6 +504,7 @@ function Dashboard() {
                               {hospital.name}
                             </motion.button>
                           ))}
+                        
                         </motion.div>
                       )}
                     </AnimatePresence>
