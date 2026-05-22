@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS donors (
   date_of_birth DATE,
   gender VARCHAR(10),
   address VARCHAR(255),
-  governorate VARCHAR(50),
+  governorate VARCHAR(50) DEFAULT 'Beirut',
   is_eligible BOOLEAN DEFAULT FALSE,
   last_donation_date DATE DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -133,27 +133,27 @@ CREATE TABLE IF NOT EXISTS emergency_blood_requests (
 
 CREATE TABLE IF NOT EXISTS emergency_donations (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  request_id INT NOT NULL,
   donor_id INT NOT NULL,
-  donation_location ENUM('hospital', 'center') DEFAULT 'center',
+  blood_type VARCHAR(10),
+  patient_email VARCHAR(255),
+  governorate VARCHAR(50),
+  status ENUM('pending', 'awaiting_confirmation', 'confirmed') DEFAULT 'pending',
+  donor_donation_location ENUM('center', 'hospital'),
   hospital_id INT,
-  hospital_name VARCHAR(255),
-  donation_status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
-  confirmed_by VARCHAR(255),
-  confirmed_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (request_id) REFERENCES emergency_blood_requests(id) ON DELETE CASCADE,
   FOREIGN KEY (donor_id) REFERENCES donors(id) ON DELETE CASCADE,
   FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE SET NULL,
-  INDEX idx_request (request_id),
   INDEX idx_donor (donor_id),
-  INDEX idx_status (donation_status)
+  INDEX idx_status (status)
 );
 `
 
 conn.connect(err => {
-  if (err) { console.error('❌ Connection failed:', err.message); process.exit(1) }
+  if (err) { 
+    console.error('❌ Connection failed:', err.message)
+    process.exit(1)
+  }
   console.log('✅ Connected to Aiven!')
 
   const statements = tables.split(';').map(s => s.trim()).filter(s => s.length > 0)
@@ -165,40 +165,109 @@ conn.connect(err => {
       
       const alterStatements = [
         `ALTER TABLE hospitals ADD COLUMN city VARCHAR(50) DEFAULT 'Beirut'`,
-        `ALTER TABLE hospitals ADD COLUMN phone VARCHAR(20) DEFAULT ''`
+        `ALTER TABLE hospitals ADD COLUMN phone VARCHAR(20) DEFAULT ''`,
+        // ✅ FIX: Modified governorate to have DEFAULT 'Beirut' for new records
+        `ALTER TABLE donors MODIFY governorate VARCHAR(50) DEFAULT 'Beirut'`
       ]
       
       let j = 0
       const runAlter = () => {
         if (j >= alterStatements.length) {
-          const hamraSQL = `INSERT INTO hospitals (name, address, governorate, city, email) SELECT 'BCC Hamra Center', 'Hamra, Beirut', 'Beirut', 'Beirut', 'blood.connect.donate@gmail.com' WHERE NOT EXISTS (SELECT id FROM hospitals WHERE name = 'BCC Hamra Center')`
+          console.log('✅ All ALTER statements completed')
           
-          conn.query(hamraSQL, (err) => {
-            if (err) console.log('❌ Error inserting Hamra Center:', err.message)
-            else console.log('✅ Hamra Center inserted successfully!')
-            conn.end()
-            process.exit(0)
+          // ✅ FIX: Add data integrity check
+          // Check for NULL governorates and update them
+          const checkNullSQL = `
+            SELECT COUNT(*) as null_count
+            FROM donors 
+            WHERE governorate IS NULL
+          `
+          
+          conn.query(checkNullSQL, (err, results) => {
+            if (!err && results && results[0]) {
+              const nullCount = results[0].null_count
+              
+              if (nullCount > 0) {
+                console.log(`⚠️  Found ${nullCount} donors with NULL governorate. Fixing...`)
+                
+                conn.query(
+                  `UPDATE donors SET governorate = 'Beirut' WHERE governorate IS NULL`,
+                  (updateErr) => {
+                    if (updateErr) {
+                      console.error('❌ Error fixing NULL governorates:', updateErr.message)
+                    } else {
+                      console.log(`✅ Fixed ${nullCount} records with default governorate 'Beirut'`)
+                    }
+                    insertHamraCenter()
+                  }
+                )
+              } else {
+                console.log('✅ No NULL governorates found')
+                insertHamraCenter()
+              }
+            } else {
+              insertHamraCenter()
+            }
           })
           return
         }
         
         conn.query(alterStatements[j], (err) => {
-          if (err && err.message.includes('Duplicate column')) {
-            console.log('✅ Column already exists')
+          if (err && (err.message.includes('Duplicate column') || err.message.includes('Unknown column'))) {
+            console.log(`✅ Column already exists (${alterStatements[j].substring(0, 40)}...)`)
           } else if (err) {
-            console.log('❌ Error adding column:', err.message)
+            console.log(`❌ Error on ALTER ${j + 1}:`, err.message)
           } else {
-            console.log('✅ Column added')
+            console.log(`✅ ALTER statement ${j + 1} completed`)
           }
           j++
           runAlter()
         })
       }
+      
+      const insertHamraCenter = () => {
+        const hamraSQL = `
+          INSERT INTO hospitals (name, address, governorate, city, email) 
+          SELECT 'BCC Hamra Center', 'Hamra, Beirut', 'Beirut', 'Beirut', 'blood.connect.donate@gmail.com' 
+          WHERE NOT EXISTS (SELECT id FROM hospitals WHERE name = 'BCC Hamra Center')
+        `
+        
+        conn.query(hamraSQL, (err) => {
+          if (err) {
+            console.log('ℹ️  Hamra Center already exists or error:', err.message)
+          } else {
+            console.log('✅ BCC Hamra Center inserted successfully!')
+          }
+          
+          // Final summary
+          const summarySQL = `
+            SELECT 
+              (SELECT COUNT(*) FROM donors) as total_donors,
+              (SELECT COUNT(*) FROM donors WHERE is_eligible = 1) as eligible_donors,
+              (SELECT COUNT(*) FROM hospitals) as total_hospitals,
+              (SELECT COUNT(*) FROM emergency_donations) as total_emergencies
+          `
+          
+          conn.query(summarySQL, (err, results) => {
+            if (!err && results && results[0]) {
+              console.log('\n📊 Database Summary:')
+              console.log(`   Total Donors: ${results[0].total_donors}`)
+              console.log(`   Eligible Donors: ${results[0].eligible_donors}`)
+              console.log(`   Total Hospitals: ${results[0].total_hospitals}`)
+              console.log(`   Emergency Donations: ${results[0].total_emergencies}`)
+            }
+            
+            conn.end()
+            process.exit(0)
+          })
+        })
+      }
+      
       runAlter()
       return
     }
     conn.query(statements[i] + ';', (err) => {
-      if (err) console.log(`❌ Error on table ${i}:`, err.message)
+      if (err) console.log(`❌ Error on table ${i + 1}:`, err.message)
       else console.log(`✅ Table ${i + 1} created`)
       i++
       runNext()
