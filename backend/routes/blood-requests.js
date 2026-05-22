@@ -131,6 +131,70 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, locationTyp
   }
 };
 
+// ✅ SEND EMAIL TO PATIENT WHEN DONATION CONFIRMED
+const sendPatientDonationConfirmedEmail = async (patientEmail, bloodType, locationType, locationName) => {
+  try {
+    let emailContent = '';
+
+    if (locationType === 'center') {
+      emailContent = `
+        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
+        <p>Excellent news! A compatible donor has successfully donated blood for your emergency case at the BCC Hamra Center.</p>
+        
+        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
+        <p><strong>Blood Type:</strong> ${bloodType}</p>
+        <p><strong>Donation Location:</strong> BCC Hamra Center, Hamra, Beirut</p>
+        <p><strong>Status:</strong> ✅ Confirmed</p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+        
+        <p style="color: #666; font-size: 13px;">
+          Your blood is ready for pickup at BCC Hamra Center during operating hours (8AM - 6PM Daily).
+        </p>
+        
+        <p style="color: #22c55e; font-weight: bold;">Thank you for using BloodConnect! 🙏</p>
+      `;
+    } else if (locationType === 'hospital') {
+      emailContent = `
+        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
+        <p>Excellent news! A compatible donor has successfully donated blood for your emergency case at the hospital.</p>
+        
+        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
+        <p><strong>Blood Type:</strong> ${bloodType}</p>
+        <p><strong>Donation Location:</strong> Hospital</p>
+        <p><strong>Status:</strong> ✅ Confirmed by Hospital</p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+        
+        <p style="color: #666; font-size: 13px;">
+          Your blood has been confirmed by the hospital and is ready for use.
+        </p>
+        
+        <p style="color: #22c55e; font-weight: bold;">Thank you for using BloodConnect! 🙏</p>
+      `;
+    }
+
+    await axios.post('https://api.brevo.com/v3/smtp/email', {
+      to: [{ email: patientEmail }],
+      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
+      subject: `✅ Blood Donation Confirmed - ${bloodType}`,
+      htmlContent: emailContent
+    }, {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
+    });
+
+    console.log(`✅ Donation confirmed email sent to patient: ${patientEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Error sending donation confirmed email:`, error.message);
+    return false;
+  }
+};
+
 // ✅ FIXED: Create emergency request and notify donors (with Promise.all)
 router.post('/create-emergency', async (req, res) => {
   try {
@@ -241,6 +305,63 @@ router.get('/donor/:donorId', (req, res) => {
   });
 });
 
+// ===== GET DONATIONS FOR HOSPITAL DASHBOARD =====
+router.get('/hospital/:hospitalId', (req, res) => {
+  const sql = `
+    SELECT 
+      ed.id,
+      ed.donor_id,
+      d.full_name as donor_name,
+      ed.blood_type,
+      ed.status,
+      ed.donor_donation_location,
+      ed.created_at,
+      ed.updated_at
+    FROM emergency_donations ed
+    LEFT JOIN donors d ON ed.donor_id = d.id
+    WHERE ed.hospital_id = ? 
+    AND ed.donor_donation_location = 'hospital'
+    AND ed.status IN ('awaiting_confirmation', 'confirmed')
+    ORDER BY ed.created_at DESC
+  `;
+
+  db.query(sql, [req.params.hospitalId], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching hospital donations:', err);
+      return res.status(500).json({ error: 'Error fetching donations' });
+    }
+    res.json(results || []);
+  });
+});
+
+// ===== GET DONATIONS AT CENTER (FOR ADMIN) =====
+router.get('/center-donations', (req, res) => {
+  const sql = `
+    SELECT 
+      ed.id,
+      ed.donor_id,
+      d.full_name as donor_name,
+      ed.blood_type,
+      ed.patient_email,
+      ed.status,
+      ed.created_at,
+      ed.updated_at
+    FROM emergency_donations ed
+    LEFT JOIN donors d ON ed.donor_id = d.id
+    WHERE ed.donor_donation_location = 'center'
+    AND ed.status IN ('awaiting_confirmation', 'confirmed')
+    ORDER BY ed.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching center donations:', err);
+      return res.status(500).json({ error: 'Error fetching donations' });
+    }
+    res.json(results || []);
+  });
+});
+
 // ===== DONOR CONFIRMS DONATION LOCATION =====
 router.post('/donor-confirm-donation', (req, res) => {
   const { notification_id, donation_location, hospital_id } = req.body;
@@ -295,6 +416,111 @@ router.post('/donor-confirm-donation', (req, res) => {
       }
 
       res.json({ message: '✅ Donation location confirmed and patient notified!' });
+    });
+  });
+});
+
+// ===== HOSPITAL CONFIRMS DONATION =====
+router.post('/hospital-confirm', (req, res) => {
+  const { notificationId, hospitalId } = req.body;
+
+  if (!notificationId || !hospitalId) {
+    return res.status(400).json({ error: 'notificationId and hospitalId are required' });
+  }
+
+  // Update status to 'confirmed' for this hospital's donation
+  const updateSql = `
+    UPDATE emergency_donations 
+    SET status = 'confirmed'
+    WHERE id = ? 
+    AND hospital_id = ? 
+    AND donor_donation_location = 'hospital'
+  `;
+
+  db.query(updateSql, [notificationId, hospitalId], async (err, result) => {
+    if (err) {
+      console.error('❌ Error confirming donation:', err);
+      return res.status(500).json({ error: 'Error confirming donation' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ error: 'Donation not found or already confirmed' });
+    }
+
+    // Get donation details to send email to patient
+    const getSql = `
+      SELECT * FROM emergency_donations WHERE id = ?
+    `;
+
+    db.query(getSql, [notificationId], async (getErr, results) => {
+      if (!getErr && results.length > 0) {
+        const donation = results[0];
+        
+        // Send email to patient that donation was confirmed
+        await sendPatientDonationConfirmedEmail(
+          donation.patient_email,
+          donation.blood_type,
+          'hospital',
+          'Hospital Confirmed'
+        );
+      }
+
+      res.json({ 
+        success: true,
+        message: '✅ Donation confirmed! Patient notified.' 
+      });
+    });
+  });
+});
+
+// ===== ADMIN/BCC CONFIRMS DONATION AT CENTER =====
+router.post('/admin-confirm', (req, res) => {
+  const { notificationId } = req.body;
+
+  if (!notificationId) {
+    return res.status(400).json({ error: 'notificationId is required' });
+  }
+
+  // Update status to 'confirmed' for center donation
+  const updateSql = `
+    UPDATE emergency_donations 
+    SET status = 'confirmed'
+    WHERE id = ? 
+    AND donor_donation_location = 'center'
+  `;
+
+  db.query(updateSql, [notificationId], async (err, result) => {
+    if (err) {
+      console.error('❌ Error confirming donation:', err);
+      return res.status(500).json({ error: 'Error confirming donation' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ error: 'Donation not found or already confirmed' });
+    }
+
+    // Get donation details
+    const getSql = `
+      SELECT * FROM emergency_donations WHERE id = ?
+    `;
+
+    db.query(getSql, [notificationId], async (getErr, results) => {
+      if (!getErr && results.length > 0) {
+        const donation = results[0];
+        
+        // Send email to patient
+        await sendPatientDonationConfirmedEmail(
+          donation.patient_email,
+          donation.blood_type,
+          'center',
+          'BCC Hamra Center Confirmed'
+        );
+      }
+
+      res.json({ 
+        success: true,
+        message: '✅ Donation confirmed! Patient notified.' 
+      });
     });
   });
 });
