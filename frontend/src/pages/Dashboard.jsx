@@ -110,7 +110,7 @@ const STYLES = `
     background:rgba(255,255,255,.62);
     backdrop-filter:blur(40px);
     -webkit-backdrop-filter:blur(40px);
-    border-bottom:2px solid rgba#991b1b;
+    border-bottom:2px solid rgba(211,47,47,.3);
     box-shadow:0 4px 24px rgba(211,47,47,.06);
   }
 
@@ -166,15 +166,29 @@ function Dashboard() {
   const [donor, setDonor] = useState(null)
   const [inventory, setInventory] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [emergencyNotifications, setEmergencyNotifications] = useState([])
   const [visible, setVisible] = useState(false)
+  const [expandedNotif, setExpandedNotif] = useState(null)
+  const [showHospitalSelect, setShowHospitalSelect] = useState(null)
+  const [hospitals, setHospitals] = useState([])
+  const [confirmingId, setConfirmingId] = useState(null)
 
   useEffect(() => {
     const data = localStorage.getItem('donorData')
     if (!data) { navigate('/login'); return }
     const donorData = JSON.parse(data)
     setDonor(donorData)
+    
+    // Load regular requests
     axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`).then(res => setInventory(res.data)).catch(console.log)
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
+    
+    // Load emergency notifications
+    axios.get(`${API}/api/blood-requests/donor/${donorData.id}`).then(res => setEmergencyNotifications(res.data || [])).catch(console.log)
+    
+    // Load hospitals
+    axios.get(`${API}/api/hospitals/all`).then(res => setHospitals(res.data || [])).catch(console.log)
+    
     setTimeout(() => setVisible(true), 60)
   }, [])
 
@@ -182,6 +196,44 @@ function Dashboard() {
     localStorage.removeItem('donorToken')
     localStorage.removeItem('donorData')
     navigate('/')
+  }
+
+  const handleDonateAtCenter = async (notificationId) => {
+    setConfirmingId(notificationId)
+    try {
+      await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
+        notificationId,
+        donorId: donor.id,
+        donationLocation: 'center'
+      })
+      alert('✅ Center donation confirmed!')
+      const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
+      setEmergencyNotifications(res.data || [])
+    } catch (err) {
+      alert('❌ Error: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setConfirmingId(null)
+    }
+  }
+
+  const handleDonateAtHospital = async (notificationId, hospitalId) => {
+    setConfirmingId(notificationId)
+    try {
+      await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
+        notificationId,
+        donorId: donor.id,
+        donationLocation: 'hospital',
+        hospitalId
+      })
+      alert('✅ Hospital donation confirmed!')
+      const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
+      setEmergencyNotifications(res.data || [])
+      setShowHospitalSelect(null)
+    } catch (err) {
+      alert('❌ Error: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setConfirmingId(null)
+    }
   }
 
   const getCanDonateTo = (bt) => {
@@ -308,6 +360,156 @@ function Dashboard() {
           </motion.div>
         </motion.div>
 
+        {/* Emergency Notifications Section */}
+        {emergencyNotifications.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="dd-glass-deep dd-card-hover"
+            style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'2px solid #dc2626', background:'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))' }}
+          >
+            <h3 style={{ fontSize:'clamp(18px,2.5vw,22px)', fontWeight:900, color:'#dc2626', margin:'0 0 16px 0' }}>
+              🩸 Emergency Blood Requests ({emergencyNotifications.length})
+            </h3>
+            <AnimatePresence>
+              {emergencyNotifications.map((notif, idx) => (
+                <motion.div
+                  key={notif.notification_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => notif.notification_status === 'pending' && setExpandedNotif(expandedNotif === notif.notification_id ? null : notif.notification_id)}
+                  className="dd-glass dd-card-hover"
+                  style={{
+                    borderRadius:16, padding:16, marginBottom:12,
+                    background:'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)',
+                    border:'2px solid #fca5a5',
+                    cursor: notif.notification_status === 'pending' ? 'pointer' : 'default',
+                    display:'flex', justifyContent:'space-between', alignItems:'center'
+                  }}
+                >
+                  <div>
+                    <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:'0 0 4px 0' }}>
+                      {notif.blood_type} Blood Needed
+                    </p>
+                    <p style={{ fontSize:11, color:'#991b1b', margin:'0 0 4px 0', fontWeight:700 }}>
+                      📍 {notif.governorate}
+                    </p>
+                    {notif.notification_status === 'pending' && (
+                      <p style={{ fontSize:11, color:'#991b1b', margin:0, fontWeight:600 }}>
+                        Click to confirm donation location →
+                      </p>
+                    )}
+                  </div>
+                  <motion.div
+                    style={{
+                      background: notif.notification_status === 'pending' ? '#FFA500' : notif.notification_status === 'awaiting_confirmation' ? '#9CA3AF' : '#22c55e',
+                      color:'#fff', padding:'6px 12px', borderRadius:8, fontSize:10, fontWeight:900,
+                      textTransform:'uppercase', whiteSpace:'nowrap'
+                    }}
+                  >
+                    {notif.notification_status === 'pending' && '⏳ Pending'}
+                    {notif.notification_status === 'awaiting_confirmation' && '⏸️ Awaiting'}
+                    {notif.notification_status === 'confirmed' && '✅ Confirmed'}
+                  </motion.div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* Expanded Emergency Notification */}
+            <AnimatePresence>
+              {emergencyNotifications.map((notif) => expandedNotif === notif.notification_id && notif.notification_status === 'pending' && (
+                <motion.div
+                  key={`expand-${notif.notification_id}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{
+                    borderTop:'2px solid rgba(220,38,38,.2)', paddingTop:12, marginTop:12,
+                    background:'rgba(255,255,255,.8)', borderRadius:12, padding:12
+                  }}
+                >
+                  <p style={{ fontSize:11, fontWeight:700, color:'#666', margin:'0 0 6px 0', textTransform:'uppercase' }}>
+                    Patient Email
+                  </p>
+                  <p style={{ fontSize:12, color:'#dc2626', fontWeight:700, marginBottom:12, margin:'0 0 12px 0' }}>
+                    {notif.patient_email}
+                  </p>
+
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDonateAtCenter(notif.notification_id)
+                      }}
+                      disabled={confirmingId === notif.notification_id}
+                      style={{
+                        background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color:'#fff', border:'none', padding:'10px 14px', borderRadius:8,
+                        fontWeight:900, fontSize:12, cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
+                        opacity: confirmingId === notif.notification_id ? 0.7 : 1
+                      }}
+                    >
+                      {confirmingId === notif.notification_id ? '⏳ Confirming...' : '🩸 Donate at Our Center'}
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowHospitalSelect(showHospitalSelect === notif.notification_id ? null : notif.notification_id)
+                      }}
+                      disabled={confirmingId === notif.notification_id}
+                      style={{
+                        background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                        color:'#fff', border:'none', padding:'10px 14px', borderRadius:8,
+                        fontWeight:900, fontSize:12, cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
+                        opacity: confirmingId === notif.notification_id ? 0.7 : 1
+                      }}
+                    >
+                      🏥 Donate at a Hospital
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {showHospitalSelect === notif.notification_id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8 }}
+                        >
+                          {hospitals.map(hospital => (
+                            <motion.button
+                              key={hospital.id}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDonateAtHospital(notif.notification_id, hospital.id)
+                              }}
+                              disabled={confirmingId === notif.notification_id}
+                              style={{
+                                background:'#fff', border:'1px solid #3b82f6', padding:'8px 12px',
+                                borderRadius:6, fontSize:11, fontWeight:700, color:'#3b82f6',
+                                cursor: confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
+                                textAlign:'left', opacity: confirmingId === notif.notification_id ? 0.7 : 1
+                              }}
+                            >
+                              {hospital.name}
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
         {/* Progress Steps */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -340,14 +542,6 @@ function Dashboard() {
                   {step.icon}
                 </motion.div>
                 <p style={{ fontSize:9, fontWeight:700, color: step.done ? '#22c55e' : 'rgba(211,47,47,.4)', textAlign:'center', margin:0, textTransform:'uppercase', letterSpacing:'.1em' }}>{step.label}</p>
-                {i < steps.length - 1 && (
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    animate={visible ? { scaleX: 1 } : { scaleX: 0 }}
-                    transition={{ delay: 0.3 + i * 0.1 }}
-                    style={{ position:'absolute', height:2, width:'clamp(20px,3vw,40px)', background: steps[i+1].done ? '#22c55e' : 'rgba#991b1b', left: `calc(50% + ${24 + i * 0}px)`, originX:0 }}
-                  />
-                )}
               </motion.div>
             ))}
           </div>
@@ -496,7 +690,7 @@ function Dashboard() {
                         </div>
                         <motion.span
                           whileHover={{ scale: 1.1 }}
-                          style={{ background:'rgba#991b1b', color:'#dc2626', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
+                          style={{ background:'rgba(220,38,38,.1)', color:'#dc2626', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
                         >
                           {row.blood_type}
                         </motion.span>

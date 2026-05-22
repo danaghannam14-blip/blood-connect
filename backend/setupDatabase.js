@@ -1,7 +1,4 @@
-// This file creates all tables - run it ONCE to initialize the database
-// Command: node setup-database.js
-
-require('dotenv').config()
+﻿require('dotenv').config()
 const mysql = require('mysql2')
 
 const conn = mysql.createConnection({
@@ -155,7 +152,7 @@ CREATE TABLE IF NOT EXISTS emergency_donations (
 `
 
 conn.connect(err => {
-  if (err) { console.error('Connection failed:', err.message); process.exit(1) }
+  if (err) { console.error('❌ Connection failed:', err.message); process.exit(1) }
   console.log('✅ Connected to Aiven!')
 
   const statements = tables.split(';').map(s => s.trim()).filter(s => s.length > 0)
@@ -168,7 +165,7 @@ conn.connect(err => {
       process.exit(0)
     }
     conn.query(statements[i] + ';', (err) => {
-      if (err) console.log(`Error on table ${i}:`, err.message)
+      if (err) console.log(`❌ Error on table ${i}:`, err.message)
       else console.log(`✅ Table ${i + 1} created`)
       i++
       runNext()
