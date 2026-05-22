@@ -285,8 +285,10 @@ function Admin() {
   const [hospitals, setHospitals] = useState([])
   const [requests, setRequests] = useState([])
   const [admins, setAdmins] = useState([])
+  const [emergencyDonations, setEmergencyDonations] = useState([])
   const [tab, setTab] = useState('overview')
   const [loading, setLoading] = useState(true)
+  const [confirmingId, setConfirmingId] = useState(null)
   const [newAdmin, setNewAdmin] = useState({ email: '', password: '' })
   const [adminMessage, setAdminMessage] = useState('')
   const [changePass, setChangePass] = useState({ email: '', old_password: '', new_password: '' })
@@ -314,16 +316,18 @@ function Admin() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [d, h, r, a] = await Promise.all([
+      const [d, h, r, a, e] = await Promise.all([
         axios.get(`${API}/api/admin/donors`),
         axios.get(`${API}/api/admin/hospitals`),
         axios.get(`${API}/api/admin/requests`),
-        axios.get(`${API}/api/admin/admins`)
+        axios.get(`${API}/api/admin/admins`),
+        axios.get(`${API}/api/blood-requests/all-emergency-donations`)
       ])
       setDonors(d.data)
       setHospitals(h.data)
       setRequests(r.data)
       setAdmins(a.data)
+      setEmergencyDonations(e.data)
     } catch (err) {
       console.log(err)
     } finally {
@@ -331,11 +335,18 @@ function Admin() {
     }
   }
 
-  const deleteDonor = async (id) => {
-    if (!window.confirm('Delete this donor?')) return
+ const deleteDonor = async (id) => {
+  if (!window.confirm('Delete this donor?')) return
+  try {
     await axios.delete(`${API}/api/admin/donors/${id}`)
     setDonors(donors.filter(d => d.id !== id))
+    alert('✅ Donor deleted successfully!')
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to delete donor'
+    alert(`❌ Cannot delete this donor.\n\nReason: ${errorMsg}\n\nPlease delete related records first (donations, health screenings, etc.)`)
+    console.error('Delete error:', error)
   }
+}
 
   const deleteRequest = async (id) => {
     if (!window.confirm('Delete this request?')) return
@@ -347,6 +358,19 @@ function Admin() {
     if (!window.confirm('Delete this admin?')) return
     await axios.delete(`${API}/api/admin/admins/${id}`)
     setAdmins(admins.filter(a => a.id !== id))
+  }
+
+  const handleConfirmDonation = async (notificationId) => {
+    setConfirmingId(notificationId)
+    try {
+      await axios.post(`${API}/api/blood-requests/admin-confirm`, { notification_id: notificationId })
+      alert('✅ Center donation confirmed! Patient notified.')
+      setEmergencyDonations(emergencyDonations.filter(d => d.notification_id !== notificationId))
+      setConfirmingId(null)
+    } catch (error) {
+      alert('❌ Error: ' + error.response?.data?.error || error.message)
+      setConfirmingId(null)
+    }
   }
 
   const addAdmin = async (e) => {
@@ -421,7 +445,7 @@ function Admin() {
   }, {})
   const mostNeeded = Object.entries(bloodTypeStats).sort((a, b) => b[1] - a[1])[0]
 
-  const tabs = ['overview', 'donors', 'hospitals', 'requests', 'admins', 'settings']
+  const tabs = ['overview', 'donors', 'hospitals', 'emergency', 'requests', 'admins', 'settings']
 
   return (
     <div className="ad-root">
@@ -600,6 +624,7 @@ function Admin() {
               {t === 'overview' ? 'Overview' :
                t === 'donors' ? `Donors (${donors.length})` :
                t === 'hospitals' ? `Hospitals (${hospitals.length})` :
+               t === 'emergency' ? `🩸 Emergency (${emergencyDonations.length})` :
                t === 'requests' ? `Requests (${requests.length})` :
                t === 'admins' ? `Admins (${admins.length})` :
                'Settings'}
@@ -893,6 +918,58 @@ function Admin() {
                     )}
                   </motion.div>
                 </div>
+              )}
+
+              {/* EMERGENCY DONATIONS (CENTER) */}
+              {tab === 'emergency' && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="ad-glass-deep ad-card-hover"
+                  style={{ borderRadius:'28px', padding:'32px' }}
+                >
+                  <h2 style={{ fontSize:22, fontWeight:900, color:'#dc2626', marginBottom:20 }}>🩸 Center Donations Awaiting Confirmation</h2>
+                  {emergencyDonations.filter(d => d.donor_donation_location === 'center').length === 0 ? (
+                    <div style={{ textAlign:'center', padding:'60px 0' }}>
+                      <p style={{ fontSize:48, margin:0 }}>✅</p>
+                      <p style={{ color:'rgba(56,1,1,.4)', fontSize:14, marginTop:16 }}>No center donations awaiting confirmation</p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX:'auto' }}>
+                      <table style={{ width:'100%', fontSize:13 }}>
+                        <thead>
+                          <tr style={{ borderBottom:'2px solid rgba(180,180,180,.2)', textAlign:'left' }}>
+                            <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(56,1,1,.5)' }}>Blood Type</th>
+                            <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(56,1,1,.5)' }}>Donor</th>
+                            <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(56,1,1,.5)' }}>Patient Email</th>
+                            <th style={{ paddingBottom:12, fontWeight:900, color:'rgba(56,1,1,.5)' }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {emergencyDonations.filter(d => d.donor_donation_location === 'center').map(donation => (
+                            <tr key={donation.notification_id} style={{ borderBottom:'1px solid rgba(56,1,1,.05)' }}>
+                              <td style={{ padding:'12px 0', fontWeight:900, color:'#dc2626', fontSize:14 }}>{donation.blood_type}</td>
+                              <td style={{ padding:'12px 0', color:'rgba(56,1,1,.6)' }}>{donation.donor_name}</td>
+                              <td style={{ padding:'12px 0', color:'rgba(56,1,1,.6)', fontSize:12 }}>{donation.patient_email}</td>
+                              <td style={{ padding:'12px 0' }}>
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleConfirmDonation(donation.notification_id)}
+                                  disabled={confirmingId === donation.notification_id}
+                                  className="ad-btn ad-btn-primary"
+                                  style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:900, opacity: confirmingId === donation.notification_id ? 0.6 : 1 }}
+                                >
+                                  {confirmingId === donation.notification_id ? '⏳ Confirming...' : '✅ Confirm'}
+                                </motion.button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
               )}
 
               {/* REQUESTS */}

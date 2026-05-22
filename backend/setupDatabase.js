@@ -5,7 +5,7 @@ const conn = mysql.createConnection({
   host: 'mysql-16d1c321-blood-bank2026.k.aivencloud.com',
   port: 18083,
   user: 'avnadmin',
-  password: process.env.AIVEN_PASSWORD,
+  password: 'AVNS__T6tTjAsWDY7Ra3rKdV',
   database: 'defaultdb',
   ssl: { rejectUnauthorized: false }
 })
@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS hospitals (
   password VARCHAR(255),
   address VARCHAR(255),
   governorate VARCHAR(50),
+  city VARCHAR(50),
   latitude DECIMAL(10,7),
   longitude DECIMAL(10,7),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -161,8 +162,40 @@ conn.connect(err => {
   const runNext = () => {
     if (i >= statements.length) {
       console.log('✅ All tables created successfully!')
-      conn.end()
-      process.exit(0)
+      
+      const alterStatements = [
+        `ALTER TABLE hospitals ADD COLUMN city VARCHAR(50) DEFAULT 'Beirut'`,
+        `ALTER TABLE hospitals ADD COLUMN phone VARCHAR(20) DEFAULT ''`
+      ]
+      
+      let j = 0
+      const runAlter = () => {
+        if (j >= alterStatements.length) {
+          const hamraSQL = `INSERT INTO hospitals (name, address, governorate, city, email) SELECT 'BCC Hamra Center', 'Hamra, Beirut', 'Beirut', 'Beirut', 'blood.connect.donate@gmail.com' WHERE NOT EXISTS (SELECT id FROM hospitals WHERE name = 'BCC Hamra Center')`
+          
+          conn.query(hamraSQL, (err) => {
+            if (err) console.log('❌ Error inserting Hamra Center:', err.message)
+            else console.log('✅ Hamra Center inserted successfully!')
+            conn.end()
+            process.exit(0)
+          })
+          return
+        }
+        
+        conn.query(alterStatements[j], (err) => {
+          if (err && err.message.includes('Duplicate column')) {
+            console.log('✅ Column already exists')
+          } else if (err) {
+            console.log('❌ Error adding column:', err.message)
+          } else {
+            console.log('✅ Column added')
+          }
+          j++
+          runAlter()
+        })
+      }
+      runAlter()
+      return
     }
     conn.query(statements[i] + ';', (err) => {
       if (err) console.log(`❌ Error on table ${i}:`, err.message)

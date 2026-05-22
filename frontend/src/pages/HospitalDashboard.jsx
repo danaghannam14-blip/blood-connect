@@ -491,6 +491,9 @@ function HospitalDashboard() {
                         <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0 0 4px 0', fontWeight: 700 }}>
                           Patient: {donation.patient_email}
                         </p>
+                        <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '0 0 0 0', fontWeight: 700 }}>
+                          🏥 Hospital: {donation.hospital_name || 'BCC Hamra Center'}
+                        </p>
                       </div>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
