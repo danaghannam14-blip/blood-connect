@@ -271,13 +271,18 @@ function Emergency() {
   const [loadingHospitals, setLoadingHospitals] = useState(false)
   const [visible, setVisible] = useState(false)
   
+  // Emergency Request States
   const [showEmergencyForm, setShowEmergencyForm] = useState(false)
-const [emergencyFormData, setEmergencyFormData] = useState({
-  patientEmail: '',
-  governorate: '',
-})
+  const [emergencyStep, setEmergencyStep] = useState(1)
+  const [emergencyFormData, setEmergencyFormData] = useState({
+    patientEmail: '',
+    governorate: '',
+  })
   const [emergencyLoading, setEmergencyLoading] = useState(false)
   const [emergencyMessage, setEmergencyMessage] = useState('')
+  const [emergencyRequestId, setEmergencyRequestId] = useState(null)
+  const [notifiedDonors, setNotifiedDonors] = useState([])
+  const [donorCount, setDonorCount] = useState(0)
 
   useEffect(() => { setTimeout(() => setVisible(true), 60) }, [])
 
@@ -287,18 +292,19 @@ const [emergencyFormData, setEmergencyFormData] = useState({
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
   }
 
+  // Handle Emergency Request Submit
   const handleEmergencyFormSubmit = async () => {
-    
+    // Validation
     if (!emergencyFormData.patientEmail.trim() || !/\S+@\S+\.\S+/.test(emergencyFormData.patientEmail)) {
-      setEmergencyMessage('Please enter a valid email')
+      setEmergencyMessage('❌ Please enter a valid email')
       return
     }
     if (!patientBloodType) {
-      setEmergencyMessage('Please select blood type')
+      setEmergencyMessage('❌ Please select blood type')
       return
     }
     if (!emergencyFormData.governorate) {
-      setEmergencyMessage('Please select governorate')
+      setEmergencyMessage('❌ Please select governorate')
       return
     }
 
@@ -306,36 +312,94 @@ const [emergencyFormData, setEmergencyFormData] = useState({
     setEmergencyMessage('')
 
     try {
-      // ✅ FIXED: Send correct field names
-     const response = await fetch('http://localhost:5000/api/blood-requests/create-emergency', {
+      // CORRECTED: Send to backend with proper field names
+      const response = await fetch('http://localhost:5000/api/blood-requests/create-emergency', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-         blood_type: patientBloodType,
-  governorate: emergencyFormData.governorate,
-  patient_email: emergencyFormData.patientEmail,
- }),
+          patient_email: emergencyFormData.patientEmail,
+          blood_type: patientBloodType,
+          governorate: emergencyFormData.governorate,
+        }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        setEmergencyMessage(`✅ Emergency request created! (ID: ${data.requestId}) ${data.donorsNotified} donors notified`)
+        // SUCCESS: Set donor count and move to step 2
+        setEmergencyRequestId(data.requestId)
+        setDonorCount(data.donorsNotified || 0)
+        setNotifiedDonors(data.donors || [])
+        
+        setEmergencyMessage(
+          `✅ Emergency request created! (ID: ${data.requestId}) ${data.donorsNotified || 0} donors notified`
+        )
+        
+        // Move to confirmation step after 1.5 seconds
         setTimeout(() => {
-          setShowEmergencyForm(false)
-         setEmergencyFormData({ patientEmail: '', governorate: '' })
-         setPatientBloodType('')
-        }, 3000)
+          setEmergencyStep(2)
+          setEmergencyMessage('')
+        }, 1500)
+      } else {
+        setEmergencyMessage(`❌ Error: ${data.message || 'Failed to create request'}`)
+      }
+    } catch (error) {
+      console.error('Error creating emergency request:', error)
+      setEmergencyMessage(`❌ Connection error: ${error.message}`)
+    } finally {
+      setEmergencyLoading(false)
+    }
+  }
+
+  // Handle Donor Confirmation (Hospital or Center)
+  const handleConfirmDonation = async (donorId, donationType) => {
+    setEmergencyLoading(true)
+    setEmergencyMessage('')
+
+    try {
+      const donor = notifiedDonors.find(d => d.id === donorId)
+      
+      // Step 1: Confirm donation in backend
+      const response = await fetch(`http://localhost:5000/api/donations/${donorId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emergency_request_id: emergencyRequestId,
+          donation_type: donationType, // 'hospital' or 'center'
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setEmergencyMessage(`✅ Donation confirmed! Patient has been notified.`)
+        
+        // Remove confirmed donor from list
+        setNotifiedDonors(prev => prev.filter(d => d.id !== donorId))
       } else {
         setEmergencyMessage(`❌ Error: ${data.message}`)
       }
     } catch (error) {
+      console.error('Error confirming donation:', error)
       setEmergencyMessage(`❌ Error: ${error.message}`)
     } finally {
       setEmergencyLoading(false)
     }
   }
 
+  // Reset Emergency Form
+  const resetEmergencyForm = () => {
+    setShowEmergencyForm(false)
+    setEmergencyStep(1)
+    setEmergencyFormData({ patientEmail: '', governorate: '' })
+    setPatientBloodType('')
+    setEmergencyMessage('')
+    setEmergencyRequestId(null)
+    setNotifiedDonors([])
+    setDonorCount(0)
+  }
+
+  // Load hospitals and get geolocation
   useEffect(() => {
     if (!bloodTypeSelected) return
     setLoadingHospitals(true)
@@ -374,6 +438,7 @@ const [emergencyFormData, setEmergencyFormData] = useState({
 
   const fadeUp = (delay=0) => ({ opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(24px)', transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s` })
 
+  // EMERGENCY FORM - STEP 1 & 2
   if (showEmergencyForm) return (
     <div className="em-root">
       <ParticleField />
@@ -384,92 +449,172 @@ const [emergencyFormData, setEmergencyFormData] = useState({
       ]}/>
 
       <div style={{ position:'relative', zIndex:10, maxWidth:700, margin:'0 auto', padding:'clamp(40px,5vw,80px) clamp(16px,3.5vw,44px)', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <motion.div
-          initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
-          className="em-glass-deep"
-          style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden', width:'100%' }}>
-          <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
+        {emergencyStep === 1 ? (
+          // STEP 1: Emergency Request Form
+          <motion.div
+            initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
+            className="em-glass-deep"
+            style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden', width:'100%' }}>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
 
-          <motion.div initial={{ scale:.7, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:.3, type:'spring', stiffness:180 }} style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
-            <div style={{ position:'relative', width:76, height:76 }}>
-              <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(211,47,47,.12)', animation:'em-ping 2s infinite' }}/>
-              <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(211,47,47,.45)' }}>
-                <svg viewBox="0 0 100 130" style={{ width:34, height:34, fill:'#faf7f7' }}><path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/></svg>
+            <motion.div initial={{ scale:.7, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:.3, type:'spring', stiffness:180 }} style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
+              <div style={{ position:'relative', width:76, height:76 }}>
+                <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(211,47,47,.12)', animation:'em-ping 2s infinite' }}/>
+                <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(211,47,47,.45)' }}>
+                  <svg viewBox="0 0 100 130" style={{ width:34, height:34, fill:'#faf7f7' }}><path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/></svg>
+                </div>
+              </div>
+            </motion.div>
+
+            <div style={{ textAlign:'center', marginBottom:26 }}>
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Request</h2>
+              <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>Enter patient information to request blood and notify donors</p>
+            </div>
+
+            <div style={{ marginBottom:16 }}>
+              <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Email *</label>
+              <input
+                type="email"
+                value={emergencyFormData.patientEmail}
+                onChange={(e) => setEmergencyFormData({...emergencyFormData, patientEmail: e.target.value})}
+                placeholder="patient@example.com"
+                className="em-input"
+                disabled={emergencyLoading}
+              />
+            </div>
+
+            <div style={{ marginBottom:16 }}>
+              <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Blood Type Needed *</label>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+                {BLOOD_TYPES.map((bt,i) => (
+                  <motion.button key={bt} initial={{ opacity:0, scale:.8 }} animate={{ opacity:1, scale:1 }} transition={{ delay:.15+i*.05, type:'spring' }}
+                    onClick={() => setPatientBloodType(bt)} className={`em-blood-chip${patientBloodType===bt?' selected':''}`}
+                    disabled={emergencyLoading}>
+                    {bt}
+                  </motion.button>
+                ))}
               </div>
             </div>
-          </motion.div>
 
-          <div style={{ textAlign:'center', marginBottom:26 }}>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#dc2626', margin:'0 0 10px', lineHeight:1.1 }}>Emergency Blood Request</h2>
-            <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>Enter patient information to request blood and notify donors</p>
-          </div>
-
-      
-
-          <div style={{ marginBottom:16 }}>
-            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Email *</label>
-            <input
-              type="email"
-              value={emergencyFormData.patientEmail}
-              onChange={(e) => setEmergencyFormData({...emergencyFormData, patientEmail: e.target.value})}
-              placeholder="patient@example.com"
-              className="em-input"
-              disabled={emergencyLoading}
-            />
-          </div>
-
-          <div style={{ marginBottom:16 }}>
-            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Blood Type Needed *</label>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
-              {BLOOD_TYPES.map((bt,i) => (
-                <motion.button key={bt} initial={{ opacity:0, scale:.8 }} animate={{ opacity:1, scale:1 }} transition={{ delay:.15+i*.05, type:'spring' }}
-                  onClick={() => setPatientBloodType(bt)} className={`em-blood-chip${patientBloodType===bt?' selected':''}`}
-                  disabled={emergencyLoading}>
-                  {bt}
-                </motion.button>
-              ))}
+            <div style={{ marginBottom:16 }}>
+              <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Governorate *</label>
+              <select
+                value={emergencyFormData.governorate}
+                onChange={(e) => setEmergencyFormData({...emergencyFormData, governorate: e.target.value})}
+                className="em-input"
+                disabled={emergencyLoading}
+                style={{ appearance:'none', cursor:'pointer' }}>
+                <option value="">Select governorate</option>
+                {GOVERNORATES.map(gov => (
+                  <option key={gov} value={gov}>{gov}</option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          <div style={{ marginBottom:16 }}>
-            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Governorate *</label>
-            <select
-              value={emergencyFormData.governorate}
-              onChange={(e) => setEmergencyFormData({...emergencyFormData, governorate: e.target.value})}
-              className="em-input"
+            {emergencyMessage && (
+              <motion.div
+                initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+                style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('❌') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('❌') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('❌') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
+                {emergencyMessage}
+              </motion.div>
+            )}
+
+            <button
+              onClick={handleEmergencyFormSubmit}
               disabled={emergencyLoading}
-              style={{ appearance:'none', cursor:'pointer' }}>
-              <option value="">Select governorate</option>
-              {GOVERNORATES.map(gov => (
-                <option key={gov} value={gov}>{gov}</option>
-              ))}
-            </select>
-          </div>
+              className="em-btn em-btn-primary"
+              style={{ width:'100%', padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:12 }}>
+              <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              {emergencyLoading ? 'Creating Request...' : '🚨 Create Emergency Request'}
+            </button>
 
-          {emergencyMessage && (
-            <motion.div
-              initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-              style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('❌') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('❌') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('❌') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
-              {emergencyMessage}
+            <button
+              onClick={resetEmergencyForm}
+              className="em-btn"
+              style={{ width:'100%', padding:'12px', borderRadius:16, fontSize:13, fontWeight:900, background:'rgba(255,255,255,.6)', border:'2px solid rgba(211,47,47,.2)', color:'#dc2626', cursor:'pointer', transition:'all 0.25s' }}>
+              ← Back to Hospital Search
+            </button>
+          </motion.div>
+        ) : (
+          // STEP 2: Donor Confirmation
+          <motion.div
+            initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
+            className="em-glass-deep"
+            style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden', width:'100%' }}>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#22c55e,transparent)' }}/>
+
+            <motion.div initial={{ scale:.7, opacity:0 }} animate={{ scale:1, opacity:1 }} transition={{ delay:.3, type:'spring', stiffness:180 }} style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
+              <div style={{ position:'relative', width:76, height:76 }}>
+                <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(34,197,94,.12)', animation:'em-ping 2s infinite' }}/>
+                <div style={{ width:76, height:76, borderRadius:'50%', background:'linear-gradient(135deg,#22c55e,#4ade80)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 14px 36px rgba(34,197,94,.45)' }}>
+                  <svg viewBox="0 0 24 24" style={{ width:34, height:34, fill:'#faf7f7' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                </div>
+              </div>
             </motion.div>
-          )}
 
-          <button
-            onClick={handleEmergencyFormSubmit}
-            disabled={emergencyLoading}
-            className="em-btn em-btn-primary"
-            style={{ width:'100%', padding:'clamp(14px,1.8vw,20px)', borderRadius:20, fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:12 }}>
-            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            {emergencyLoading ? 'Creating Request...' : '🚨 Create Emergency Request'}
-          </button>
+            <div style={{ textAlign:'center', marginBottom:26 }}>
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(22px,3vw,34px)', fontWeight:900, color:'#16a34a', margin:'0 0 10px', lineHeight:1.1 }}>Confirm Donors</h2>
+              <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(34,197,94,.7)', fontWeight:600, margin:0, lineHeight:1.65 }}>
+                {donorCount} compatible donors have been notified. Confirm donations as they respond:
+              </p>
+            </div>
 
-          <button
-            onClick={() => setShowEmergencyForm(false)}
-            className="em-btn"
-            style={{ width:'100%', padding:'12px', borderRadius:16, fontSize:13, fontWeight:900, background:'rgba(255,255,255,.6)', border:'2px solid rgba(211,47,47,.2)', color:'#dc2626', cursor:'pointer', transition:'all 0.25s' }}>
-            ← Back to Hospital Search
-          </button>
-        </motion.div>
+            {emergencyMessage && (
+              <motion.div
+                initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+                style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('❌') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('❌') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('❌') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
+                {emergencyMessage}
+              </motion.div>
+            )}
+
+            <div style={{ maxHeight:'400px', overflowY:'auto', marginBottom:20 }}>
+              {notifiedDonors.length > 0 ? (
+                notifiedDonors.map((donor, i) => (
+                  <motion.div
+                    key={donor.id}
+                    initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }}
+                    transition={{ delay:i*0.055 }}
+                    className="em-glass em-card-hover"
+                    style={{ borderRadius:18, padding:'14px', marginBottom:10, border:'2px solid rgba(211,47,47,.15)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontWeight:900, fontSize:14, color:'#dc2626', margin:'0 0 4px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{donor.name}</p>
+                      <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'0 0 6px', fontWeight:600 }}>📧 {donor.email}</p>
+                      <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:0, fontWeight:600 }}>📱 {donor.phone}</p>
+                    </div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button
+                        onClick={() => handleConfirmDonation(donor.id, 'center')}
+                        disabled={emergencyLoading}
+                        className="em-btn em-btn-primary"
+                        style={{ padding:'8px 14px', borderRadius:11, fontSize:11, fontWeight:900 }}>
+                        Center
+                      </button>
+                      <button
+                        onClick={() => handleConfirmDonation(donor.id, 'hospital')}
+                        disabled={emergencyLoading}
+                        className="em-btn em-btn-primary"
+                        style={{ padding:'8px 14px', borderRadius:11, fontSize:11, fontWeight:900, background:'linear-gradient(135deg,#0ea5e9,#06b6d4)' }}>
+                        Hospital
+                      </button>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="em-glass" style={{ borderRadius:18, padding:'30px', textAlign:'center', border:'2px solid rgba(211,47,47,.15)' }}>
+                  <p style={{ color:'rgba(211,47,47,.6)', fontWeight:900, fontSize:14, margin:0 }}>✓ All donors confirmed!</p>
+                  <p style={{ fontSize:12, color:'rgba(211,47,47,.5)', margin:'6px 0 0', fontWeight:600 }}>Patient notifications sent.</p>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={resetEmergencyForm}
+              className="em-btn em-btn-primary"
+              style={{ width:'100%', padding:'12px', borderRadius:16, fontSize:13, fontWeight:900 }}>
+              ← Start New Emergency Request
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   )
