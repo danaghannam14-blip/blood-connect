@@ -112,7 +112,7 @@ const STYLES = `
   .hd-tab-btn {
     position:relative;overflow:hidden;
     background:rgba(255,255,255,.5);
-    border:2px solid rgba#991b1b;
+    border:2px solid rgba(211,47,47,.2);
     color:#dc2626;
     font-weight:700;
     transition:all .28s cubic-bezier(.22,1,.36,1);
@@ -187,7 +187,7 @@ function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
       style={{
         borderRadius: '20px',
         padding: '24px',
-        border: '2px solid rgba#991b1b',
+        border: '2px solid rgba(211,47,47,.2)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -224,12 +224,14 @@ function HospitalDashboard() {
   const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
   const [transfusionMessage, setTransfusionMessage] = useState('')
   const [transfusions, setTransfusions] = useState([])
+  const [emergencyDonations, setEmergencyDonations] = useState([])
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('requests')
   const [visible, setVisible] = useState(false)
+  const [confirmingId, setConfirmingId] = useState(null)
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 60)
@@ -249,16 +251,18 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [reqRes, stockRes, transfusionRes] = await Promise.all([
+      const [reqRes, stockRes, transfusionRes, emergencyRes] = await Promise.all([
         axios.get(`${API}/api/requests/hospital/${hospital.id}`),
         axios.get(`${API}/api/hospitals/stock/${hospital.id}`),
-        axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`)
+        axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`),
+        axios.get(`${API}/api/blood-requests/all-emergency-donations`)
       ])
       setRequests(reqRes.data)
       const stockMap = {}
       stockRes.data.forEach(s => { stockMap[s.blood_type] = s.units_available })
       setBloodStock(stockMap)
       setTransfusions(transfusionRes.data)
+      setEmergencyDonations(emergencyRes.data || [])
     } catch (err) { console.log(err) }
     finally { setLoading(false) }
   }
@@ -294,6 +298,22 @@ function HospitalDashboard() {
       }
     } catch (error) {
       console.error('Error deleting request:', error)
+    }
+  }
+
+  const handleConfirmDonation = async (notificationId) => {
+    setConfirmingId(notificationId)
+    try {
+      await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
+        notificationId,
+        hospitalId: hospital.id
+      })
+      alert('✅ Donation confirmed! Patient notified.')
+      loadData()
+    } catch (err) {
+      alert('❌ Error: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setConfirmingId(null)
     }
   }
 
@@ -337,6 +357,7 @@ function HospitalDashboard() {
 
   const pendingCount = requests.filter(r => r.status === 'pending').length
   const fulfilledCount = requests.filter(r => r.status === 'fulfilled').length
+  const emergencyAwaitingCount = emergencyDonations.filter(d => d.status === 'awaiting_confirmation' && d.donor_donation_location === 'hospital' && d.hospital_id === hospital.id).length
 
   const fadeUp = (delay = 0) => ({
     opacity: visible ? 1 : 0,
@@ -369,7 +390,7 @@ function HospitalDashboard() {
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          borderBottom: '2px solid rgba#991b1b',
+          borderBottom: '2px solid rgba(211,47,47,.3)',
           backdropFilter: 'blur(40px)',
         }}
       >
@@ -418,7 +439,86 @@ function HospitalDashboard() {
             color="#22C55E"
             delay={0.2}
           />
+          <StatCard
+            icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#DC2626' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11z"/></svg>}
+            value={emergencyAwaitingCount}
+            label="Emergency Awaiting"
+            color="#DC2626"
+            delay={0.3}
+          />
         </motion.div>
+
+        {/* Emergency Donations Section */}
+        {emergencyAwaitingCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
+            transition={{ delay: 0.4 }}
+            className="hd-glass-deep hd-card-hover"
+            style={{ borderRadius: 28, padding: 32, border: '2px solid #dc2626', background:'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))', marginBottom: 44, position: 'relative', overflow: 'hidden' }}
+          >
+            <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>🩸 Emergency Donations Awaiting Confirmation</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', zIndex: 1 }}>
+              <AnimatePresence>
+                {emergencyDonations
+                  .filter(d => d.status === 'awaiting_confirmation' && d.donor_donation_location === 'hospital' && d.hospital_id === hospital.id)
+                  .map((donation, idx) => (
+                    <motion.div
+                      key={donation.notification_id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="hd-glass hd-card-hover"
+                      style={{
+                        borderRadius: 18,
+                        padding: 18,
+                        border: '2px solid rgba(220,38,38,.3)',
+                        background: 'rgba(254,226,226,.5)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
+                          {donation.blood_type} • {donation.donor_name}
+                        </p>
+                        <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0 0 4px 0', fontWeight: 700 }}>
+                          Patient: {donation.patient_email}
+                        </p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleConfirmDonation(donation.notification_id)}
+                        disabled={confirmingId === donation.notification_id}
+                        style={{
+                          background: confirmingId === donation.notification_id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '9px 18px',
+                          borderRadius: 10,
+                          fontWeight: 900,
+                          fontSize: 12,
+                          cursor: confirmingId === donation.notification_id ? 'not-allowed' : 'pointer',
+                          whiteSpace: 'nowrap',
+                          opacity: confirmingId === donation.notification_id ? 0.7 : 1
+                        }}
+                        className="hd-btn"
+                      >
+                        {confirmingId === donation.notification_id ? '⏳ Confirming...' : '✅ Confirm Donation'}
+                      </motion.button>
+                    </motion.div>
+                  ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
 
         {/* Tabs */}
         <motion.div
@@ -450,7 +550,7 @@ function HospitalDashboard() {
           ))}
         </motion.div>
 
-        {/* Content Sections */}
+        {/* Content Sections - Keep existing sections unchanged */}
         <AnimatePresence mode="wait">
 
           {/* POST REQUEST TAB */}
@@ -462,7 +562,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep hd-card-hover"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)', position: 'relative', overflow: 'hidden' }}
             >
               <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
               
@@ -593,7 +693,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Your Blood Requests</h2>
 
@@ -714,7 +814,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Current Blood Stock</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 16px', fontWeight: 600, position: 'relative', zIndex: 1 }}>Update your current blood inventory. This is visible to donors on the map.</p>
@@ -821,7 +921,7 @@ function HospitalDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
               className="hd-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
+              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)', position: 'relative', overflow: 'hidden' }}
             >
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>Record Blood Usage</h2>
               <p style={{ fontSize: 12, color: 'rgba(211,47,47,.5)', margin: '0 0 20px', fontWeight: 600, position: 'relative', zIndex: 1 }}>When a patient receives blood, record it here to keep stock accurate.</p>
@@ -908,7 +1008,7 @@ function HospitalDashboard() {
                         borderRadius: 14,
                         padding: 12,
                         background: 'rgba(255,235,238,.4)',
-                        border: '2px solid rgba#991b1b',
+                        border: '2px solid rgba(211,47,47,.2)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -935,7 +1035,7 @@ function HospitalDashboard() {
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
           transition={{ delay: 0.5 }}
           className="hd-glass-deep hd-card-hover"
-          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba#991b1b', position: 'relative', overflow: 'hidden' }}
+          style={{ borderRadius: 28, padding: 32, marginTop: 44, border: '2px solid rgba(211,47,47,.2)', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(255,235,238,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
           <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Change Password</h2>

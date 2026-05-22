@@ -47,7 +47,6 @@ const BLOOD_FACTS = {
   'O-':  { pop:'7%',  donate:'All types',        special:'Universal donor'  },
 }
 
-/* ─── Injected Styles ─────────────────────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
@@ -140,7 +139,6 @@ if (typeof document !== 'undefined' && !document.getElementById('em-styles-v3'))
   const s = document.createElement('style'); s.id = 'em-styles-v3'; s.textContent = STYLES; document.head.appendChild(s)
 }
 
-/* ─── Particle Field ─────────────────────────────────────── */
 function ParticleField() {
   const pts = Array.from({ length:32 }, (_, i) => ({
     id:i, w:Math.random()*5+2, left:Math.random()*100, top:Math.random()*100,
@@ -155,7 +153,6 @@ function ParticleField() {
   )
 }
 
-/* ─── Orbs ───────────────────────────────────────────────── */
 function Orbs({ set }) {
   return (
     <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
@@ -164,7 +161,6 @@ function Orbs({ set }) {
   )
 }
 
-/* ─── Live Ticker ────────────────────────────────────────── */
 function LiveTicker() {
   const items = ['🔴 Tripoli — O- critically needed','🟡 Beirut — A+ supply stable','🔴 Baalbek — B+ urgent request','🟢 Sidon — AB+ available','🔴 Zahle — O+ shortage alert','🟢 Jounieh — All types available','🔴 Tyre — AB- emergency request']
   return (
@@ -185,7 +181,6 @@ function LiveTicker() {
   )
 }
 
-/* ─── Animated Blood Drop ────────────────────────────────── */
 function BloodDropHero({ bloodType }) {
   return (
     <div style={{ position:'relative', width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -221,7 +216,6 @@ function BloodDropHero({ bloodType }) {
   )
 }
 
-/* ─── Hospital Card ──────────────────────────────────────── */
 function HospitalCard({ h, index, compatibleTypes }) {
   return (
     <motion.div
@@ -265,7 +259,6 @@ function HospitalCard({ h, index, compatibleTypes }) {
   )
 }
 
-/* ─── Main Component ─────────────────────────────────────── */
 function Emergency() {
   const [patientBloodType, setPatientBloodType] = useState('')
   const [bloodTypeSelected, setBloodTypeSelected] = useState(false)
@@ -278,7 +271,6 @@ function Emergency() {
   const [loadingHospitals, setLoadingHospitals] = useState(false)
   const [visible, setVisible] = useState(false)
   
-  // NEW: Emergency case registration states
   const [showEmergencyForm, setShowEmergencyForm] = useState(false)
   const [emergencyFormData, setEmergencyFormData] = useState({
     patientName: '',
@@ -297,7 +289,6 @@ function Emergency() {
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
   }
 
-  // NEW: Handle emergency form submission
   const handleEmergencyFormSubmit = async () => {
     if (!emergencyFormData.patientName.trim()) {
       setEmergencyMessage('Please enter patient name')
@@ -320,34 +311,31 @@ function Emergency() {
     setEmergencyMessage('')
 
     try {
-      const response = await fetch('https://blood-bank-eqyr.onrender.com/api/blood-requests/create', {
+      // ✅ FIXED: Send correct field names
+      const response = await fetch('http://localhost:5000/api/blood-requests/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blood_type: patientBloodType,
-          quantity_needed: 2,
-          urgency: emergencyFormData.urgency,
-          hospital_id: 1,
-          patient_name: emergencyFormData.patientName,
-          patient_email: emergencyFormData.patientEmail,
+          bloodType: patientBloodType,
           governorate: emergencyFormData.governorate,
+          patientEmail: emergencyFormData.patientEmail,
         }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        setEmergencyMessage('✅ Emergency request created! Donors are being notified...')
+        setEmergencyMessage(`✅ Emergency request created! (ID: ${data.requestId}) ${data.donorsNotified} donors notified`)
         setTimeout(() => {
           setShowEmergencyForm(false)
           setEmergencyFormData({ patientName: '', patientEmail: '', governorate: '', urgency: 'urgent' })
           setPatientBloodType('')
-        }, 2000)
+        }, 3000)
       } else {
-        setEmergencyMessage(`Error: ${data.message}`)
+        setEmergencyMessage(`❌ Error: ${data.message}`)
       }
     } catch (error) {
-      setEmergencyMessage(`Error: ${error.message}`)
+      setEmergencyMessage(`❌ Error: ${error.message}`)
     } finally {
       setEmergencyLoading(false)
     }
@@ -356,7 +344,7 @@ function Emergency() {
   useEffect(() => {
     if (!bloodTypeSelected) return
     setLoadingHospitals(true)
-    fetch('https://blood-bank-eqyr.onrender.com/api/hospitals/with-stock')
+    fetch('http://localhost:5000/api/hospitals/with-stock')
       .then(r => r.json()).then(d => { setHospitals(Array.isArray(d)?d:[]); setLoadingHospitals(false) })
       .catch(() => setLoadingHospitals(false))
     navigator.geolocation.getCurrentPosition(
@@ -391,7 +379,6 @@ function Emergency() {
 
   const fadeUp = (delay=0) => ({ opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(24px)', transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s` })
 
-  /* ════════ EMERGENCY CASE FORM SCREEN ════════ */
   if (showEmergencyForm) return (
     <div className="em-root">
       <ParticleField />
@@ -422,7 +409,6 @@ function Emergency() {
             <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>Enter patient information to request blood and notify donors</p>
           </div>
 
-          {/* Patient Name */}
           <div style={{ marginBottom:16 }}>
             <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Name *</label>
             <input
@@ -435,7 +421,6 @@ function Emergency() {
             />
           </div>
 
-          {/* Patient Email */}
           <div style={{ marginBottom:16 }}>
             <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Email *</label>
             <input
@@ -448,7 +433,6 @@ function Emergency() {
             />
           </div>
 
-          {/* Blood Type */}
           <div style={{ marginBottom:16 }}>
             <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Blood Type Needed *</label>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
@@ -462,7 +446,6 @@ function Emergency() {
             </div>
           </div>
 
-          {/* Governorate */}
           <div style={{ marginBottom:16 }}>
             <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Governorate *</label>
             <select
@@ -478,34 +461,14 @@ function Emergency() {
             </select>
           </div>
 
-          {/* Urgency */}
-          <div style={{ marginBottom:20 }}>
-            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Urgency Level</label>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
-              {['low', 'medium', 'urgent', 'critical'].map(level => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setEmergencyFormData({...emergencyFormData, urgency: level})}
-                  disabled={emergencyLoading}
-                  className={`em-blood-chip ${emergencyFormData.urgency === level ? 'selected' : ''}`}
-                  style={{ fontSize:'12px', padding:'10px' }}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Message */}
           {emergencyMessage && (
             <motion.div
               initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-              style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('Error') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('Error') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('Error') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
+              style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontWeight:600, fontSize:13, background: emergencyMessage.includes('❌') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: emergencyMessage.includes('❌') ? '#dc2626' : '#16a34a', border: emergencyMessage.includes('❌') ? '1.5px solid rgba(239,68,68,.25)' : '1.5px solid rgba(34,197,94,.25)' }}>
               {emergencyMessage}
             </motion.div>
           )}
 
-          {/* Submit Button */}
           <button
             onClick={handleEmergencyFormSubmit}
             disabled={emergencyLoading}
@@ -515,7 +478,6 @@ function Emergency() {
             {emergencyLoading ? 'Creating Request...' : '🚨 Create Emergency Request'}
           </button>
 
-          {/* Back Button */}
           <button
             onClick={() => setShowEmergencyForm(false)}
             className="em-btn"
@@ -527,7 +489,6 @@ function Emergency() {
     </div>
   )
 
-  /* ════════ BLOOD TYPE SELECTION SCREEN ════════ */
   if (!bloodTypeSelected) return (
     <div className="em-root">
       <ParticleField />
@@ -542,7 +503,6 @@ function Emergency() {
 
       <div style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(24px,4vw,56px) clamp(16px,3.5vw,44px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(28px,5vw,80px)', alignItems:'center', minHeight:'calc(100vh - 42px)' }} className="em-sel-grid">
 
-        {/* LEFT hero */}
         <motion.div initial={{ opacity:0, x:-40 }} animate={{ opacity:1, x:0 }} transition={{ duration:.7, type:'spring' }} style={{ display:'flex', flexDirection:'column', gap:'clamp(18px,2.5vw,32px)' }} className="em-sel-hero">
 
           <div style={fadeUp(0)}>
@@ -567,7 +527,6 @@ function Emergency() {
             </p>
           </div>
 
-          {/* Drop visual card */}
           <div style={fadeUp(.3)}>
             <div className="em-glass-deep em-card-hover" style={{ borderRadius:'clamp(24px,3.5vw,44px)', height:'clamp(240px,28vw,360px)', border:'2px solid rgba(211,47,47,.12)', overflow:'hidden', position:'relative' }}>
               <BloodDropHero bloodType={patientBloodType} />
@@ -582,7 +541,6 @@ function Emergency() {
             </div>
           </div>
 
-          {/* Blood fact panel */}
           <AnimatePresence>
             {fact && (
               <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:14 }}
@@ -601,7 +559,6 @@ function Emergency() {
           </AnimatePresence>
         </motion.div>
 
-        {/* RIGHT form */}
         <motion.div initial={{ opacity:0, x:40 }} animate={{ opacity:1, x:0 }} transition={{ duration:.7, type:'spring', delay:.1 }}>
           <div className="em-glass-deep" style={{ borderRadius:'clamp(32px,4vw,52px)', padding:'clamp(28px,4vw,52px)', border:'2px solid rgba(211,47,47,.12)', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#991b1b,transparent)' }}/>
@@ -674,7 +631,6 @@ function Emergency() {
     </div>
   )
 
-  /* ════════ LOADING ════════ */
   if (userLocation === undefined) return (
     <div className="em-root" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh' }}>
       <ParticleField />
@@ -686,7 +642,6 @@ function Emergency() {
     </div>
   )
 
-  /* ════════ RESULTS SCREEN ════════ */
   return (
     <div className="em-root">
       <ParticleField />
@@ -700,7 +655,6 @@ function Emergency() {
 
       <div style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(14px,2vw,28px) clamp(16px,3.5vw,44px)' }}>
 
-        {/* Header */}
         <motion.div initial={{ opacity:0, y:-18 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5 }}
           className="em-glass-deep"
           style={{ borderRadius:'clamp(20px,2.5vw,32px)', padding:'clamp(14px,1.8vw,22px) clamp(18px,2.2vw,28px)', border:'2px solid rgba(211,47,47,.12)', marginBottom:14, position:'relative', overflow:'hidden' }}>
@@ -742,10 +696,8 @@ function Emergency() {
           </div>
         </motion.div>
 
-        {/* 2-col main layout */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1.6fr', gap:14, alignItems:'start' }} className="em-results-grid">
 
-          {/* LEFT — list */}
           <motion.div initial={{ opacity:0, x:-18 }} animate={{ opacity:1, x:0 }} transition={{ delay:.1, duration:.5 }}>
             <div className="em-glass" style={{ display:'flex', gap:8, padding:6, borderRadius:20, border:'2px solid rgba(211,47,47,.15)', marginBottom:12 }}>
               <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap?'active':'inactive'}`}>📋 Hospital List</button>
@@ -781,7 +733,6 @@ function Emergency() {
             </div>
           </motion.div>
 
-          {/* RIGHT — map or info panel */}
           <motion.div initial={{ opacity:0, x:18 }} animate={{ opacity:1, x:0 }} transition={{ delay:.15, duration:.5 }}>
             <AnimatePresence mode="wait">
               {!showMap ? (
