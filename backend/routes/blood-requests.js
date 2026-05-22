@@ -3,29 +3,28 @@ const router = express.Router();
 const db = require('../db');
 const axios = require('axios');
 
-// Get compatible donors for a blood type (who CAN receive this blood)
+// Get compatible donors for a blood type (which DONORS CAN GIVE to this patient)
 const getCompatibleDonors = (bloodType) => {
   const compatibility = {
-    'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
-    'O+': ['O+', 'A+', 'B+', 'AB+'],
-    'A-': ['A-', 'A+', 'AB-', 'AB+'],
-    'A+': ['A+', 'AB+'],
-    'B-': ['B-', 'B+', 'AB-', 'AB+'],
-    'B+': ['B+', 'AB+'],
-    'AB-': ['AB-', 'AB+'],
-    'AB+': ['AB+']
+    'O-': ['O-'],                           // Only O- can give to O-
+    'O+': ['O-', 'O+'],                     // O- and O+ can give to O+
+    'A-': ['O-', 'A-'],                     // O- and A- can give to A-
+    'A+': ['O-', 'O+', 'A-', 'A+'],         // O-, O+, A-, A+ can give to A+
+    'B-': ['O-', 'B-'],                     // O- and B- can give to B-
+    'B+': ['O-', 'O+', 'B-', 'B+'],         // O-, O+, B-, B+ can give to B+
+    'AB-': ['O-', 'A-', 'B-', 'AB-'],       // O-, A-, B-, AB- can give to AB-
+    'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] // Everyone can give to AB+
   };
   return compatibility[bloodType] || [];
 };
 
-// Send email to donor about emergency request
+// ✅ FIXED: Send email to donor about emergency request with proper error handling
 const sendDonorEmail = async (donor, bloodType, governorate, patientEmail) => {
   try {
     const emailContent = `
       <h2 style="color: #dc2626;">🩸 URGENT BLOOD DONATION NEEDED</h2>
       <p><strong>Blood Type Needed:</strong> ${bloodType}</p>
       <p><strong>Location:</strong> ${governorate}</p>
-      <p><strong>Patient Contact:</strong> ${patientEmail}</p>
       <p style="margin: 20px 0; font-size: 14px; color: #991b1b; font-weight: bold;">A patient needs blood immediately!</p>
       <ol>
         <li>Log in to BloodConnect</li>
@@ -36,26 +35,29 @@ const sendDonorEmail = async (donor, bloodType, governorate, patientEmail) => {
       <p style="color: #dc2626; font-weight: bold; font-size: 16px;">Every donation saves lives! 🙏</p>
     `;
 
-    await axios.post('https://api.brevo.com/v3/smtp/email', {
+    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
       to: [{ email: donor.email, name: donor.full_name }],
-      sender: { email: 'noreply@bloodconnect.com', name: 'BloodConnect' },
+      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
       subject: `🚨 URGENT: ${bloodType} Blood Needed in ${governorate}`,
       htmlContent: emailContent
     }, {
       headers: {
         'api-key': process.env.BREVO_API_KEY,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000
     });
 
-    console.log(`✅ Emergency notification sent to ${donor.email}`);
+    console.log(`✅ Emergency notification sent to ${donor.email} (ID: ${response.status})`);
+    return true;
   } catch (error) {
-    console.error('❌ Error sending donor email:', error.message);
+    console.error(`❌ Error sending email to ${donor.email}:`, error.message);
+    return false;
   }
 };
 
-// Send confirmation email to patient (location-specific)
-const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, locationType, locationInfo) => {
+// ✅ FIXED: Send confirmation email to patient (location-specific)
+const sendPatientConfirmationEmail = async (patientEmail, bloodType, locationType, locationInfo) => {
   try {
     let emailContent = '';
 
@@ -67,7 +69,6 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
         
         <h3 style="color: #dc2626;">🩸 Blood Details</h3>
         <p><strong>Blood Type:</strong> ${bloodType}</p>
-        <p><strong>Donor Name:</strong> ${donorName}</p>
         
         <h3 style="color: #dc2626;">📍 Pickup Location</h3>
         <p><strong>BloodConnect Hamra Center</strong></p>
@@ -78,7 +79,7 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
         
         <p style="color: #666; font-size: 13px;">
           Please visit our center during operating hours to pick up the blood. 
-          If you have any questions, contact us at noreply@bloodconnect.com
+          If you have any questions, contact us at blood.connect.donate@gmail.com
         </p>
         
         <p style="color: #666; font-size: 12px; margin-top: 20px;">
@@ -93,7 +94,6 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
         
         <h3 style="color: #dc2626;">🩸 Blood Details</h3>
         <p><strong>Blood Type:</strong> ${bloodType}</p>
-        <p><strong>Donor Name:</strong> ${donorName}</p>
         
         <h3 style="color: #dc2626;">🏥 Pickup Location</h3>
         <p><strong>${locationInfo}</strong></p>
@@ -101,8 +101,7 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
         <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
         
         <p style="color: #666; font-size: 13px;">
-          Please contact <strong>${locationInfo}</strong> to arrange the blood pickup or delivery.
-          Provide them with this confirmation and your blood type requirement.
+          Please contact the hospital to arrange pickup. If you have any questions, contact us at blood.connect.donate@gmail.com
         </p>
         
         <p style="color: #666; font-size: 12px; margin-top: 20px;">
@@ -113,23 +112,26 @@ const sendPatientConfirmationEmail = async (patientEmail, bloodType, donorName, 
 
     await axios.post('https://api.brevo.com/v3/smtp/email', {
       to: [{ email: patientEmail }],
-      sender: { email: 'noreply@bloodconnect.com', name: 'BloodConnect' },
+      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
       subject: `✅ Blood Donation Confirmed - ${bloodType}`,
       htmlContent: emailContent
     }, {
       headers: {
         'api-key': process.env.BREVO_API_KEY,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000
     });
 
-    console.log(`✅ Patient confirmation email sent to ${patientEmail}`);
+    console.log(`✅ Confirmation email sent to patient: ${patientEmail}`);
+    return true;
   } catch (error) {
-    console.error('❌ Error sending patient confirmation email:', error.message);
+    console.error(`❌ Error sending confirmation email to ${patientEmail}:`, error.message);
+    return false;
   }
 };
 
-// ===== PATIENT INITIATES EMERGENCY REQUEST =====
+// ✅ FIXED: Create emergency request and notify donors (with Promise.all)
 router.post('/create-emergency', async (req, res) => {
   try {
     const { patient_email, blood_type, governorate } = req.body;
@@ -167,32 +169,41 @@ router.post('/create-emergency', async (req, res) => {
       console.log(`📝 Emergency created: ${blood_type} needed in ${governorate}`);
       console.log(`👥 Found ${donors.length} compatible eligible donors`);
 
-      // Create emergency records and send emails to all donors
-      let successCount = 0;
-      for (const donor of donors) {
-        try {
-          // Create emergency_donations record
+      // ✅ FIXED: Use Promise.all to wait for all emails to be sent
+      const emailPromises = donors.map(donor => {
+        return new Promise((resolve) => {
+          // Insert emergency_donations record
           const insertSql = `
             INSERT INTO emergency_donations (donor_id, blood_type, patient_email, governorate, status)
             VALUES (?, ?, ?, ?, 'pending')
           `;
 
           db.query(insertSql, [donor.id, blood_type, patient_email, governorate], async (insertErr) => {
-            if (!insertErr) {
-              // Send notification email to donor
-              await sendDonorEmail(donor, blood_type, governorate, patient_email);
-              successCount++;
+            if (insertErr) {
+              console.error(`❌ Error inserting record for donor ${donor.id}:`, insertErr);
+              resolve(false);
+              return;
             }
+
+            // Send notification email to donor
+            const emailSent = await sendDonorEmail(donor, blood_type, governorate, patient_email);
+            resolve(emailSent);
           });
-        } catch (error) {
-          console.error(`Error processing donor ${donor.id}:`, error);
-        }
-      }
+        });
+      });
+
+      // ✅ FIXED: Wait for all emails to complete
+      const emailResults = await Promise.all(emailPromises);
+      const successCount = emailResults.filter(r => r === true).length;
+
+      console.log(`📧 Emails sent to ${successCount}/${donors.length} donors`);
 
       // Return success response
       res.json({
-        message: `✅ Emergency posted! ${donors.length} donors in ${governorate} are being notified.`,
-        donorsNotified: donors.length
+        message: `✅ Emergency posted! ${successCount}/${donors.length} donors in ${governorate} notified.`,
+        donorsNotified: successCount,
+        governorate: governorate,
+        bloodType: blood_type
       });
     });
 
@@ -231,224 +242,107 @@ router.get('/donor/:donorId', (req, res) => {
 });
 
 // ===== DONOR CONFIRMS DONATION LOCATION =====
-router.post('/donor-confirm-donation', async (req, res) => {
-  try {
-    const { notificationId, donorId, donationLocation, hospitalId } = req.body;
+router.post('/donor-confirm-donation', (req, res) => {
+  const { notification_id, donation_location, hospital_id } = req.body;
 
-    if (!notificationId || !donorId || !donationLocation) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    if (!['center', 'hospital'].includes(donationLocation)) {
-      return res.status(400).json({ error: 'Invalid donation location' });
-    }
-
-    // Update emergency donation record
-    const updateSql = `
-      UPDATE emergency_donations 
-      SET donor_donation_location = ?, 
-          hospital_id = ?,
-          status = 'awaiting_confirmation'
-      WHERE id = ? AND donor_id = ?
-    `;
-
-    db.query(updateSql, [donationLocation, hospitalId || null, notificationId, donorId], (err) => {
-      if (err) {
-        console.error('❌ Error updating donation:', err);
-        return res.status(500).json({ error: 'Error updating donation location' });
-      }
-
-      console.log(`✅ Donor ${donorId} confirmed ${donationLocation} donation for notification ${notificationId}`);
-      res.json({
-        message: `Donation location confirmed! Awaiting ${donationLocation === 'center' ? 'admin' : 'hospital'} confirmation.`,
-        notificationId
-      });
-    });
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Server error' });
+  if (!notification_id || !donation_location) {
+    return res.status(400).json({ error: 'notification_id and donation_location are required' });
   }
-});
 
-// ===== HOSPITAL CONFIRMS DONATION =====
-router.post('/hospital-confirm', async (req, res) => {
-  try {
-    const { notificationId, hospitalId } = req.body;
+  const updateSql = `
+    UPDATE emergency_donations 
+    SET 
+      donor_donation_location = ?,
+      hospital_id = ?,
+      status = 'awaiting_confirmation'
+    WHERE id = ?
+  `;
 
-    if (!notificationId || !hospitalId) {
-      return res.status(400).json({ error: 'notificationId and hospitalId are required' });
+  db.query(updateSql, [donation_location, hospital_id || null, notification_id], async (err) => {
+    if (err) {
+      console.error('❌ Error updating donation location:', err);
+      return res.status(500).json({ error: 'Error updating donation location' });
     }
 
-    // Get donation details
+    // Get the updated record to get hospital name
     const getSql = `
-      SELECT 
-        ed.id,
-        ed.blood_type,
-        ed.patient_email,
-        ed.donor_donation_location,
-        d.full_name as donor_name,
-        h.name as hospital_name
+      SELECT ed.*, h.name as hospital_name
       FROM emergency_donations ed
-      JOIN donors d ON ed.donor_id = d.id
       LEFT JOIN hospitals h ON ed.hospital_id = h.id
-      WHERE ed.id = ? AND ed.hospital_id = ? AND ed.donor_donation_location = 'hospital'
+      WHERE ed.id = ?
     `;
 
-    db.query(getSql, [notificationId, hospitalId], async (err, results) => {
-      if (err || !results || results.length === 0) {
-        console.error('❌ Donation not found or invalid:', err);
-        return res.status(404).json({ error: 'Donation not found or not for this hospital' });
-      }
+    db.query(getSql, [notification_id], async (getErr, results) => {
+      if (!getErr && results.length > 0) {
+        const record = results[0];
+        let locationInfo = '';
 
-      const { blood_type, patient_email, donor_name, hospital_name } = results[0];
-
-      // Update status to confirmed
-      const updateSql = `
-        UPDATE emergency_donations 
-        SET status = 'confirmed'
-        WHERE id = ?
-      `;
-
-      db.query(updateSql, [notificationId], async (updateErr) => {
-        if (updateErr) {
-          console.error('❌ Error confirming donation:', updateErr);
-          return res.status(500).json({ error: 'Error confirming donation' });
+        if (donation_location === 'center') {
+          locationInfo = 'BCC Hamra Center, Hamra, Beirut';
+        } else if (donation_location === 'hospital' && record.hospital_name) {
+          locationInfo = record.hospital_name;
         }
 
-        // Send confirmation email to patient (hospital location)
-        await sendPatientConfirmationEmail(
-          patient_email,
-          blood_type,
-          donor_name,
-          'hospital',
-          hospital_name
-        );
-
-        console.log(`✅ Hospital ${hospitalId} confirmed donation ${notificationId}`);
-        res.json({
-          message: 'Donation confirmed! Patient has been notified.',
-          notificationId
-        });
-      });
-    });
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ===== ADMIN CONFIRMS DONATION (CENTER ONLY) =====
-router.post('/admin-confirm', async (req, res) => {
-  try {
-    const { notification_id } = req.body;
-
-    if (!notification_id) {
-      return res.status(400).json({ error: 'notification_id is required' });
-    }
-
-    // Get donation details (must be center donation)
-    const getSql = `
-      SELECT 
-        ed.id,
-        ed.blood_type,
-        ed.patient_email,
-        ed.donor_donation_location,
-        d.full_name as donor_name
-      FROM emergency_donations ed
-      JOIN donors d ON ed.donor_id = d.id
-      WHERE ed.id = ? AND ed.donor_donation_location = 'center'
-    `;
-
-    db.query(getSql, [notification_id], async (err, results) => {
-      if (err || !results || results.length === 0) {
-        console.error('❌ Donation not found or not center donation:', err);
-        return res.status(404).json({ error: 'Donation not found or not a center donation' });
+        // Send confirmation email to patient
+        if (locationInfo) {
+          await sendPatientConfirmationEmail(
+            record.patient_email,
+            record.blood_type,
+            donation_location,
+            locationInfo
+          );
+        }
       }
 
-      const { blood_type, patient_email, donor_name } = results[0];
-
-      // Update status to confirmed
-      const updateSql = `
-        UPDATE emergency_donations 
-        SET status = 'confirmed'
-        WHERE id = ?
-      `;
-
-      db.query(updateSql, [notification_id], async (updateErr) => {
-        if (updateErr) {
-          console.error('❌ Error confirming donation:', updateErr);
-          return res.status(500).json({ error: 'Error confirming donation' });
-        }
-
-        // Send confirmation email to patient (center location)
-        await sendPatientConfirmationEmail(
-          patient_email,
-          blood_type,
-          donor_name,
-          'center',
-          'BCC Hamra Center, Hamra, Beirut'
-        );
-
-        console.log(`✅ Admin confirmed center donation ${notification_id}`);
-        res.json({
-          message: 'Donation confirmed! Patient has been notified with center details.',
-          notificationId: notification_id
-        });
-      });
+      res.json({ message: '✅ Donation location confirmed and patient notified!' });
     });
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
+  });
 });
 
-// ===== GET ALL EMERGENCY DONATIONS (FOR ADMIN) =====
+// ===== GET ALL EMERGENCY DONATIONS (ADMIN) =====
 router.get('/all-emergency-donations', (req, res) => {
   const sql = `
     SELECT 
-      ed.id as notification_id,
-      ed.status,
-      ed.donor_donation_location,
-      ed.hospital_id,
+      ed.id,
+      ed.donor_id,
+      d.full_name as donor_name,
+      d.email as donor_email,
       ed.blood_type,
       ed.patient_email,
       ed.governorate,
-      d.full_name as donor_name,
+      ed.status,
+      ed.donor_donation_location,
       h.name as hospital_name,
       ed.created_at
     FROM emergency_donations ed
-    JOIN donors d ON ed.donor_id = d.id
+    LEFT JOIN donors d ON ed.donor_id = d.id
     LEFT JOIN hospitals h ON ed.hospital_id = h.id
     ORDER BY ed.created_at DESC
   `;
 
   db.query(sql, (err, results) => {
     if (err) {
-      console.error('❌ Error fetching donations:', err);
-      return res.status(500).json({ error: 'Error fetching donations' });
+      console.error('❌ Error fetching emergency donations:', err);
+      return res.status(500).json({ error: 'Error fetching emergency donations' });
     }
     res.json(results || []);
   });
 });
 
-// ===== GET EMERGENCY REQUEST STATUS (FOR PATIENT) =====
+// ===== GET PATIENT STATUS =====
 router.get('/status/:patientEmail', (req, res) => {
   const sql = `
     SELECT 
       ed.id,
       ed.blood_type,
       ed.governorate,
-      ed.patient_email,
       ed.status,
       ed.donor_donation_location,
-      COUNT(CASE WHEN ed.status = 'confirmed' THEN 1 END) as confirmed_count,
+      h.name as hospital_name,
       ed.created_at
     FROM emergency_donations ed
+    LEFT JOIN hospitals h ON ed.hospital_id = h.id
     WHERE ed.patient_email = ?
-    GROUP BY ed.id
     ORDER BY ed.created_at DESC
   `;
 
@@ -457,12 +351,7 @@ router.get('/status/:patientEmail', (req, res) => {
       console.error('❌ Error fetching status:', err);
       return res.status(500).json({ error: 'Error fetching status' });
     }
-
-    if (!results || results.length === 0) {
-      return res.status(404).json({ error: 'No emergency requests found' });
-    }
-
-    res.json(results);
+    res.json(results || []);
   });
 });
 
