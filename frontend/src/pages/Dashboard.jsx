@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ✅ Smart API URL detection - works on both localhost and production
-const API_BASE_URL = 
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000'
-    : 'https://blood-bank-eqyr.onrender.com'
+// ✅ Auto-detect API URL based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://blood-bank-eqyr.onrender.com'
 
 const API = 'https://blood-bank-eqyr.onrender.com'
 const API_LOCAL = API_BASE_URL
