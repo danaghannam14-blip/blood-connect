@@ -272,12 +272,10 @@ function Emergency() {
   const [visible, setVisible] = useState(false)
   
   const [showEmergencyForm, setShowEmergencyForm] = useState(false)
-  const [emergencyFormData, setEmergencyFormData] = useState({
-    patientName: '',
-    patientEmail: '',
-    governorate: '',
-    urgency: 'urgent',
-  })
+const [emergencyFormData, setEmergencyFormData] = useState({
+  patientEmail: '',
+  governorate: '',
+})
   const [emergencyLoading, setEmergencyLoading] = useState(false)
   const [emergencyMessage, setEmergencyMessage] = useState('')
 
@@ -290,10 +288,7 @@ function Emergency() {
   }
 
   const handleEmergencyFormSubmit = async () => {
-    if (!emergencyFormData.patientName.trim()) {
-      setEmergencyMessage('Please enter patient name')
-      return
-    }
+    
     if (!emergencyFormData.patientEmail.trim() || !/\S+@\S+\.\S+/.test(emergencyFormData.patientEmail)) {
       setEmergencyMessage('Please enter a valid email')
       return
@@ -312,14 +307,14 @@ function Emergency() {
 
     try {
       // ✅ FIXED: Send correct field names
-      const response = await fetch('http://localhost:5000/api/blood-requests/create', {
+     const response = await fetch('http://localhost:5000/api/blood-requests/create-emergency', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bloodType: patientBloodType,
-          governorate: emergencyFormData.governorate,
-          patientEmail: emergencyFormData.patientEmail,
-        }),
+         blood_type: patientBloodType,
+  governorate: emergencyFormData.governorate,
+  patient_email: emergencyFormData.patientEmail,
+ }),
       })
 
       const data = await response.json()
@@ -328,8 +323,8 @@ function Emergency() {
         setEmergencyMessage(`✅ Emergency request created! (ID: ${data.requestId}) ${data.donorsNotified} donors notified`)
         setTimeout(() => {
           setShowEmergencyForm(false)
-          setEmergencyFormData({ patientName: '', patientEmail: '', governorate: '', urgency: 'urgent' })
-          setPatientBloodType('')
+         setEmergencyFormData({ patientEmail: '', governorate: '' })
+         setPatientBloodType('')
         }, 3000)
       } else {
         setEmergencyMessage(`❌ Error: ${data.message}`)
@@ -409,17 +404,7 @@ function Emergency() {
             <p style={{ fontSize:'clamp(11px,1.1vw,13px)', color:'rgba(211,47,47,.6)', fontWeight:600, margin:0, lineHeight:1.65 }}>Enter patient information to request blood and notify donors</p>
           </div>
 
-          <div style={{ marginBottom:16 }}>
-            <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Name *</label>
-            <input
-              type="text"
-              value={emergencyFormData.patientName}
-              onChange={(e) => setEmergencyFormData({...emergencyFormData, patientName: e.target.value})}
-              placeholder="Enter patient full name"
-              className="em-input"
-              disabled={emergencyLoading}
-            />
-          </div>
+      
 
           <div style={{ marginBottom:16 }}>
             <label style={{ display:'block', fontWeight:900, color:'#dc2626', marginBottom:8, fontSize:12, textTransform:'uppercase', letterSpacing:'0.5px' }}>Patient Email *</label>
