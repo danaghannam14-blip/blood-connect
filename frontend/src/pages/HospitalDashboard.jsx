@@ -4,7 +4,10 @@ import ChangePassword from '../components/ChangePassword'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
-const API = 'https://blood-bank-eqyr.onrender.com'
+// ✅ API Auto-Detection
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://blood-bank-eqyr.onrender.com'
 
 const URGENCY_CONFIG = {
   critical: { label: 'Critical', color: '#DC2626', bg: 'from-red-500 to-red-600', light: 'rgba(220,38,38,.15)', border: 'border-red-300' },
@@ -13,18 +16,12 @@ const URGENCY_CONFIG = {
   low:      { label: 'Low',      color: '#6B7280', bg: 'from-gray-500 to-gray-600', light: 'rgba(107,114,128,.15)', border: 'border-gray-200' }
 }
 
-/* ─── Injected Styles ─────────────────────────────────────── */
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
-
-  @keyframes bc-ping      { 75%,100% { transform:scale(2.2); opacity:0; } }
-  @keyframes bc-pulse     { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
-  @keyframes bc-float-b   { 0%,100%  { transform:translateY(0); } 50% { transform:translateY(-10px); } }
-  @keyframes bc-particle  { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.3; } 50% { transform:translateY(-28px) translateX(var(--px,6px)) scale(1.2); opacity:.8; } }
-  @keyframes bc-orb       { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.08); } 66% { transform:translateY(8px) translateX(-10px) scale(.96); } }
-  @keyframes bc-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-  @keyframes bc-spin8     { to { transform:rotate(360deg); } }
-  @keyframes bc-shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&display=swap');
+  @keyframes bc-pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+  @keyframes bc-particle { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.3; } 50% { transform:translateY(-28px) translateX(var(--px,6px)) scale(1.2); opacity:.8; } }
+  @keyframes bc-orb { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.08); } 66% { transform:translateY(8px) translateX(-10px) scale(.96); } }
+  @keyframes bc-gradient { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
 
   .hd-root {
     min-height:100vh;
@@ -95,7 +92,7 @@ const STYLES = `
   }
 
   .hd-btn:hover::after { width:300px;height:300px; }
-  .hd-btn:hover  { transform:translateY(-3px) scale(1.05); }
+  .hd-btn:hover { transform:translateY(-3px) scale(1.05); }
   .hd-btn:active { transform:scale(.97); }
 
   .hd-btn-primary {
@@ -141,7 +138,6 @@ if (typeof document !== 'undefined' && !document.getElementById('hd-styles')) {
   document.head.appendChild(s)
 }
 
-/* ─── Particle Field ─────────────────────────────────────── */
 function ParticleField() {
   const particles = Array.from({ length: 25 }, (_, i) => ({
     id: i,
@@ -176,7 +172,6 @@ function ParticleField() {
   )
 }
 
-/* ─── Stat Card ──────────────────────────────────────────── */
 function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
   return (
     <motion.div
@@ -217,6 +212,7 @@ function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
 
 function HospitalDashboard() {
   const navigate = useNavigate()
+  
   const [hospital, setHospital] = useState(null)
   const [requests, setRequests] = useState([])
   const [bloodStock, setBloodStock] = useState({})
@@ -224,13 +220,16 @@ function HospitalDashboard() {
   const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
   const [transfusionMessage, setTransfusionMessage] = useState('')
   const [transfusions, setTransfusions] = useState([])
-  const [emergencyDonations, setEmergencyDonations] = useState([])
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('requests')
   const [visible, setVisible] = useState(false)
+  
+  // ✅ Emergency donations states
+  const [awaitingDonations, setAwaitingDonations] = useState([])
+  const [confirmedDonations, setConfirmedDonations] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
 
   useEffect(() => {
@@ -241,7 +240,7 @@ function HospitalDashboard() {
     const data = localStorage.getItem('hospitalData')
     if (!data) { navigate('/login'); return }
     setHospital(JSON.parse(data))
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     if (!hospital) return
@@ -255,15 +254,20 @@ function HospitalDashboard() {
         axios.get(`${API}/api/requests/hospital/${hospital.id}`),
         axios.get(`${API}/api/hospitals/stock/${hospital.id}`),
         axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`),
-        axios.get(`${API}/api/blood-requests/all-emergency-donations`)
+        axios.get(`${API}/api/blood-requests/hospital/${hospital.id}`)
       ])
       setRequests(reqRes.data)
       const stockMap = {}
       stockRes.data.forEach(s => { stockMap[s.blood_type] = s.units_available })
       setBloodStock(stockMap)
       setTransfusions(transfusionRes.data)
-      setEmergencyDonations(emergencyRes.data || [])
-    } catch (err) { console.log(err) }
+      
+      const donations = emergencyRes.data || []
+      setAwaitingDonations(donations.filter(d => d.status === 'awaiting_confirmation'))
+      setConfirmedDonations(donations.filter(d => d.status === 'confirmed'))
+    } catch (err) { 
+      console.error('Error loading data:', err)
+    }
     finally { setLoading(false) }
   }
 
@@ -301,17 +305,17 @@ function HospitalDashboard() {
     }
   }
 
-  const handleConfirmDonation = async (notificationId) => {
-    setConfirmingId(notificationId)
+  const handleConfirmDonation = async (donationId) => {
+    setConfirmingId(donationId)
     try {
       await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
-        notificationId,
+        notificationId: donationId,
         hospitalId: hospital.id
       })
       alert('✅ Donation confirmed! Patient notified.')
       loadData()
     } catch (err) {
-      alert('❌ Error: ' + (err.response?.data?.message || err.message))
+      alert('❌ Error: ' + (err.response?.data?.error || err.message))
     } finally {
       setConfirmingId(null)
     }
@@ -357,19 +361,12 @@ function HospitalDashboard() {
 
   const pendingCount = requests.filter(r => r.status === 'pending').length
   const fulfilledCount = requests.filter(r => r.status === 'fulfilled').length
-  const emergencyAwaitingCount = emergencyDonations.filter(d => d.status === 'awaiting_confirmation' && d.donor_donation_location === 'hospital' && d.hospital_id === hospital.id).length
-
-  const fadeUp = (delay = 0) => ({
-    opacity: visible ? 1 : 0,
-    transform: visible ? 'translateY(0)' : 'translateY(24px)',
-    transition: `opacity .6s ease ${delay}s, transform .6s ease ${delay}s`,
-  })
+  const emergencyAwaitingCount = awaitingDonations.length
 
   return (
     <div className="hd-root">
       <ParticleField />
 
-      {/* Orbs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
         {[
           { t:'8%', l:'8%', w:'min(380px,32vw)', c:'rgba(211,47,47,.17)', d:'0s' },
@@ -380,19 +377,12 @@ function HospitalDashboard() {
         ))}
       </div>
 
-      {/* Header */}
       <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
         className="hd-glass"
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          borderBottom: '2px solid rgba(211,47,47,.3)',
-          backdropFilter: 'blur(40px)',
-        }}
+        style={{ position: 'sticky', top: 0, zIndex: 40, borderBottom: '2px solid rgba(211,47,47,.3)', backdropFilter: 'blur(40px)' }}
       >
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -418,7 +408,6 @@ function HospitalDashboard() {
 
       <main style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '32px 24px' }}>
 
-        {/* Stats */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: visible ? 1 : 0 }}
@@ -448,7 +437,6 @@ function HospitalDashboard() {
           />
         </motion.div>
 
-        {/* Emergency Donations Section */}
         {emergencyAwaitingCount > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -462,101 +450,135 @@ function HospitalDashboard() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', zIndex: 1 }}>
               <AnimatePresence>
-                {emergencyDonations
-                  .filter(d => d.status === 'awaiting_confirmation' && d.donor_donation_location === 'hospital' && d.hospital_id === hospital.id)
-                  .map((donation, idx) => (
-                    <motion.div
-                      key={donation.notification_id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="hd-glass hd-card-hover"
+                {awaitingDonations.map((donation, idx) => (
+                  <motion.div
+                    key={donation.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="hd-glass hd-card-hover"
+                    style={{
+                      borderRadius: 18,
+                      padding: 18,
+                      border: '2px solid rgba(220,38,38,.3)',
+                      background: 'rgba(254,226,226,.5)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
+                        {donation.blood_type} • {donation.donor_name}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0', fontWeight: 700 }}>
+                        ⏳ Awaiting confirmation • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                      </p>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleConfirmDonation(donation.id)}
+                      disabled={confirmingId === donation.id}
                       style={{
-                        borderRadius: 18,
-                        padding: 18,
-                        border: '2px solid rgba(220,38,38,.3)',
-                        background: 'rgba(254,226,226,.5)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
+                        background: confirmingId === donation.id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '9px 18px',
+                        borderRadius: 10,
+                        fontWeight: 900,
+                        fontSize: 12,
+                        cursor: confirmingId === donation.id ? 'not-allowed' : 'pointer',
+                        whiteSpace: 'nowrap',
+                        opacity: confirmingId === donation.id ? 0.7 : 1
                       }}
+                      className="hd-btn"
                     >
-                      <div>
-                        <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
-                          {donation.blood_type} • {donation.donor_name}
-                        </p>
-                        <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0 0 4px 0', fontWeight: 700 }}>
-                          Patient: {donation.patient_email}
-                        </p>
-                        <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '0 0 0 0', fontWeight: 700 }}>
-                          🏥 Hospital: {donation.hospital_name || 'BCC Hamra Center'}
-                        </p>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleConfirmDonation(donation.notification_id)}
-                        disabled={confirmingId === donation.notification_id}
-                        style={{
-                          background: confirmingId === donation.notification_id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '9px 18px',
-                          borderRadius: 10,
-                          fontWeight: 900,
-                          fontSize: 12,
-                          cursor: confirmingId === donation.notification_id ? 'not-allowed' : 'pointer',
-                          whiteSpace: 'nowrap',
-                          opacity: confirmingId === donation.notification_id ? 0.7 : 1
-                        }}
-                        className="hd-btn"
-                      >
-                        {confirmingId === donation.notification_id ? '⏳ Confirming...' : '✅ Confirm Donation'}
-                      </motion.button>
-                    </motion.div>
-                  ))}
+                      {confirmingId === donation.id ? '⏳ Confirming...' : '✅ Confirm'}
+                    </motion.button>
+                  </motion.div>
+                ))}
               </AnimatePresence>
             </div>
           </motion.div>
         )}
 
-        {/* Tabs */}
+        {confirmedDonations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
+            transition={{ delay: 0.45 }}
+            className="hd-glass-deep"
+            style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(34,197,94,.3)', background:'linear-gradient(135deg, rgba(34,197,94,.08), rgba(134,239,172,.04))', marginBottom: 44, position: 'relative', overflow: 'hidden' }}
+          >
+            <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(134,239,172,.4)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }} />
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#22c55e', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>✅ Confirmed Donations</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', zIndex: 1 }}>
+              <AnimatePresence>
+                {confirmedDonations.map((donation, idx) => (
+                  <motion.div
+                    key={donation.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="hd-glass"
+                    style={{
+                      borderRadius: 18,
+                      padding: 18,
+                      border: '2px solid rgba(34,197,94,.3)',
+                      background: 'rgba(236,253,245,.5)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 900, color: '#22c55e', margin: '0 0 6px 0' }}>
+                        {donation.blood_type} • {donation.donor_name}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
+                        ✅ Confirmed • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10 }}>
+                      Ready
+                    </span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
           transition={{ delay: 0.3 }}
           style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}
         >
-          {['requests', 'stock', 'transfusions', 'post'].map((t, i) => (
+          {['requests', 'post', 'stock', 'transfusions'].map((t, i) => (
             <motion.button
               key={t}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(t)}
               className={`hd-btn hd-tab-btn ${activeTab === t ? 'active' : ''}`}
-              style={{
-                padding: '10px 18px',
-                borderRadius: 14,
-                fontSize: 13,
-                fontWeight: 900,
-                transitionDelay: `${i * 50}ms`
-              }}
+              style={{ padding: '10px 18px', borderRadius: 14, fontSize: 13, fontWeight: 900, transitionDelay: `${i * 50}ms` }}
             >
-              {t === 'post' ? '+ Post Request' :
-               t === 'stock' ? 'Blood Stock' :
-               t === 'transfusions' ? 'Blood Used' :
-               'Requests'}
+              {t === 'post' ? '+ Post Request' : t === 'stock' ? 'Blood Stock' : t === 'transfusions' ? 'Blood Used' : 'Requests'}
             </motion.button>
           ))}
         </motion.div>
 
-        {/* Content Sections - Keep existing sections unchanged */}
         <AnimatePresence mode="wait">
 
-          {/* POST REQUEST TAB */}
           {activeTab === 'post' && (
             <motion.div
               key="post"
@@ -687,7 +709,6 @@ function HospitalDashboard() {
             </motion.div>
           )}
 
-          {/* REQUESTS TAB */}
           {activeTab === 'requests' && (
             <motion.div
               key="requests"
@@ -701,7 +722,7 @@ function HospitalDashboard() {
               <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>Your Blood Requests</h2>
 
               {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#dc2626', borderRadius: '50%' }} />
                 </div>
               ) : requests.length === 0 ? (
@@ -746,25 +767,22 @@ function HospitalDashboard() {
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                               <span style={{ fontSize: 24, fontWeight: 900, color: urgency.color }}>{r.blood_type}</span>
-                              <motion.span
-                                whileHover={{ scale: 1.1 }}
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 900,
-                                  padding: '6px 12px',
-                                  borderRadius: 9,
-                                  background: `linear-gradient(135deg, ${urgency.color}, ${urgency.color}80)`,
-                                  color: '#faf7f7',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '.1em',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                }}
-                              >
+                              <span style={{
+                                fontSize: 10,
+                                fontWeight: 900,
+                                padding: '6px 12px',
+                                borderRadius: 9,
+                                background: `linear-gradient(135deg, ${urgency.color}, ${urgency.color}80)`,
+                                color: '#faf7f7',
+                                textTransform: 'uppercase',
+                                letterSpacing: '.1em',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                              }}>
                                 <span className="hd-stat-dot" style={{ background: urgency.color }} />
                                 {urgency.label}
-                              </motion.span>
+                              </span>
                             </div>
                             <p style={{ fontSize: 13, color: '#333', margin: '8px 0', fontWeight: 700 }}>{r.quantity_needed} units needed</p>
                             <span style={{
@@ -808,7 +826,6 @@ function HospitalDashboard() {
             </motion.div>
           )}
 
-          {/* STOCK TAB */}
           {activeTab === 'stock' && (
             <motion.div
               key="stock"
@@ -841,10 +858,6 @@ function HospitalDashboard() {
                   {stockMessage}
                 </motion.div>
               )}
-
-              <div className="hd-glass" style={{ background: 'rgba(255,184,66,.15)', border: '2px solid rgba(255,184,66,.3)', borderRadius: 16, padding: 14, marginBottom: 20, position: 'relative', zIndex: 1 }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'rgba(211,47,47,.7)', margin: 0 }}>Having stock doesn't mean donations aren't needed. Blood expires quickly and reserves must stay topped up.</p>
-              </div>
 
               <motion.div
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 20, position: 'relative', zIndex: 1 }}
@@ -915,7 +928,6 @@ function HospitalDashboard() {
             </motion.div>
           )}
 
-          {/* TRANSFUSIONS TAB */}
           {activeTab === 'transfusions' && (
             <motion.div
               key="transfusions"
@@ -1032,7 +1044,6 @@ function HospitalDashboard() {
 
         </AnimatePresence>
 
-        {/* Change Password */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
