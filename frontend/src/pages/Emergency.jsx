@@ -16,6 +16,11 @@ const hospitalIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 })
 
+// ✅ AUTO-DETECT API URL - CRITICAL FIX
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://blood-bank-eqyr.onrender.com'
+
 function RecenterMap({ center }) {
   const map = useMap()
   useEffect(() => { if (center) map.setView(center, 13) }, [center])
@@ -294,7 +299,6 @@ function Emergency() {
 
   // Handle Emergency Request Submit
   const handleEmergencyFormSubmit = async () => {
-    // Validation
     if (!emergencyFormData.patientEmail.trim() || !/\S+@\S+\.\S+/.test(emergencyFormData.patientEmail)) {
       setEmergencyMessage('❌ Please enter a valid email')
       return
@@ -312,8 +316,8 @@ function Emergency() {
     setEmergencyMessage('')
 
     try {
-      // CORRECTED: Send to backend with proper field names
-      const response = await fetch('http://localhost:5000/api/blood-requests/create-emergency', {
+      // ✅ FIXED: Using API variable
+      const response = await fetch(`${API}/api/blood-requests/create-emergency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -326,7 +330,6 @@ function Emergency() {
       const data = await response.json()
 
       if (response.ok) {
-        // SUCCESS: Set donor count and move to step 2
         setEmergencyRequestId(data.requestId)
         setDonorCount(data.donorsNotified || 0)
         setNotifiedDonors(data.donors || [])
@@ -335,7 +338,6 @@ function Emergency() {
           `✅ Emergency request created! (ID: ${data.requestId}) ${data.donorsNotified || 0} donors notified`
         )
         
-        // Move to confirmation step after 1.5 seconds
         setTimeout(() => {
           setEmergencyStep(2)
           setEmergencyMessage('')
@@ -351,21 +353,19 @@ function Emergency() {
     }
   }
 
-  // Handle Donor Confirmation (Hospital or Center)
+  // Handle Donor Confirmation
   const handleConfirmDonation = async (donorId, donationType) => {
     setEmergencyLoading(true)
     setEmergencyMessage('')
 
     try {
-      const donor = notifiedDonors.find(d => d.id === donorId)
-      
-      // Step 1: Confirm donation in backend
-      const response = await fetch(`http://localhost:5000/api/donations/${donorId}/confirm`, {
+      // ✅ FIXED: Using API variable
+      const response = await fetch(`${API}/api/donations/${donorId}/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           emergency_request_id: emergencyRequestId,
-          donation_type: donationType, // 'hospital' or 'center'
+          donation_type: donationType,
         }),
       })
 
@@ -373,8 +373,6 @@ function Emergency() {
 
       if (response.ok) {
         setEmergencyMessage(`✅ Donation confirmed! Patient has been notified.`)
-        
-        // Remove confirmed donor from list
         setNotifiedDonors(prev => prev.filter(d => d.id !== donorId))
       } else {
         setEmergencyMessage(`❌ Error: ${data.message}`)
@@ -403,7 +401,8 @@ function Emergency() {
   useEffect(() => {
     if (!bloodTypeSelected) return
     setLoadingHospitals(true)
-    fetch('http://localhost:5000/api/hospitals/with-stock')
+    // ✅ FIXED: Using API variable
+    fetch(`${API}/api/hospitals/with-stock`)
       .then(r => r.json()).then(d => { setHospitals(Array.isArray(d)?d:[]); setLoadingHospitals(false) })
       .catch(() => setLoadingHospitals(false))
     navigator.geolocation.getCurrentPosition(
@@ -438,7 +437,7 @@ function Emergency() {
 
   const fadeUp = (delay=0) => ({ opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(24px)', transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s` })
 
-  // EMERGENCY FORM - STEP 1 & 2
+  // EMERGENCY FORM
   if (showEmergencyForm) return (
     <div className="em-root">
       <ParticleField />
@@ -450,7 +449,6 @@ function Emergency() {
 
       <div style={{ position:'relative', zIndex:10, maxWidth:700, margin:'0 auto', padding:'clamp(40px,5vw,80px) clamp(16px,3.5vw,44px)', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
         {emergencyStep === 1 ? (
-          // STEP 1: Emergency Request Form
           <motion.div
             initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
             className="em-glass-deep"
@@ -536,7 +534,6 @@ function Emergency() {
             </button>
           </motion.div>
         ) : (
-          // STEP 2: Donor Confirmation
           <motion.div
             initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
             className="em-glass-deep"
