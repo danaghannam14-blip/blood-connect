@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ✅ WORKS ON BOTH LOCALHOST AND PRODUCTION
+// ✅ API Auto-Detection (works on localhost and production)
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://blood-bank-eqyr.onrender.com'
@@ -17,10 +17,8 @@ const URGENCY_CONFIG = {
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { overflow-x: hidden; }
-
   @keyframes dd-ping      { 75%,100% { transform:scale(2.2); opacity:0; } }
   @keyframes dd-pulse     { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
   @keyframes dd-particle  { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.3; } 50% { transform:translateY(-28px) translateX(var(--px,6px)) scale(1.2); opacity:.8; } }
@@ -78,16 +76,6 @@ const STYLES = `
     transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;
     font-family:'Plus Jakarta Sans',sans-serif;
   }
-
-  .dd-btn::after {
-    content:'';position:absolute;top:50%;left:50%;
-    width:0;height:0;background:rgba(255,255,255,.28);border-radius:50%;
-    transform:translate(-50%,-50%);transition:width .4s,height .4s;
-  }
-
-  .dd-btn:hover::after { width:300px;height:300px; }
-  .dd-btn:hover  { transform:translateY(-3px) scale(1.05); }
-  .dd-btn:active { transform:scale(.97); }
 
   .dd-btn-primary {
     background:linear-gradient(135deg,#dc2626,#ff6b6b);
@@ -181,11 +169,10 @@ function Dashboard() {
     const donorData = JSON.parse(data)
     setDonor(donorData)
     
-    // Load regular requests
     axios.get(`${API}/api/requests/compatible/${donorData.blood_type}`).then(res => setInventory(res.data)).catch(console.log)
     axios.get(`${API}/api/donors/notifications/${donorData.id}`).then(res => setNotifications(res.data)).catch(console.log)
     
-    // ✅ Load emergency notifications from LOCAL backend
+    // ✅ Load emergency notifications
     axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
       .then(res => {
         console.log('Emergency notifications:', res.data)
@@ -197,11 +184,10 @@ function Dashboard() {
       })
       .finally(() => setLoadingEmergency(false))
     
-    // Load hospitals
     axios.get(`${API}/api/hospitals/all`).then(res => setHospitals(res.data || [])).catch(console.log)
     
     setTimeout(() => setVisible(true), 60)
-  }, [])
+  }, [navigate])
 
   const handleLogout = () => {
     localStorage.removeItem('donorToken')
@@ -209,16 +195,15 @@ function Dashboard() {
     navigate('/')
   }
 
-  // ✅ NEW: Handle donor confirming donation at center
+  // ✅ Handle center donation confirmation
   const handleDonateAtCenter = async (notificationId) => {
     setConfirmingId(notificationId)
     try {
-      const response = await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
+      await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'center'
       })
       alert('✅ Center donation confirmed! Patient will be notified.')
-      // Refresh emergency notifications
       const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
       setEmergencyNotifications(res.data || [])
       setExpandedNotif(null)
@@ -229,17 +214,16 @@ function Dashboard() {
     }
   }
 
-  // ✅ NEW: Handle donor confirming donation at hospital
+  // ✅ Handle hospital donation confirmation
   const handleDonateAtHospital = async (notificationId, hospitalId) => {
     setConfirmingId(notificationId)
     try {
-      const response = await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
+      await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'hospital',
         hospital_id: hospitalId
       })
       alert('✅ Hospital donation confirmed! Patient will be notified.')
-      // Refresh emergency notifications
       const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
       setEmergencyNotifications(res.data || [])
       setShowHospitalSelect(null)
@@ -303,17 +287,10 @@ function Dashboard() {
     { id: 3, label: 'Donation Complete', icon: '✅', done: totalDonations > 0 },
   ]
 
-  const fadeUp = (delay = 0) => ({
-    opacity:   visible ? 1 : 0,
-    transform: visible ? 'translateY(0)' : 'translateY(24px)',
-    transition: `opacity .6s ease ${delay}s, transform .6s ease ${delay}s`,
-  })
-
   return (
     <div className="dd-root">
       <ParticleField />
 
-      {/* Orbs */}
       <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
         {[
           { t:'10%', l:'8%', w:'min(420px,36vw)', c:'rgba(211,47,47,.17)', d:'0s' },
@@ -324,13 +301,7 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* NAV */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -20 }}
-        transition={{ duration: 0.5 }}
-        className="dd-nav"
-      >
+      <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -20 }} transition={{ duration: 0.5 }} className="dd-nav">
         <div className="dd-nav-inner">
           <div style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
             <span style={{ fontSize:'clamp(16px,1.8vw,22px)', fontWeight:800, color:'#dc2626', letterSpacing:'-.04em', fontFamily:"'Fraunces',serif" }}>
@@ -338,38 +309,20 @@ function Dashboard() {
             </span>
             <span style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em' }}>Donor Portal</span>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleLogout}
-            className="dd-btn dd-btn-secondary"
-            style={{ padding:'10px 24px', borderRadius:14, fontSize:13 }}
-          >
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} onClick={handleLogout} className="dd-btn dd-btn-secondary" style={{ padding:'10px 24px', borderRadius:14, fontSize:13 }}>
             Logout
           </motion.button>
         </div>
       </motion.header>
 
-      {/* MAIN */}
       <main style={{ position:'relative', zIndex:10, maxWidth:1360, margin:'0 auto', padding:'clamp(24px,3.5vw,52px) clamp(16px,3.5vw,44px)', display:'flex', flexDirection:'column', gap:'clamp(32px,4.5vw,72px)' }}>
 
-        {/* Welcome Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-          transition={{ duration: 0.6 }}
-          className="dd-glass-deep dd-card-hover"
-          style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)', display:'flex', justifyContent:'space-between', alignItems:'center' }}
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }} transition={{ duration: 0.6 }} className="dd-glass-deep dd-card-hover" style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div>
             <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(24px,3.5vw,44px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>Welcome, {donor.full_name} 👋</h2>
             <p style={{ fontSize:'clamp(12px,1.2vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:600, marginTop:8, marginBottom:0 }}>Blood Type: <span style={{ color:'#dc2626', fontWeight:900 }}>{donor.blood_type}</span> · Governorate: <span style={{ color:'#dc2626', fontWeight:900 }}>{donor.governorate}</span></p>
           </div>
-          <motion.div
-            whileHover={{ scale: 1.12 }}
-            className="dd-glass"
-            style={{ borderRadius:22, padding:'clamp(18px,2.5vw,32px)', textAlign:'center', border:'1px solid rgba(255,255,255,.72)', minWidth:'fit-content' }}
-          >
+          <motion.div whileHover={{ scale: 1.12 }} className="dd-glass" style={{ borderRadius:22, padding:'clamp(18px,2.5vw,32px)', textAlign:'center', border:'1px solid rgba(255,255,255,.72)', minWidth:'fit-content' }}>
             <p style={{ fontSize:'clamp(28px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1, textShadow:'0 4px 20px rgba(211,47,47,.2)' }}>{totalDonations * 3}</p>
             <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em', marginTop:8, marginBottom:0 }}>Lives Saved</p>
           </motion.div>
@@ -377,13 +330,7 @@ function Dashboard() {
 
         {/* ✅ Emergency Notifications Section */}
         {!loadingEmergency && emergencyNotifications.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="dd-glass-deep dd-card-hover"
-            style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'2px solid #dc2626', background:'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))' }}
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }} transition={{ duration: 0.6, delay: 0.1 }} className="dd-glass-deep dd-card-hover" style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'2px solid #dc2626', background:'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))' }}>
             <h3 style={{ fontSize:'clamp(18px,2.5vw,22px)', fontWeight:900, color:'#dc2626', margin:'0 0 16px 0' }}>
               🩸 Emergency Blood Requests ({emergencyNotifications.length})
             </h3>
@@ -447,7 +394,6 @@ function Dashboard() {
                   }}
                 >
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    {/* Center Donation Option (only for Beirut) - SPECIAL */}
                     {donor?.governorate === 'Beirut' && (
                       <motion.button
                         whileHover={{ scale: 1.06, boxShadow: '0 12px 40px rgba(220, 38, 38, 0.4)' }}
@@ -458,28 +404,19 @@ function Dashboard() {
                         }}
                         disabled={confirmingId === notif.notification_id}
                         style={{
-                          background: confirmingId === notif.notification_id 
-                            ? '#ccc' 
-                            : 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
-                          color:'#fff', 
-                          border:'2px solid rgba(220, 38, 38, 0.6)',
-                          padding:'14px 20px', 
-                          borderRadius:12,
-                          fontWeight:900, 
-                          fontSize:14,
+                          background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
+                          color:'#fff', border:'2px solid rgba(220, 38, 38, 0.6)',
+                          padding:'14px 20px', borderRadius:12, fontWeight:900, fontSize:14,
                           cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
                           opacity: confirmingId === notif.notification_id ? 0.7 : 1,
                           boxShadow: '0 8px 20px rgba(220, 38, 38, 0.3)',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                          position: 'relative', overflow: 'hidden', textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
                         }}
                       >
                         {confirmingId === notif.notification_id ? '⏳ Confirming...' : '👑 Donate at BCC Hamra Center (Featured)'}
                       </motion.button>
                     )}
 
-                    {/* Hospital Donation Option - Show hospitals from donor's governorate */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       onClick={(e) => {
@@ -497,7 +434,6 @@ function Dashboard() {
                       🏥 Donate at a Hospital in {donor?.governorate}
                     </motion.button>
 
-                    {/* Hospital Selection Dropdown */}
                     <AnimatePresence>
                       {showHospitalSelect === notif.notification_id && (
                         <motion.div
@@ -509,9 +445,7 @@ function Dashboard() {
                           <p style={{ fontSize:10, fontWeight:700, color:'#666', margin:'0 0 8px 0', textTransform:'uppercase', letterSpacing:'.05em' }}>
                             🏥 Select a hospital in {donor?.governorate}:
                           </p>
-                          {hospitals
-                            .filter(h => h.governorate === donor?.governorate)
-                            .length > 0 ? (
+                          {hospitals.filter(h => h.governorate === donor?.governorate).length > 0 ? (
                             hospitals
                               .filter(h => h.governorate === donor?.governorate)
                               .map(hospital => (
@@ -536,7 +470,7 @@ function Dashboard() {
                             ))
                           ) : (
                             <p style={{ fontSize:11, color:'#999', margin:0, fontStyle:'italic', padding:'8px' }}>
-                              No hospitals found in {donor?.governorate}. Please try the center option if available.
+                              No hospitals found in {donor?.governorate}.
                             </p>
                           )}
                         </motion.div>
@@ -546,239 +480,6 @@ function Dashboard() {
                 </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
-        )}
-
-        {/* Progress Steps */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="dd-glass-deep dd-card-hover"
-          style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)' }}
-        >
-          <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:20, marginTop:0 }}>Your Donation Journey</p>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={visible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="dd-card-hover"
-                style={{ display:'flex', flexDirection:'column', alignItems:'center', flex:1 }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.15 }}
-                  className="dd-glass"
-                  style={{
-                    width:48, height:48, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:18, border: step.done ? '2px solid #22c55e' : '2px solid rgba(211,47,47,.15)',
-                    background: step.done ? 'rgba(34,197,94,.15)' : undefined,
-                    marginBottom:10
-                  }}
-                >
-                  {step.icon}
-                </motion.div>
-                <p style={{ fontSize:9, fontWeight:700, color: step.done ? '#22c55e' : 'rgba(211,47,47,.4)', textAlign:'center', margin:0, textTransform:'uppercase', letterSpacing:'.1em' }}>{step.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Profile Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="dd-glass-deep dd-card-hover"
-          style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)' }}
-        >
-          <p style={{ fontSize:8, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:16, marginTop:0 }}>Your Profile</p>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(12px,1.8vw,20px)' }}>
-            <motion.div whileHover={{ y: -4 }} className="dd-glass dd-card-hover" style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,255,255,.72)' }}>
-              <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Can donate to</p>
-              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>{getCanDonateTo(donor.blood_type)}</p>
-            </motion.div>
-            <motion.div whileHover={{ y: -4 }} className="dd-glass dd-card-hover" style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,255,255,.72)' }}>
-              <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Total donations</p>
-              <p style={{ fontSize:'clamp(12px,1.3vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>{totalDonations} unit{totalDonations !== 1 ? 's' : ''}</p>
-            </motion.div>
-            {nextEligible ? (
-              <motion.div
-                whileHover={{ y: -4 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="dd-glass dd-card-hover"
-                style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(255,165,0,.3)', background:'rgba(255,165,0,.1)', gridColumn:'1 / -1' }}
-              >
-                <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Next eligible donation date</p>
-                <p style={{ fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, color:'#dc2626', margin:0 }}>📅 {nextEligible}</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                whileHover={{ y: -4 }}
-                initial={{ scale: 0.9 }}
-                animate={visible ? { scale: 1 } : { scale: 0.9 }}
-                className="dd-glass dd-card-hover"
-                style={{ borderRadius:18, padding:'clamp(16px,2vw,24px)', border:'1px solid rgba(34,197,94,.3)', background:'rgba(34,197,94,.1)', gridColumn:'1 / -1' }}
-              >
-                <p style={{ fontSize:9, fontWeight:700, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 8px 0' }}>Donation eligibility</p>
-                <p style={{ fontSize:'clamp(13px,1.4vw,16px)', fontWeight:900, color:'#22c55e', margin:0 }}>✅ You can donate now!</p>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Blood Requests Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="dd-glass-deep dd-card-hover"
-          style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)' }}
-        >
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-            <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>1</div>
-            <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Hospitals Requesting Your Blood Type</h3>
-          </div>
-          {inventory.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={visible ? { opacity: 1 } : { opacity: 0 }} style={{ textAlign:'center', paddingY:32 }}>
-              <motion.p animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity }} style={{ fontSize:48, margin:0 }}>💤</motion.p>
-              <p style={{ color:'rgba(211,47,47,.65)', fontWeight:700, fontSize:14, marginTop:12, marginBottom:0 }}>No urgent requests for your blood type right now.</p>
-              <p style={{ color:'rgba(211,47,47,.4)', fontWeight:600, fontSize:12, marginTop:6, marginBottom:0 }}>We'll notify you by email when a hospital needs you.</p>
-            </motion.div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              <AnimatePresence>
-                {inventory.map((item, idx) => {
-                  const urgency = URGENCY_CONFIG[item.urgency] || URGENCY_CONFIG.urgent
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      whileHover={{ scale: 1.02, x: 8 }}
-                      className={`dd-glass dd-card-hover ${urgency.bg}`}
-                      style={{ borderRadius:16, padding:16, border:'1px solid rgba(255,255,255,.4)' }}
-                    >
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:8 }}>
-                        <div>
-                          <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0 }}>{item.hospital_name}</p>
-                          <p style={{ fontSize:11, color:'rgba(211,47,47,.65)', margin:'4px 0 0 0' }}>{item.hospital_address}</p>
-                        </div>
-                        <motion.span
-                          whileHover={{ scale: 1.1 }}
-                          style={{ background:'#dc2626', color:'#faf7f7', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10 }}
-                        >
-                          {item.blood_type}
-                        </motion.span>
-                      </div>
-                      <motion.div
-                        animate={{ opacity: [1, 0.7, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        style={{ display:'flex', alignItems:'center', gap:6, fontSize:10 }}
-                      >
-                        <span className="dd-stat-dot" style={{ width:8, height:8, background: URGENCY_CONFIG[item.urgency]?.dot || '#ff6b6b', animation:'dd-pulse 2s infinite' }}/>
-                        <span style={{ fontWeight:700, color: URGENCY_CONFIG[item.urgency]?.text }}>{urgency.label}</span>
-                      </motion.div>
-                      <p style={{ fontSize:11, fontWeight:900, color:'#dc2626', margin:'8px 0 0 0' }}>🩸 Needs {item.quantity_needed} units</p>
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Donation History */}
-        {hospitalRows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="dd-glass-deep dd-card-hover"
-            style={{ borderRadius:'clamp(24px,3.5vw,44px)', padding:'clamp(24px,3.5vw,40px)', border:'1px solid rgba(255,255,255,.72)' }}
-          >
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-              <div className="dd-glass" style={{ width:36, height:36, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, border:'1px solid rgba(255,255,255,.72)' }}>2</div>
-              <h3 style={{ fontSize:'clamp(16px,2vw,20px)', fontWeight:900, color:'#dc2626', margin:0 }}>Donation History</h3>
-            </div>
-            <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:48, marginBottom:16, marginTop:0 }}>The hospital will confirm your donation after completion. You'll see it reflected here.</p>
-
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              <AnimatePresence>
-                {hospitalRows.map((row, idx) => {
-                  const unitsDonatedHere = row.donated_count
-                  return (
-                    <motion.div
-                      key={row.hospital_id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      whileHover={{ y: -4 }}
-                      className="dd-glass dd-card-hover"
-                      style={{ borderRadius:16, padding:16, border:'1px solid rgba(255,255,255,.4)' }}
-                    >
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:12 }}>
-                        <div>
-                          <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0 }}>{row.hospital_name}</p>
-                          <p style={{ fontSize:11, color:'rgba(211,47,47,.65)', margin:'4px 0 2px 0' }}>{row.hospital_address}</p>
-                          <p style={{ fontSize:10, color:'rgba(211,47,47,.4)', margin:0 }}>{new Date(row.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <motion.span
-                          whileHover={{ scale: 1.1 }}
-                          style={{ background:'rgba(220,38,38,.1)', color:'#dc2626', fontSize:11, fontWeight:900, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(211,47,47,.2)' }}
-                        >
-                          {row.blood_type}
-                        </motion.span>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                        {[1, 2].map(i => (
-                          <motion.div
-                            key={i}
-                            whileHover={{ scale: 1.2 }}
-                            style={{
-                              width:32, height:32, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                              fontWeight:900, fontSize:12, border:'2px solid rgba(211,47,47,.15)',
-                              background: i <= unitsDonatedHere ? 'rgba(34,197,94,.15)' : undefined,
-                              color: i <= unitsDonatedHere ? '#22c55e' : 'rgba(211,47,47,.4)',
-                              borderColor: i <= unitsDonatedHere ? 'rgba(34,197,94,.4)' : undefined
-                            }}
-                          >
-                            {i <= unitsDonatedHere ? '✓' : i}
-                          </motion.div>
-                        ))}
-                        <span style={{ fontSize:10, fontWeight:700, color:'rgba(211,47,47,.65)', marginLeft:4 }}>
-                          {unitsDonatedHere === 0 && 'Awaiting hospital confirmation'}
-                          {unitsDonatedHere === 1 && '1 unit confirmed by hospital'}
-                          {unitsDonatedHere >= 2 && '2 units confirmed by hospital'}
-                        </span>
-                      </div>
-                      {unitsDonatedHere >= 2 && (
-                        <motion.p initial={{ scale: 0.8 }} animate={{ scale: 1 }} style={{ fontSize:11, fontWeight:900, color:'#22c55e', margin:'8px 0 0 0' }}>
-                          ✅ Complete — 2 units donated!
-                        </motion.p>
-                      )}
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-              {maxReached && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="dd-glass"
-                  style={{ borderRadius:16, padding:16, border:'1px solid rgba(255,165,0,.3)', background:'rgba(255,165,0,.1)' }}
-                >
-                  <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:'0 0 8px 0' }}>You've given your all — time to recharge. 🌿</p>
-                  <p style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.65)', lineHeight:1.6, margin:0 }}>
-                    💧 Drink extra water · 🥩 Eat iron-rich foods · 😴 Sleep well · 🚫 Skip intense workouts for 24 hours. Come back in 3 months!
-                  </p>
-                </motion.div>
-              )}
-            </div>
           </motion.div>
         )}
 
