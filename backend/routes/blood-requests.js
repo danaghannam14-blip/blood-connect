@@ -1,584 +1,433 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const axios = require('axios');
-
-// Get compatible donors for a blood type (which DONORS CAN GIVE to this patient)
-const getCompatibleDonors = (bloodType) => {
-  const compatibility = {
-    'O-': ['O-'],                           // Only O- can give to O-
-    'O+': ['O-', 'O+'],                     // O- and O+ can give to O+
-    'A-': ['O-', 'A-'],                     // O- and A- can give to A-
-    'A+': ['O-', 'O+', 'A-', 'A+'],         // O-, O+, A-, A+ can give to A+
-    'B-': ['O-', 'B-'],                     // O- and B- can give to B-
-    'B+': ['O-', 'O+', 'B-', 'B+'],         // O-, O+, B-, B+ can give to B+
-    'AB-': ['O-', 'A-', 'B-', 'AB-'],       // O-, A-, B-, AB- can give to AB-
-    'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] // Everyone can give to AB+
-  };
-  return compatibility[bloodType] || [];
-};
-
-// ✅ FIXED: Send email to donor about emergency request with proper error handling
-const sendDonorEmail = async (donor, bloodType, governorate, patientEmail) => {
+const nodemailer = require('nodemailer');
+ 
+// ✅ Email transporter - NO HARDCODED SECRETS
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.ADMIN_EMAIL || 'blood.connect.donate@gmail.com',
+    pass: process.env.BREVO_API_KEY // ✅ Use environment variable ONLY
+  }
+});
+ 
+console.log('[blood-requests.js] Routes being registered...');
+ 
+// =============================================
+// POST /api/blood-requests/create
+// Hospital creates blood request
+// =============================================
+router.post('/create', (req, res) => {
+  console.log('[POST /create] Received:', req.body);
+ 
   try {
-    const emailContent = `
-      <h2 style="color: #dc2626;">🩸 URGENT BLOOD DONATION NEEDED</h2>
-      <p><strong>Blood Type Needed:</strong> ${bloodType}</p>
-      <p><strong>Location:</strong> ${governorate}</p>
-      <p style="margin: 20px 0; font-size: 14px; color: #991b1b; font-weight: bold;">A patient needs blood immediately!</p>
-      <ol>
-        <li>Log in to BloodConnect</li>
-        <li>Go to your Emergency Blood Requests</li>
-        <li>Choose where you can donate (Center or Hospital)</li>
-        <li>Confirm your donation</li>
-      </ol>
-      <p style="color: #dc2626; font-weight: bold; font-size: 16px;">Every donation saves lives! 🙏</p>
+    const { hospital_id, blood_type, quantity_needed, urgency } = req.body;
+ 
+    // Validation
+    if (!hospital_id || !blood_type || !quantity_needed) {
+      console.log('[POST /create] Missing fields:', { hospital_id, blood_type, quantity_needed });
+      return res.status(400).json({
+        error: 'Missing required fields: hospital_id, blood_type, quantity_needed'
+      });
+    }
+ 
+    // Insert into database
+    const query = `
+      INSERT INTO blood_requests (hospital_id, blood_type, quantity_needed, urgency, status, created_at)
+      VALUES (?, ?, ?, ?, 'pending', NOW())
     `;
-
-    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-      to: [{ email: donor.email, name: donor.full_name }],
-      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
-      subject: `🚨 URGENT: ${bloodType} Blood Needed in ${governorate}`,
-      htmlContent: emailContent
-    }, {
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-
-    console.log(`✅ Emergency notification sent to ${donor.email} (ID: ${response.status})`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending email to ${donor.email}:`, error.message);
-    return false;
-  }
-};
-
-// ✅ FIXED: Send confirmation email to patient (location-specific)
-const sendPatientConfirmationEmail = async (patientEmail, bloodType, locationType, locationInfo) => {
-  try {
-    let emailContent = '';
-
-    if (locationType === 'center') {
-      // Email for Center donation (Hamra)
-      emailContent = `
-        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
-        <p>Great news! A compatible donor has confirmed their donation for you.</p>
-        
-        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
-        <p><strong>Blood Type:</strong> ${bloodType}</p>
-        
-        <h3 style="color: #dc2626;">📍 Pickup Location</h3>
-        <p><strong>BloodConnect Hamra Center</strong></p>
-        <p style="margin: 8px 0;">Address: Hamra, Beirut, Lebanon</p>
-        <p style="margin: 8px 0; font-weight: bold;">⏰ Operating Hours: 8AM - 6PM Daily</p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        
-        <p style="color: #666; font-size: 13px;">
-          Please visit our center during operating hours to pick up the blood. 
-          If you have any questions, contact us at blood.connect.donate@gmail.com
-        </p>
-        
-        <p style="color: #666; font-size: 12px; margin-top: 20px;">
-          Thank you for using BloodConnect! 🙏
-        </p>
-      `;
-    } else if (locationType === 'hospital') {
-      // Email for Hospital donation
-      emailContent = `
-        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
-        <p>Great news! A compatible donor has confirmed their donation for you.</p>
-        
-        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
-        <p><strong>Blood Type:</strong> ${bloodType}</p>
-        
-        <h3 style="color: #dc2626;">🏥 Pickup Location</h3>
-        <p><strong>${locationInfo}</strong></p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        
-        <p style="color: #666; font-size: 13px;">
-          Please contact the hospital to arrange pickup. If you have any questions, contact us at blood.connect.donate@gmail.com
-        </p>
-        
-        <p style="color: #666; font-size: 12px; margin-top: 20px;">
-          Thank you for using BloodConnect! 🙏
-        </p>
-      `;
-    }
-
-    await axios.post('https://api.brevo.com/v3/smtp/email', {
-      to: [{ email: patientEmail }],
-      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
-      subject: `✅ Blood Donation Confirmed - ${bloodType}`,
-      htmlContent: emailContent
-    }, {
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-
-    console.log(`✅ Confirmation email sent to patient: ${patientEmail}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending confirmation email to ${patientEmail}:`, error.message);
-    return false;
-  }
-};
-
-// ✅ SEND EMAIL TO PATIENT WHEN DONATION CONFIRMED
-const sendPatientDonationConfirmedEmail = async (patientEmail, bloodType, locationType, locationName) => {
-  try {
-    let emailContent = '';
-
-    if (locationType === 'center') {
-      emailContent = `
-        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
-        <p>Excellent news! A compatible donor has successfully donated blood for your emergency case at the BCC Hamra Center.</p>
-        
-        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
-        <p><strong>Blood Type:</strong> ${bloodType}</p>
-        <p><strong>Donation Location:</strong> BCC Hamra Center, Hamra, Beirut</p>
-        <p><strong>Status:</strong> ✅ Confirmed</p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        
-        <p style="color: #666; font-size: 13px;">
-          Your blood is ready for pickup at BCC Hamra Center during operating hours (8AM - 6PM Daily).
-        </p>
-        
-        <p style="color: #22c55e; font-weight: bold;">Thank you for using BloodConnect! 🙏</p>
-      `;
-    } else if (locationType === 'hospital') {
-      emailContent = `
-        <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
-        <p>Excellent news! A compatible donor has successfully donated blood for your emergency case at the hospital.</p>
-        
-        <h3 style="color: #dc2626;">🩸 Blood Details</h3>
-        <p><strong>Blood Type:</strong> ${bloodType}</p>
-        <p><strong>Donation Location:</strong> Hospital</p>
-        <p><strong>Status:</strong> ✅ Confirmed by Hospital</p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        
-        <p style="color: #666; font-size: 13px;">
-          Your blood has been confirmed by the hospital and is ready for use.
-        </p>
-        
-        <p style="color: #22c55e; font-weight: bold;">Thank you for using BloodConnect! 🙏</p>
-      `;
-    }
-
-    await axios.post('https://api.brevo.com/v3/smtp/email', {
-      to: [{ email: patientEmail }],
-      sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
-      subject: `✅ Blood Donation Confirmed - ${bloodType}`,
-      htmlContent: emailContent
-    }, {
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-
-    console.log(`✅ Donation confirmed email sent to patient: ${patientEmail}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending donation confirmed email:`, error.message);
-    return false;
-  }
-};
-
-// ✅ FIXED: Create emergency request and notify donors (with Promise.all)
-router.post('/create-emergency', async (req, res) => {
-  try {
-    const { patient_email, blood_type, governorate } = req.body;
-
-    if (!patient_email || !blood_type || !governorate) {
-      return res.status(400).json({ error: 'patient_email, blood_type, and governorate are required' });
-    }
-
-    // Get compatible blood types that donors can provide
-    const compatibleBloodTypes = getCompatibleDonors(blood_type);
-
-    // Find eligible donors in the SAME governorate with compatible blood types
-    const donorSql = `
-      SELECT id, full_name, email, blood_type, governorate 
-      FROM donors 
-      WHERE blood_type IN (?) 
-      AND governorate = ? 
-      AND is_eligible = 1
-      LIMIT 100
-    `;
-
-    db.query(donorSql, [compatibleBloodTypes, governorate], async (err, donors) => {
+ 
+    db.query(query, [hospital_id, blood_type, quantity_needed, urgency || 'urgent'], async (err, result) => {
       if (err) {
-        console.error('❌ Database error:', err);
-        return res.status(500).json({ error: 'Database error', details: err.message });
-      }
-
-      if (!donors || donors.length === 0) {
-        return res.json({
-          message: `⚠️ No eligible donors found in ${governorate}. Request logged.`,
-          donorsNotified: 0
+        console.error('[POST /create] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to create request',
+          details: err.message
         });
       }
-
-      console.log(`📝 Emergency created: ${blood_type} needed in ${governorate}`);
-      console.log(`👥 Found ${donors.length} compatible eligible donors`);
-
-      // ✅ FIXED: Use Promise.all to wait for all emails to be sent
-      const emailPromises = donors.map(donor => {
-        return new Promise((resolve) => {
-          // Insert emergency_donations record
-          const insertSql = `
-            INSERT INTO emergency_donations (donor_id, blood_type, patient_email, governorate, status)
-            VALUES (?, ?, ?, ?, 'pending')
-          `;
-
-          db.query(insertSql, [donor.id, blood_type, patient_email, governorate], async (insertErr) => {
-            if (insertErr) {
-              console.error(`❌ Error inserting record for donor ${donor.id}:`, insertErr);
-              resolve(false);
-              return;
-            }
-
-            // Send notification email to donor
-            const emailSent = await sendDonorEmail(donor, blood_type, governorate, patient_email);
-            resolve(emailSent);
-          });
+ 
+      console.log('[POST /create] Request created with ID:', result.insertId);
+ 
+      // Get hospital info (async, don't block response)
+      const hospitalQuery = 'SELECT name, email FROM hospitals WHERE id = ?';
+      db.query(hospitalQuery, [hospital_id], (err, hospitalResults) => {
+        if (err || !hospitalResults || !hospitalResults.length) {
+          console.warn('[POST /create] Hospital not found:', hospital_id);
+          return;
+        }
+ 
+        const hospital = hospitalResults[0];
+        console.log('[POST /create] Found hospital:', hospital.name);
+ 
+        // Get matching donors
+        const donorQuery = `
+          SELECT id, email, full_name FROM donors
+          WHERE blood_type = ? AND is_eligible = 1
+          LIMIT 50
+        `;
+ 
+        db.query(donorQuery, [blood_type], (err, donors) => {
+          if (!err && donors && donors.length > 0) {
+            console.log(`[POST /create] Found ${donors.length} donors for ${blood_type}`);
+            // Send emails (fire and forget)
+            donors.forEach(donor => {
+              try {
+                transporter.sendMail({
+                  from: process.env.ADMIN_EMAIL || 'blood.connect.donate@gmail.com',
+                  to: donor.email,
+                  subject: `🩸 URGENT: ${hospital.name} needs ${blood_type} blood`,
+                  html: `
+<h2>Emergency Blood Request</h2>
+<p>Hi ${donor.full_name},</p>
+<p><strong>${hospital.name}</strong> urgently needs <strong>${quantity_needed}</strong> units of <strong>${blood_type}</strong> blood.</p>
+<p>Your blood type matches! Please respond as soon as possible.</p>
+                  `
+                }).catch(err => console.error('[Email Error]:', err.message));
+              } catch (e) {
+                console.error('[Email Error]:', e.message);
+              }
+            });
+          }
         });
       });
-
-      // ✅ FIXED: Wait for all emails to complete
-      const emailResults = await Promise.all(emailPromises);
-      const successCount = emailResults.filter(r => r === true).length;
-
-      console.log(`📧 Emails sent to ${successCount}/${donors.length} donors`);
-
-      // Return success response
+ 
+      // Return success immediately
       res.json({
-        message: `✅ Emergency posted! ${successCount}/${donors.length} donors in ${governorate} notified.`,
-        donorsNotified: successCount,
-        governorate: governorate,
-        bloodType: blood_type
+        success: true,
+        message: 'Blood request created and donors notified',
+        requestId: result.insertId
       });
     });
-
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('[POST /create] Server error:', error);
     res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
-
-// ===== GET DONOR'S EMERGENCY NOTIFICATIONS =====
-router.get('/donor/:donorId', (req, res) => {
-  const sql = `
-    SELECT 
-      ed.id as notification_id,
-      ed.blood_type,
-      ed.governorate,
-      ed.patient_email,
-      ed.status,
-      ed.donor_donation_location,
-      ed.hospital_id,
-      h.name as hospital_name,
-      ed.created_at
-    FROM emergency_donations ed
-    LEFT JOIN hospitals h ON ed.hospital_id = h.id
-    WHERE ed.donor_id = ?
-    ORDER BY ed.created_at DESC
-  `;
-
-  db.query(sql, [req.params.donorId], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching notifications:', err);
-      return res.status(500).json({ error: 'Error fetching notifications' });
-    }
-    res.json(results || []);
-  });
-});
-
-// ===== GET DONATIONS FOR HOSPITAL DASHBOARD =====
+ 
+// =============================================
+// GET /api/blood-requests/hospital/:hospitalId
+// Get hospital's blood requests
+// =============================================
 router.get('/hospital/:hospitalId', (req, res) => {
-  const sql = `
-    SELECT 
-      ed.id,
-      ed.donor_id,
-      d.full_name as donor_name,
-      ed.blood_type,
-      ed.status,
-      ed.donor_donation_location,
-      ed.created_at,
-      ed.updated_at
-    FROM emergency_donations ed
-    LEFT JOIN donors d ON ed.donor_id = d.id
-    WHERE ed.hospital_id = ? 
-    AND ed.donor_donation_location = 'hospital'
-    AND ed.status IN ('awaiting_confirmation', 'confirmed')
-    ORDER BY ed.created_at DESC
-  `;
-
-  db.query(sql, [req.params.hospitalId], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching hospital donations:', err);
-      return res.status(500).json({ error: 'Error fetching donations' });
+  console.log('[GET /hospital/:id] Requested for hospital:', req.params.hospitalId);
+ 
+  try {
+    const { hospitalId } = req.params;
+ 
+    if (!hospitalId) {
+      console.log('[GET /hospital/:id] Missing hospitalId');
+      return res.status(400).json({ error: 'hospitalId is required' });
     }
-    res.json(results || []);
-  });
+ 
+    // First try to get from blood_requests table (regular requests)
+    const query = `
+      SELECT
+        br.id,
+        br.hospital_id,
+        br.blood_type,
+        br.quantity_needed,
+        br.urgency,
+        br.status,
+        br.created_at,
+        h.name as hospital_name
+      FROM blood_requests br
+      LEFT JOIN hospitals h ON br.hospital_id = h.id
+      WHERE br.hospital_id = ?
+      ORDER BY br.created_at DESC
+      LIMIT 100
+    `;
+ 
+    db.query(query, [hospitalId], (err, results) => {
+      if (err) {
+        console.error('[GET /hospital/:id] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to fetch requests',
+          details: err.message
+        });
+      }
+ 
+      console.log('[GET /hospital/:id] Found', results ? results.length : 0, 'requests');
+      res.json(results || []);
+    });
+  } catch (error) {
+    console.error('[GET /hospital/:id] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
-// ===== GET DONATIONS AT CENTER (FOR ADMIN) =====
+ 
+// =============================================
+// GET /api/blood-requests/center-donations
+// Get center donations for admin
+// =============================================
 router.get('/center-donations', (req, res) => {
-  const sql = `
-    SELECT 
-      ed.id,
-      ed.donor_id,
-      d.full_name as donor_name,
-      ed.blood_type,
-      ed.patient_email,
-      ed.status,
-      ed.created_at,
-      ed.updated_at
-    FROM emergency_donations ed
-    LEFT JOIN donors d ON ed.donor_id = d.id
-    WHERE ed.donor_donation_location = 'center'
-    AND ed.status IN ('awaiting_confirmation', 'confirmed')
-    ORDER BY ed.created_at DESC
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching center donations:', err);
-      return res.status(500).json({ error: 'Error fetching donations' });
-    }
-    res.json(results || []);
-  });
-});
-
-// ===== DONOR CONFIRMS DONATION LOCATION =====
-router.post('/donor-confirm-donation', (req, res) => {
-  const { notification_id, donation_location, hospital_id } = req.body;
-
-  if (!notification_id || !donation_location) {
-    return res.status(400).json({ error: 'notification_id and donation_location are required' });
-  }
-
-  const updateSql = `
-    UPDATE emergency_donations 
-    SET 
-      donor_donation_location = ?,
-      hospital_id = ?,
-      status = 'awaiting_confirmation'
-    WHERE id = ?
-  `;
-
-  db.query(updateSql, [donation_location, hospital_id || null, notification_id], async (err) => {
-    if (err) {
-      console.error('❌ Error updating donation location:', err);
-      return res.status(500).json({ error: 'Error updating donation location' });
-    }
-
-    // Get the updated record to get hospital name
-    const getSql = `
-      SELECT ed.*, h.name as hospital_name
-      FROM emergency_donations ed
-      LEFT JOIN hospitals h ON ed.hospital_id = h.id
-      WHERE ed.id = ?
+  console.log('[GET /center-donations] Requested');
+ 
+  try {
+    const query = `
+      SELECT
+        id,
+        notification_id,
+        donor_id,
+        donor_name,
+        blood_type,
+        patient_email,
+        status,
+        created_at
+      FROM emergency_notifications
+      WHERE status IN ('awaiting_confirmation', 'confirmed')
+      ORDER BY created_at DESC
+      LIMIT 100
     `;
-
-    db.query(getSql, [notification_id], async (getErr, results) => {
-      if (!getErr && results.length > 0) {
-        const record = results[0];
-        let locationInfo = '';
-
-        if (donation_location === 'center') {
-          locationInfo = 'BCC Hamra Center, Hamra, Beirut';
-        } else if (donation_location === 'hospital' && record.hospital_name) {
-          locationInfo = record.hospital_name;
-        }
-
-        // Send confirmation email to patient
-        if (locationInfo) {
-          await sendPatientConfirmationEmail(
-            record.patient_email,
-            record.blood_type,
-            donation_location,
-            locationInfo
-          );
-        }
+ 
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('[GET /center-donations] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to fetch center donations',
+          details: err.message
+        });
       }
-
-      res.json({ message: '✅ Donation location confirmed and patient notified!' });
+ 
+      console.log('[GET /center-donations] Found', results ? results.length : 0, 'donations');
+      res.json(results || []);
     });
-  });
+  } catch (error) {
+    console.error('[GET /center-donations] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
-// ===== HOSPITAL CONFIRMS DONATION =====
+ 
+// =============================================
+// POST /api/blood-requests/hospital-confirm
+// Hospital confirms donation
+// =============================================
 router.post('/hospital-confirm', (req, res) => {
-  const { notificationId, hospitalId } = req.body;
-
-  if (!notificationId || !hospitalId) {
-    return res.status(400).json({ error: 'notificationId and hospitalId are required' });
-  }
-
-  // Update status to 'confirmed' for this hospital's donation
-  const updateSql = `
-    UPDATE emergency_donations 
-    SET status = 'confirmed'
-    WHERE id = ? 
-    AND hospital_id = ? 
-    AND donor_donation_location = 'hospital'
-  `;
-
-  db.query(updateSql, [notificationId, hospitalId], async (err, result) => {
-    if (err) {
-      console.error('❌ Error confirming donation:', err);
-      return res.status(500).json({ error: 'Error confirming donation' });
+  console.log('[POST /hospital-confirm] Received:', req.body);
+ 
+  try {
+    const { notificationId, hospitalId } = req.body;
+ 
+    if (!notificationId) {
+      console.log('[POST /hospital-confirm] Missing notificationId');
+      return res.status(400).json({ error: 'notificationId is required' });
     }
-
-    if (result.affectedRows === 0) {
-      return res.status(400).json({ error: 'Donation not found or already confirmed' });
-    }
-
-    // Get donation details to send email to patient
-    const getSql = `
-      SELECT * FROM emergency_donations WHERE id = ?
+ 
+    const query = `
+      UPDATE emergency_notifications
+      SET status = 'confirmed'
+      WHERE id = ?
+      ${hospitalId ? 'AND hospital_id = ?' : ''}
     `;
-
-    db.query(getSql, [notificationId], async (getErr, results) => {
-      if (!getErr && results.length > 0) {
-        const donation = results[0];
-        
-        // Send email to patient that donation was confirmed
-        await sendPatientDonationConfirmedEmail(
-          donation.patient_email,
-          donation.blood_type,
-          'hospital',
-          'Hospital Confirmed'
-        );
+ 
+    const params = hospitalId ? [notificationId, hospitalId] : [notificationId];
+ 
+    db.query(query, params, (err, result) => {
+      if (err) {
+        console.error('[POST /hospital-confirm] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to confirm donation',
+          details: err.message
+        });
       }
-
-      res.json({ 
+ 
+      if (result.affectedRows === 0) {
+        console.log('[POST /hospital-confirm] Donation not found:', notificationId);
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+ 
+      console.log('[POST /hospital-confirm] Donation confirmed:', notificationId);
+      res.json({
         success: true,
-        message: '✅ Donation confirmed! Patient notified.' 
+        message: 'Donation confirmed'
       });
     });
-  });
+  } catch (error) {
+    console.error('[POST /hospital-confirm] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
-// ===== ADMIN/BCC CONFIRMS DONATION AT CENTER =====
+ 
+// =============================================
+// POST /api/blood-requests/admin-confirm
+// Admin confirms center donation
+// =============================================
 router.post('/admin-confirm', (req, res) => {
-  const { notificationId } = req.body;
-
-  if (!notificationId) {
-    return res.status(400).json({ error: 'notificationId is required' });
-  }
-
-  // Update status to 'confirmed' for center donation
-  const updateSql = `
-    UPDATE emergency_donations 
-    SET status = 'confirmed'
-    WHERE id = ? 
-    AND donor_donation_location = 'center'
-  `;
-
-  db.query(updateSql, [notificationId], async (err, result) => {
-    if (err) {
-      console.error('❌ Error confirming donation:', err);
-      return res.status(500).json({ error: 'Error confirming donation' });
+  console.log('[POST /admin-confirm] Received:', req.body);
+ 
+  try {
+    const { notificationId } = req.body;
+ 
+    if (!notificationId) {
+      console.log('[POST /admin-confirm] Missing notificationId');
+      return res.status(400).json({ error: 'notificationId is required' });
     }
-
-    if (result.affectedRows === 0) {
-      return res.status(400).json({ error: 'Donation not found or already confirmed' });
-    }
-
-    // Get donation details
-    const getSql = `
-      SELECT * FROM emergency_donations WHERE id = ?
+ 
+    const query = `
+      UPDATE emergency_notifications
+      SET status = 'confirmed'
+      WHERE id = ?
     `;
-
-    db.query(getSql, [notificationId], async (getErr, results) => {
-      if (!getErr && results.length > 0) {
-        const donation = results[0];
-        
-        // Send email to patient
-        await sendPatientDonationConfirmedEmail(
-          donation.patient_email,
-          donation.blood_type,
-          'center',
-          'BCC Hamra Center Confirmed'
-        );
+ 
+    db.query(query, [notificationId], (err, result) => {
+      if (err) {
+        console.error('[POST /admin-confirm] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to confirm donation',
+          details: err.message
+        });
       }
-
-      res.json({ 
+ 
+      console.log('[POST /admin-confirm] Donation confirmed:', notificationId);
+      res.json({
         success: true,
-        message: '✅ Donation confirmed! Patient notified.' 
+        message: 'Donation confirmed'
       });
     });
-  });
+  } catch (error) {
+    console.error('[POST /admin-confirm] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
-// ===== GET ALL EMERGENCY DONATIONS (ADMIN) =====
-router.get('/all-emergency-donations', (req, res) => {
-  const sql = `
-    SELECT 
-      ed.id,
-      ed.donor_id,
-      d.full_name as donor_name,
-      d.email as donor_email,
-      ed.blood_type,
-      ed.patient_email,
-      ed.governorate,
-      ed.status,
-      ed.donor_donation_location,
-      h.name as hospital_name,
-      ed.created_at
-    FROM emergency_donations ed
-    LEFT JOIN donors d ON ed.donor_id = d.id
-    LEFT JOIN hospitals h ON ed.hospital_id = h.id
-    ORDER BY ed.created_at DESC
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching emergency donations:', err);
-      return res.status(500).json({ error: 'Error fetching emergency donations' });
+ 
+// =============================================
+// GET /api/blood-requests/donor/:donorId
+// Get donor's emergency requests
+// =============================================
+router.get('/donor/:donorId', (req, res) => {
+  console.log('[GET /donor/:id] Requested for donor:', req.params.donorId);
+ 
+  try {
+    const { donorId } = req.params;
+ 
+    if (!donorId) {
+      console.log('[GET /donor/:id] Missing donorId');
+      return res.status(400).json({ error: 'donorId is required' });
     }
-    res.json(results || []);
-  });
+ 
+    const query = `
+      SELECT
+        id,
+        notification_id,
+        donor_id,
+        donor_name,
+        blood_type,
+        patient_email,
+        governorate,
+        status,
+        created_at
+      FROM emergency_notifications
+      WHERE donor_id = ?
+      ORDER BY created_at DESC
+      LIMIT 50
+    `;
+ 
+    db.query(query, [donorId], (err, results) => {
+      if (err) {
+        console.error('[GET /donor/:id] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to fetch emergency requests',
+          details: err.message
+        });
+      }
+ 
+      console.log('[GET /donor/:id] Found', results ? results.length : 0, 'requests');
+      res.json(results || []);
+    });
+  } catch (error) {
+    console.error('[GET /donor/:id] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
-// ===== GET PATIENT STATUS =====
-router.get('/status/:patientEmail', (req, res) => {
-  const sql = `
-    SELECT 
-      ed.id,
-      ed.blood_type,
-      ed.governorate,
-      ed.status,
-      ed.donor_donation_location,
-      h.name as hospital_name,
-      ed.created_at
-    FROM emergency_donations ed
-    LEFT JOIN hospitals h ON ed.hospital_id = h.id
-    WHERE ed.patient_email = ?
-    ORDER BY ed.created_at DESC
-  `;
-
-  db.query(sql, [req.params.patientEmail], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching status:', err);
-      return res.status(500).json({ error: 'Error fetching status' });
+ 
+// =============================================
+// POST /api/blood-requests/donor-confirm-donation
+// Donor confirms donation
+// =============================================
+router.post('/donor-confirm-donation', (req, res) => {
+  console.log('[POST /donor-confirm-donation] Received:', req.body);
+ 
+  try {
+    const { notification_id, donation_location, hospital_id } = req.body;
+ 
+    if (!notification_id || !donation_location) {
+      console.log('[POST /donor-confirm-donation] Missing required fields');
+      return res.status(400).json({
+        error: 'notification_id and donation_location are required'
+      });
     }
-    res.json(results || []);
-  });
+ 
+    const query = `
+      UPDATE emergency_notifications
+      SET status = 'awaiting_confirmation',
+          donation_location = ?,
+          hospital_id = ?
+      WHERE notification_id = ?
+    `;
+ 
+    db.query(query, [donation_location, hospital_id || null, notification_id], (err, result) => {
+      if (err) {
+        console.error('[POST /donor-confirm-donation] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to confirm donation',
+          details: err.message
+        });
+      }
+ 
+      console.log('[POST /donor-confirm-donation] Donation confirmed:', notification_id);
+      res.json({
+        success: true,
+        message: 'Donation confirmed'
+      });
+    });
+  } catch (error) {
+    console.error('[POST /donor-confirm-donation] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
 });
-
+ 
+// =============================================
+// DELETE /api/blood-requests/:requestId
+// Delete blood request
+// =============================================
+router.delete('/:requestId', (req, res) => {
+  console.log('[DELETE /:id] Deleting request:', req.params.requestId);
+ 
+  try {
+    const { requestId } = req.params;
+ 
+    if (!requestId) {
+      return res.status(400).json({ error: 'requestId is required' });
+    }
+ 
+    const query = 'DELETE FROM blood_requests WHERE id = ?';
+ 
+    db.query(query, [requestId], (err, result) => {
+      if (err) {
+        console.error('[DELETE /:id] Database error:', err);
+        return res.status(500).json({
+          error: 'Failed to delete request',
+          details: err.message
+        });
+      }
+ 
+      if (result.affectedRows === 0) {
+        console.log('[DELETE /:id] Request not found:', requestId);
+        return res.status(404).json({ error: 'Request not found' });
+      }
+ 
+      console.log('[DELETE /:id] Request deleted:', requestId);
+      res.json({
+        success: true,
+        message: 'Request deleted'
+      });
+    });
+  } catch (error) {
+    console.error('[DELETE /:id] Server error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+ 
+console.log('[blood-requests.js] ✅ All routes registered');
+ 
 module.exports = router;
