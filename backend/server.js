@@ -32,29 +32,99 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-const requestsRoute = require('./routes/requests');
-const bloodRequestsRoute = require('./routes/blood-requests');
-const donorRoutes = require('./routes/donors');
-const hospitalsRoutes = require('./routes/hospitals');
-const inventoryRoutes = require('./routes/inventory');
-const chatbotRoutes = require('./routes/chatbot');
-const idcheckRoutes = require('./routes/idcheck');
-const adminRoutes = require('./routes/admin');
-const passwordResetRoutes = require('./routes/passwordreset');
-const analyticsRoutes = require('./routes/analytics');
+// ========================================
+// ✅ ROUTE IMPORTS - ONLY EXISTING ONES
+// ========================================
 
-// Register routes
-app.use('/api/requests', requestsRoute);
-app.use('/api/blood-requests', bloodRequestsRoute);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/password', passwordResetRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/idcheck', idcheckRoutes);
-app.use('/api/donors', donorRoutes);
-app.use('/api/hospitals', hospitalsRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+// Load routes only if they exist
+let requestsRoute, bloodRequestsRoute, donorRoutes, hospitalsRoutes;
+let inventoryRoutes, chatbotRoutes, idcheckRoutes, adminRoutes;
+let passwordResetRoutes, analyticsRoutes;
+
+try {
+  requestsRoute = require('./routes/requests');
+  console.log('✅ Loaded: requests');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/requests.js');
+}
+
+try {
+  bloodRequestsRoute = require('./routes/blood-requests');
+  console.log('✅ Loaded: blood-requests');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/blood-requests.js');
+}
+
+try {
+  donorRoutes = require('./routes/donors');
+  console.log('✅ Loaded: donors');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/donors.js');
+}
+
+try {
+  hospitalsRoutes = require('./routes/hospitals');
+  console.log('✅ Loaded: hospitals');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/hospitals.js');
+}
+
+try {
+  inventoryRoutes = require('./routes/inventory');
+  console.log('✅ Loaded: inventory');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/inventory.js');
+}
+
+try {
+  chatbotRoutes = require('./routes/chatbot');
+  console.log('✅ Loaded: chatbot');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/chatbot.js');
+}
+
+try {
+  idcheckRoutes = require('./routes/idcheck');
+  console.log('✅ Loaded: idcheck');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/idcheck.js');
+}
+
+try {
+  adminRoutes = require('./routes/admin');
+  console.log('✅ Loaded: admin');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/admin.js');
+}
+
+try {
+  passwordResetRoutes = require('./routes/passwordreset');
+  console.log('✅ Loaded: passwordreset');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/passwordreset.js');
+}
+
+try {
+  analyticsRoutes = require('./routes/analytics');
+  console.log('✅ Loaded: analytics');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/analytics.js');
+}
+
+// ========================================
+// ✅ ROUTE REGISTRATION - ONLY IF LOADED
+// ========================================
+
+if (requestsRoute) app.use('/api/requests', requestsRoute);
+if (bloodRequestsRoute) app.use('/api/blood-requests', bloodRequestsRoute);
+if (analyticsRoutes) app.use('/api/analytics', analyticsRoutes);
+if (passwordResetRoutes) app.use('/api/password', passwordResetRoutes);
+if (adminRoutes) app.use('/api/admin', adminRoutes);
+if (idcheckRoutes) app.use('/api/idcheck', idcheckRoutes);
+if (donorRoutes) app.use('/api/donors', donorRoutes);
+if (hospitalsRoutes) app.use('/api/hospitals', hospitalsRoutes);
+if (inventoryRoutes) app.use('/api/inventory', inventoryRoutes);
+if (chatbotRoutes) app.use('/api/chatbot', chatbotRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -65,9 +135,36 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    message: 'Server is healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found', path: req.path });
+  console.log(`[404] ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    message: 'Route not found', 
+    path: req.path,
+    method: req.method,
+    availableRoutes: [
+      'POST /api/blood-requests/create',
+      'GET /api/blood-requests/hospital/:hospitalId',
+      'GET /api/blood-requests/center-donations',
+      'POST /api/blood-requests/hospital-confirm',
+      'POST /api/blood-requests/admin-confirm',
+      'GET /api/blood-requests/donor/:donorId',
+      'POST /api/blood-requests/donor-confirm-donation',
+      'GET /api/requests/hospital/:hospitalId',
+      'DELETE /api/requests/:requestId',
+      'GET /api/health',
+      'GET /'
+    ]
+  });
 });
 
 // Error handler
@@ -81,8 +178,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`\n✅ Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔗 http://localhost:${PORT}`);
+  console.log(`📋 Health check: http://localhost:${PORT}/api/health\n`);
 });
 
 module.exports = app;
