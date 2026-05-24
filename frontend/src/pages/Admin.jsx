@@ -232,7 +232,6 @@ function Admin() {
   const [visible, setVisible] = useState(false)
   
   // ✅ Emergency donations state
-  const [emergencyDonations, setEmergencyDonations] = useState([])
   const [awaitingDonations, setAwaitingDonations] = useState([])
   const [confirmedDonations, setConfirmedDonations] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
@@ -271,13 +270,12 @@ function Admin() {
       console.log('[Admin.jsx] Response received:', response.data);
       setRequests(response.data || [])
       
-      // ✅ Load emergency donations for BCC Hamra center (location = 'center')
+      // ✅ Load emergency donations for BCC Hamra center
       try {
         const emergencyRes = await axios.get(`${API}/api/blood-requests/center-donations`)
         const donations = emergencyRes.data || []
-        setAwaitingDonations(donations.filter(d => d.status === 'awaiting_confirmation'))
+        setAwaitingDonations(donations.filter(d => d.status === 'no_show'))
         setConfirmedDonations(donations.filter(d => d.status === 'confirmed'))
-        setEmergencyDonations(donations)
         console.log('[Admin.jsx] Emergency donations loaded:', donations.length)
       } catch (err) {
         console.error('[Admin.jsx] Error loading emergency donations:', err.message)
@@ -293,34 +291,65 @@ function Admin() {
     }
   }
 
-  // ✅ DELETE REQUEST
+  // ✅ MARK REQUEST AS CONFIRMED (syncs to donor dashboard)
+  const handleConfirmed = async (requestId) => {
+    try {
+      // Update blood_requests status to "confirmed"
+      await axios.put(`${API}/api/requests/${requestId}`, { status: 'confirmed' })
+      
+      // Also update corresponding emergency_donations record
+      const request = requests.find(r => r.id === requestId)
+      if (request) {
+        await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'confirmed' })
+      }
+      
+      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'confirmed' } : r))
+      alert('✅ Request confirmed! Donor will see this on their dashboard.')
+      loadData()
+    } catch (err) {
+      alert(`❌ Error: ${err.message}`)
+    }
+  }
+
+  // ✅ MARK REQUEST AS "DIDN'T SHOW UP" (moves to admin supply blood section)
+  const handleDidntShowUp = async (requestId) => {
+    try {
+      // Update blood_requests status to "no_show"
+      await axios.put(`${API}/api/requests/${requestId}`, { status: 'no_show' })
+      
+      // Also update corresponding emergency_donations record
+      const request = requests.find(r => r.id === requestId)
+      if (request) {
+        await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'no_show' })
+      }
+      
+      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'no_show' } : r))
+      alert('❌ Request marked as "didn\'t show up". Will appear in supply blood section for admin.')
+      loadData()
+    } catch (err) {
+      alert(`❌ Error: ${err.message}`)
+    }
+  }
+
+  // ✅ DELETE REQUEST (removes from everywhere)
   const deleteRequest = async (id) => {
-    if (!window.confirm('Delete this request?')) return
+    if (!window.confirm('Delete this request completely?')) return
     try {
       await axios.delete(`${API}/api/requests/${id}`)
+      // Also delete from emergency_donations
+      await axios.delete(`${API}/api/blood-requests/${id}`)
       setRequests(requests.filter(r => r.id !== id))
-      alert('✅ Request deleted!')
+      alert('✅ Request deleted from everywhere!')
+      loadData()
     } catch (err) {
       alert(`❌ Error: ${err.message}`)
     }
   }
 
-  // ✅ APPROVE REQUEST
-  const handleApprove = async (requestId) => {
-    try {
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'fulfilled' })
-      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'fulfilled' } : r))
-      alert('✅ Request approved!')
-    } catch (err) {
-      alert(`❌ Error: ${err.message}`)
-    }
-  }
-
-  // ✅ CONFIRM EMERGENCY DONATION (BCC Hamra Center)
-  const handleConfirmDonation = async (donationId) => {
+  // ✅ SUPPLY BLOOD FOR HOSPITAL (when donor didn't show up)
+  const handleSupplyBlood = async (donationId) => {
     setConfirmingId(donationId)
     try {
-      // Get the donation to extract blood type and donor name
       const donation = awaitingDonations.find(d => d.id === donationId)
       console.log('Donation found:', donation)
 
@@ -343,11 +372,11 @@ function Admin() {
         patientEmail: donation.patient_email,
         donorName: donation.donor_name
       })
-      console.log('Confirm response:', response.data)
-      alert('✅ Donation confirmed! Patient notified.')
+      console.log('Supply blood response:', response.data)
+      alert('✅ Blood supplied from BCC Hamra bank to hospital! Patient notified.')
       loadData()
     } catch (err) {
-      console.error('Confirm error:', err)
+      console.error('Supply blood error:', err)
       alert(`❌ Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingId(null)
@@ -426,14 +455,16 @@ function Admin() {
   if (!authed) return null
 
   const pendingRequests = requests.filter(r => r.status === 'pending').length
-  const fulfilledRequests = requests.filter(r => r.status === 'fulfilled').length
+  const confirmedRequests = requests.filter(r => r.status === 'confirmed').length
+  const didntShowUpRequests = requests.filter(r => r.status === 'no_show').length
 
-  const tabs = ['all', 'pending', 'fulfilled', 'donors', 'hospitals', 'settings']
+  const tabs = ['all', 'pending', 'confirmed', 'no_show', 'donors', 'hospitals', 'settings']
 
   // Filtered requests based on tab
   let filteredRequests = requests
   if (tab === 'pending') filteredRequests = requests.filter(r => r.status === 'pending')
-  if (tab === 'fulfilled') filteredRequests = requests.filter(r => r.status === 'fulfilled')
+  if (tab === 'confirmed') filteredRequests = requests.filter(r => r.status === 'confirmed')
+  if (tab === 'no_show') filteredRequests = requests.filter(r => r.status === 'no_show')
 
   return (
     <div className="ad-root">
@@ -505,16 +536,24 @@ function Admin() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: visible ? 1 : 0 }} transition={{ staggerChildren: 0.1, delayChildren: 0.2 }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
           <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#1f2937' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={requests.length} label="Total Requests" color="#1f2937" delay={0.1} />
           <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EA580C' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={pendingRequests} label="Pending" color="#EA580C" delay={0.2} />
-          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>} value={fulfilledRequests} label="Fulfilled" color="#22C55E" delay={0.3} />
+          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>} value={confirmedRequests} label="Confirmed" color="#22C55E" delay={0.3} />
+          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EF4444' }}><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>} value={didntShowUpRequests} label="Didn't Show Up" color="#EF4444" delay={0.4} />
         </motion.div>
 
         {/* TABS */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }} transition={{ delay: 0.3 }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {tabs.map((t) => (
-            <motion.button key={t} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setTab(t)} className={`ad-btn ad-tab-btn ${tab === t ? 'active' : ''}`} style={{ padding: '10px 18px', borderRadius: 14, fontSize: 13, fontWeight: 900 }}>
-              {t === 'all' ? `📋 All (${requests.length})` : t === 'pending' ? `⏳ Pending (${pendingRequests})` : t === 'fulfilled' ? `✅ Fulfilled (${fulfilledRequests})` : t === 'donors' ? '👥 Donors' : t === 'hospitals' ? '🏥 Hospitals' : '⚙️ Settings'}
-            </motion.button>
-          ))}
+          {tabs.map((t) => {
+            let count = requests.length
+            if (t === 'pending') count = pendingRequests
+            if (t === 'confirmed') count = confirmedRequests
+            if (t === 'no_show') count = didntShowUpRequests
+            
+            return (
+              <motion.button key={t} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setTab(t)} className={`ad-btn ad-tab-btn ${tab === t ? 'active' : ''}`} style={{ padding: '10px 18px', borderRadius: 14, fontSize: 13, fontWeight: 900 }}>
+                {t === 'all' ? `📋 All (${count})` : t === 'pending' ? `⏳ Pending (${count})` : t === 'confirmed' ? `✅ Confirmed (${count})` : t === 'no_show' ? `❌ Didn't Show (${count})` : t === 'donors' ? '👥 Donors' : t === 'hospitals' ? '🏥 Hospitals' : '⚙️ Settings'}
+              </motion.button>
+            )
+          })}
         </motion.div>
 
         {loading && (
@@ -529,7 +568,7 @@ function Admin() {
             <motion.div key={tab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
                 <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>
-                  {tab === 'all' ? '📋 All Hospital Blood Requests' : tab === 'pending' ? '⏳ Pending Requests' : '✅ Fulfilled Requests'}
+                  {tab === 'all' ? '📋 All Hospital Blood Requests' : tab === 'pending' ? '⏳ Pending Requests' : tab === 'confirmed' ? '✅ Confirmed Requests' : '❌ Didn\'t Show Up'}
                 </h2>
                 {filteredRequests.length === 0 ? (
                   <div style={{ textAlign:'center', padding:'60px 0' }}>
@@ -578,15 +617,26 @@ function Admin() {
                         </div>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           {request.status === 'pending' && (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleApprove(request.id)}
-                              className="ad-btn ad-btn-primary"
-                              style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12 }}
-                            >
-                              ✅ Approve
-                            </motion.button>
+                            <>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleConfirmed(request.id)}
+                                className="ad-btn ad-btn-primary"
+                                style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12, background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                              >
+                                ✅ Confirmed
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleDidntShowUp(request.id)}
+                                className="ad-btn ad-btn-secondary"
+                                style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12, color: '#ef4444', borderColor: '#fca5a5' }}
+                              >
+                                ❌ Didn't Show
+                              </motion.button>
+                            </>
                           )}
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -607,27 +657,30 @@ function Admin() {
           </AnimatePresence>
         )}
 
-        {/* ✅ EMERGENCY DONATIONS FOR BCC HAMRA CENTER */}
+        {/* ✅ SUPPLY BLOOD SECTION - Only shows when donors "didn't show up" */}
         {awaitingDonations.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))', borderRadius: 28, padding: 32, border: '2px solid #dc2626' }}
+            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,.12), rgba(255,107,107,.06))', borderRadius: 28, padding: 32, border: '2px solid #dc2626' }}
           >
             <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>
-              🩸 Emergency Donations Awaiting Confirmation (BCC Hamra Center)
+              🩸 BCC Hamra Supply Blood ({awaitingDonations.length})
             </h2>
+            <p style={{ fontSize: 13, color: 'rgba(31,41,55,.6)', margin: '0 0 20px 0', fontWeight: 600 }}>
+              When donors didn't show up, BCC Hamra (main center) supplies blood from its bank to hospitals across Lebanon:
+            </p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {awaitingDonations.map((donation) => (
                 <div
                   key={donation.id}
                   style={{
-                    background: 'rgba(254,226,226,.5)',
+                    background: 'rgba(254,226,226,.6)',
                     borderRadius: 18,
                     padding: 18,
-                    border: '2px solid rgba(220,38,38,.3)',
+                    border: '2px solid rgba(220,38,38,.4)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
@@ -635,19 +688,19 @@ function Admin() {
                 >
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} • {donation.donor_name || 'Anonymous Donor'}
+                      {donation.blood_type} • Hospital: {donation.patient_email}
                     </p>
-                    <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0', fontWeight: 700 }}>
-                      ⏳ Awaiting confirmation • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                    <p style={{ fontSize: 12, color: 'rgba(211,47,47,.7)', margin: '0', fontWeight: 700 }}>
+                      ❌ {donation.donor_name || 'Donor'} didn't show up • {new Date(donation.created_at).toLocaleDateString('en-GB')}
                     </p>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleConfirmDonation(donation.id)}
+                    onClick={() => handleSupplyBlood(donation.id)}
                     disabled={confirmingId === donation.id}
                     style={{
-                      background: confirmingId === donation.id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                      background: confirmingId === donation.id ? '#ccc' : 'linear-gradient(135deg, #ef4444, #dc2626)',
                       color: '#fff',
                       border: 'none',
                       padding: '9px 18px',
@@ -659,7 +712,7 @@ function Admin() {
                       opacity: confirmingId === donation.id ? 0.7 : 1
                     }}
                   >
-                    {confirmingId === donation.id ? '⏳ Confirming...' : '✅ Confirm'}
+                    {confirmingId === donation.id ? '⏳ Supplying...' : '🏥 Supply Blood'}
                   </motion.button>
                 </div>
               ))}
@@ -675,7 +728,7 @@ function Admin() {
             style={{ background: 'linear-gradient(135deg, rgba(34,197,94,.08), rgba(134,239,172,.04))', borderRadius: 28, padding: 32, border: '2px solid rgba(34,197,94,.3)' }}
           >
             <h2 style={{ fontSize: 22, fontWeight: 900, color: '#22c55e', margin: '0 0 20px 0' }}>
-              ✅ Confirmed Donations (BCC Hamra Center)
+              ✅ Confirmed Donor Donations (BCC Hamra Center)
             </h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -697,7 +750,7 @@ function Admin() {
                       {donation.blood_type} • {donation.donor_name || 'Anonymous Donor'}
                     </p>
                     <p style={{ fontSize: 11, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
-                      ✅ Confirmed • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                      ✅ Confirmed & Available • {new Date(donation.created_at).toLocaleDateString('en-GB')}
                     </p>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10 }}>
@@ -759,7 +812,7 @@ function Admin() {
                 className="ad-btn ad-btn-primary"
                 style={{ padding: '12px 24px', borderRadius: 14, fontWeight: 900, fontSize: 14 }}
               >
-              View Hospital Partner
+                View Hospital Partner
               </motion.button>
             </div>
             {hospitals.length === 0 ? (

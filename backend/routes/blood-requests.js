@@ -5,6 +5,93 @@ const axios = require('axios');
 
 console.log('[blood-requests.js] Setting up Brevo REST API...');
 
+// ✅ Normalize governorate names to match frontend and database
+const normalizeGovernorate = (governorate) => {
+  if (!governorate) return '';
+  
+  const normalizationMap = {
+    'akkar': 'Akkar',
+    'محافظة عكار': 'Akkar',
+    'عكار': 'Akkar',
+    
+    'baalbek': 'Baalbek-Hermel',
+    'baalbak': 'Baalbek-Hermel',
+    'hermel': 'Baalbek-Hermel',
+    'محافظة بعلبك الهرمل': 'Baalbek-Hermel',
+    'بعلبك': 'Baalbek-Hermel',
+    'الهرمل': 'Baalbek-Hermel',
+    'baalbek-hermel': 'Baalbek-Hermel',
+    
+    'beirut': 'Beirut',
+    'beyrouth': 'Beirut',
+    'محافظة بيروت': 'Beirut',
+    'بيروت': 'Beirut',
+    'hamra': 'Beirut',
+    'ashrafieh': 'Beirut',
+    'sin el fil': 'Beirut',
+    'سن الفيل': 'Beirut',
+    
+    'beqaa': 'Beqaa',
+    'bekaa': 'Beqaa',
+    'محافظة البقاع': 'Beqaa',
+    'البقاع': 'Beqaa',
+    'chtaura': 'Beqaa',
+    'chtoura': 'Beqaa',
+    'zahle': 'Beqaa',
+    'zahlé': 'Beqaa',
+    'زحلة': 'Beqaa',
+    
+    'keserwan': 'Keserwan-Jbeil',
+    'jbeil': 'Keserwan-Jbeil',
+    'jbail': 'Keserwan-Jbeil',
+    'محافظة كسروان جبيل': 'Keserwan-Jbeil',
+    'كسروان': 'Keserwan-Jbeil',
+    'جبيل': 'Keserwan-Jbeil',
+    'jounieh': 'Keserwan-Jbeil',
+    'juniyah': 'Keserwan-Jbeil',
+    
+    'mount lebanon': 'Mount Lebanon',
+    'محافظة جبل لبنان': 'Mount Lebanon',
+    'جبل لبنان': 'Mount Lebanon',
+    'baabda': 'Mount Lebanon',
+    'aley': 'Mount Lebanon',
+    'chouf': 'Mount Lebanon',
+    'شوف': 'Mount Lebanon',
+    
+    'nabatiyeh': 'Nabatiyeh',
+    'nabatieh': 'Nabatiyeh',
+    'محافظة النبطية': 'Nabatiyeh',
+    'النبطية': 'Nabatiyeh',
+    'bent jbail': 'Nabatiyeh',
+    'bint jbail': 'Nabatiyeh',
+    
+    'north lebanon': 'North Lebanon',
+    'محافظة الشمال': 'North Lebanon',
+    'الشمال': 'North Lebanon',
+    'tripoli': 'North Lebanon',
+    'trablous': 'North Lebanon',
+    'طرابلس': 'North Lebanon',
+    'batrun': 'North Lebanon',
+    'halba': 'North Lebanon',
+    'البترون': 'North Lebanon',
+    
+    'south lebanon': 'South Lebanon',
+    'محافظة الجنوب': 'South Lebanon',
+    'الجنوب': 'South Lebanon',
+    'sidon': 'South Lebanon',
+    'saida': 'South Lebanon',
+    'صيدا': 'South Lebanon',
+    'tyre': 'South Lebanon',
+    'sour': 'South Lebanon',
+    'صور': 'South Lebanon',
+    'jezzine': 'South Lebanon',
+    'جزين': 'South Lebanon',
+  };
+  
+  const normalized = normalizationMap[governorate.toLowerCase()];
+  return normalized || governorate;
+};
+
 // ✅ Send email via Brevo REST API
 const sendEmailViaBrevo = async (toEmail, toName, subject, htmlContent) => {
   try {
@@ -155,29 +242,37 @@ router.post('/create', async (req, res) => {
       }
 
       const hospital = hospitalResults[0];
-      const governorate = hospital.governorate || 'Beirut';
+      const governorate = normalizeGovernorate(hospital.governorate);
       
-      console.log('[/blood-requests/create] Hospital:', hospital.name, 'Governorate:', governorate);
+      if (!governorate || governorate === 'Other') {
+        console.error('[/blood-requests/create] Hospital has no valid governorate assigned');
+        res.json({ success: true, requestId: result.insertId, warning: 'Hospital has no valid governorate' });
+        return;
+      }
+      
+      console.log('[/blood-requests/create] Hospital:', hospital.name, 'Raw governorate:', hospital.governorate, 'Normalized:', governorate);
       
       // Get compatible blood types
       const compatibleBloodTypes = getCompatibleDonors(blood_type);
       console.log('[/blood-requests/create] Compatible blood types:', compatibleBloodTypes);
+      console.log('[/blood-requests/create] Filtering donors by governorate:', governorate);
       
       const donorQuery = `
         SELECT id, email, full_name FROM donors 
         WHERE blood_type IN (?) 
+        AND governorate = ?
         AND is_eligible = 1
         LIMIT 50
       `;
       
-      db.query(donorQuery, [compatibleBloodTypes], async (err, donors) => {
+      db.query(donorQuery, [compatibleBloodTypes, governorate], async (err, donors) => {
         if (err) {
           console.error('[/blood-requests/create] Donor query error:', err);
           res.json({ success: true, requestId: result.insertId });
           return;
         }
 
-        console.log('[/blood-requests/create] Found donors:', donors?.length || 0);
+        console.log('[/blood-requests/create] Found donors in', governorate, ':', donors?.length || 0);
 
         if (donors && donors.length) {
           let successCount = 0;
@@ -266,12 +361,15 @@ router.get('/hospital/:hospitalId', (req, res) => {
   });
 });
 
-// GET /api/blood-requests/donor/:donorId - Get emergency requests for this donor
+// ✅ FIXED: GET /api/blood-requests/donor/:donorId - Get emergency requests for this donor
+// NOW INCLUDES hospital_name via JOIN
 router.get('/donor/:donorId', (req, res) => {
   const query = `
-    SELECT * FROM emergency_donations 
-    WHERE donor_id = ? 
-    ORDER BY created_at DESC
+    SELECT ed.*, h.name as hospital_name
+    FROM emergency_donations ed
+    LEFT JOIN hospitals h ON ed.hospital_id = h.id
+    WHERE ed.donor_id = ? 
+    ORDER BY ed.created_at DESC
   `;
   db.query(query, [req.params.donorId], (err, results) => {
     if (err) {

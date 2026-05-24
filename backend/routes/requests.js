@@ -6,6 +6,116 @@ const axios = require('axios');
 console.log('[requests.js] Setting up Brevo REST API...');
 console.log('[requests.js] BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
 
+// ✅ EXACT same normalization as HospitalPartners.jsx - extracts from ADDRESS
+const normalizeGovernorate = (address) => {
+  if (!address) return 'Other'
+  
+  const addressLower = address.toLowerCase()
+  
+  const normalizationMap = {
+    'akkar': 'Akkar',
+    'محافظة عكار': 'Akkar',
+    'عكار': 'Akkar',
+    
+    'baalbek': 'Baalbek-Hermel',
+    'baalbak': 'Baalbek-Hermel',
+    'hermel': 'Baalbek-Hermel',
+    'محافظة بعلبك الهرمل': 'Baalbek-Hermel',
+    'بعلبك': 'Baalbek-Hermel',
+    'الهرمل': 'Baalbek-Hermel',
+    'baalbek-hermel': 'Baalbek-Hermel',
+    
+    'beirut': 'Beirut',
+    'beyrouth': 'Beirut',
+    'محافظة بيروت': 'Beirut',
+    'بيروت': 'Beirut',
+    'hamra': 'Beirut',
+    'ashrafieh': 'Beirut',
+    'sin el fil': 'Beirut',
+    'سن الفيل': 'Beirut',
+    
+    'beqaa': 'Beqaa',
+    'bekaa': 'Beqaa',
+    'محافظة البقاع': 'Beqaa',
+    'البقاع': 'Beqaa',
+    'chtaura': 'Beqaa',
+    'chtoura': 'Beqaa',
+    'zahle': 'Beqaa',
+    'zahlé': 'Beqaa',
+    'زحلة': 'Beqaa',
+    
+    'keserwan': 'Keserwan-Jbeil',
+    'jbeil': 'Keserwan-Jbeil',
+    'jbail': 'Keserwan-Jbeil',
+    'محافظة كسروان جبيل': 'Keserwan-Jbeil',
+    'كسروان': 'Keserwan-Jbeil',
+    'جبيل': 'Keserwan-Jbeil',
+    'jounieh': 'Keserwan-Jbeil',
+    'juniyah': 'Keserwan-Jbeil',
+    
+    'mount lebanon': 'Mount Lebanon',
+    'محافظة جبل لبنان': 'Mount Lebanon',
+    'جبل لبنان': 'Mount Lebanon',
+    'baabda': 'Mount Lebanon',
+    'aley': 'Mount Lebanon',
+    'chouf': 'Mount Lebanon',
+    'شوف': 'Mount Lebanon',
+    
+    'nabatiyeh': 'Nabatiyeh',
+    'nabatieh': 'Nabatiyeh',
+    'محافظة النبطية': 'Nabatiyeh',
+    'النبطية': 'Nabatiyeh',
+    'bent jbail': 'Nabatiyeh',
+    'bint jbail': 'Nabatiyeh',
+    
+    'north lebanon': 'North Lebanon',
+    'محافظة الشمال': 'North Lebanon',
+    'الشمال': 'North Lebanon',
+    'tripoli': 'North Lebanon',
+    'trablous': 'North Lebanon',
+    'طرابلس': 'North Lebanon',
+    'batrun': 'North Lebanon',
+    'halba': 'North Lebanon',
+    'البترون': 'North Lebanon',
+    
+    'south lebanon': 'South Lebanon',
+    'محافظة الجنوب': 'South Lebanon',
+    'الجنوب': 'South Lebanon',
+    'sidon': 'South Lebanon',
+    'saida': 'South Lebanon',
+    'صيدا': 'South Lebanon',
+    'tyre': 'South Lebanon',
+    'sour': 'South Lebanon',
+    'صور': 'South Lebanon',
+    'jezzine': 'South Lebanon',
+    'جزين': 'South Lebanon',
+  }
+  
+  // Search through address for any matching key
+  for (let [key, value] of Object.entries(normalizationMap)) {
+    if (addressLower.includes(key)) {
+      return value
+    }
+  }
+  
+  return 'Other'
+}
+
+// Blood type compatibility
+const getCompatibleDonors = (bloodType) => {
+  const compatibility = {
+    'O-': ['O-'],
+    'O+': ['O-', 'O+'],
+    'A-': ['O-', 'A-'],
+    'A+': ['O-', 'O+', 'A-', 'A+'],
+    'B-': ['O-', 'B-'],
+    'B+': ['O-', 'O+', 'B-', 'B+'],
+    'AB-': ['O-', 'A-', 'B-', 'AB-'],
+    'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+  };
+  return compatibility[bloodType] || [];
+};
+
 // ✅ Send email via Brevo REST API
 const sendEmailViaBrevo = async (toEmail, toName, subject, htmlContent) => {
   try {
@@ -32,7 +142,7 @@ const sendEmailViaBrevo = async (toEmail, toName, subject, htmlContent) => {
 
 console.log('[requests.js] Routes registering...');
 
-// POST /api/requests/create
+// ✅ POST /api/requests/create - Hospital blood requests with governorate filtering
 router.post('/create', async (req, res) => {
   console.log('[POST /create] Received:', req.body);
   
@@ -56,53 +166,100 @@ router.post('/create', async (req, res) => {
 
       console.log('[POST /create] Request created with ID:', result.insertId);
 
-      // Get hospital info
-      const hospitalQuery = 'SELECT name FROM hospitals WHERE id = ?';
+      // Get hospital info - we need ADDRESS to extract governorate (like HospitalPartners.jsx does)
+      const hospitalQuery = 'SELECT name, address, id FROM hospitals WHERE id = ?';
       db.query(hospitalQuery, [hospital_id], async (err, hospitalResults) => {
         if (!err && hospitalResults && hospitalResults.length) {
           const hospital = hospitalResults[0];
           
-          // Get donors
+          // ✅ Extract and normalize governorate from ADDRESS (same as HospitalPartners.jsx)
+          const hospitalAddress = hospital.address || '';
+          const normalizedGovernorate = normalizeGovernorate(hospitalAddress);
+          
+          console.log('[POST /create] Hospital:', hospital.name);
+          console.log('[POST /create] Hospital Address:', hospitalAddress);
+          console.log('[POST /create] Extracted & Normalized Governorate:', normalizedGovernorate);
+          
+          // Get compatible blood types
+          const compatibleBloodTypes = getCompatibleDonors(blood_type);
+          console.log('[POST /create] Compatible blood types:', compatibleBloodTypes);
+          
+          // ✅ Query donors from the SAME GOVERNORATE ONLY
+          // Donors table should have a 'governorate' column with normalized names
           const donorQuery = `
-            SELECT email, full_name FROM donors 
-            WHERE blood_type = ? AND is_eligible = 1 
+            SELECT id, email, full_name FROM donors 
+            WHERE blood_type IN (?) 
+            AND governorate = ?
+            AND is_eligible = 1 
             LIMIT 50
           `;
           
-          db.query(donorQuery, [blood_type], async (err, donors) => {
+          db.query(donorQuery, [compatibleBloodTypes, normalizedGovernorate], async (err, donors) => {
             if (!err && donors && donors.length) {
-              console.log(`[POST /create] Found ${donors.length} donors`);
+              console.log(`[POST /create] ✅ Found ${donors.length} donors in ${normalizedGovernorate}`);
               
+              let emailCount = 0;
               // Send emails via Brevo REST API
               for (let i = 0; i < donors.length; i++) {
                 const donor = donors[i];
                 
                 const emailHtml = `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #dc2626;">🩸 Emergency Blood Request</h2>
+                    <h2 style="color: #dc2626; margin: 0 0 20px 0;">🩸 Blood Request</h2>
                     
                     <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                      <p>Hi <strong>${donor.full_name}</strong>,</p>
-                      <p><strong>${hospital.name}</strong> urgently needs <strong>${quantity_needed} units</strong> of <strong>${blood_type}</strong> blood.</p>
+                      <p style="margin: 0 0 10px 0;">Hi <strong>${donor.full_name}</strong>,</p>
+                      <p style="margin: 0 0 10px 0;">
+                        <strong style="font-size: 16px; color: #dc2626;">${hospital.name}</strong> needs 
+                        <strong style="font-size: 16px; color: #dc2626;">${blood_type}</strong> blood 
+                        (<strong>${quantity_needed} units</strong>).
+                      </p>
                     </div>
                     
-                    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
+                    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 4px;">
                       <p style="margin: 0; font-weight: bold; color: #991b1b;">⚠️ Your blood type matches! Please respond ASAP.</p>
                     </div>
                     
-                    <p>Every donation saves lives. Thank you!</p>
+                    <p style="margin: 20px 0; color: #4b5563;">Every donation saves lives. Thank you!</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #6b7280; margin: 0;">
+                      This is an automated message from BloodConnect Lebanon
+                    </p>
                   </div>
                 `;
 
-                await sendEmailViaBrevo(
+                const sent = await sendEmailViaBrevo(
                   donor.email,
                   donor.full_name,
-                  `🩸 URGENT: ${hospital.name} needs ${blood_type} blood`,
+                  `🩸 ${hospital.name} needs ${blood_type} blood`,
                   emailHtml
                 );
+                
+                if (sent) {
+                  emailCount++;
+                  
+                  // ✅ IMPORTANT: Also insert into emergency_donations so it shows on donor dashboard
+                  const insertEmergencySql = `
+                    INSERT INTO emergency_donations 
+                    (donor_id, blood_type, patient_email, governorate, status, hospital_id) 
+                    VALUES (?, ?, ?, ?, 'pending', ?)
+                  `;
+                  db.query(insertEmergencySql, [donor.id, blood_type, hospital.name, normalizedGovernorate, hospital_id], (err) => {
+                    if (err) console.error('[POST /create] Emergency donation insert error:', err);
+                    else console.log(`[POST /create] ✅ Added to emergency_donations for donor ${donor.id}`);
+                  });
+                }
               }
+              
+              console.log(`[POST /create] ✅ ${emailCount}/${donors.length} emails sent successfully`);
+            } else {
+              console.log(`[POST /create] ⚠️ No donors found in ${normalizedGovernorate}`);
+              console.log(`[POST /create] Available governorates in donors table - run: SELECT DISTINCT governorate FROM donors;`);
             }
           });
+        } else {
+          console.log('[POST /create] ⚠️ Hospital not found');
         }
       });
 
@@ -155,14 +312,30 @@ router.get('/hospital/:hospitalId', (req, res) => {
   });
 });
 
+// GET /api/requests/:requestId - Get single request
+router.get('/:requestId', (req, res) => {
+  const id = parseInt(req.params.requestId);
+  if (!id) return res.status(400).json({ error: 'Invalid ID' });
+  
+  db.query('SELECT * FROM blood_requests WHERE id = ?', [id], (err, results) => {
+    if (err) {
+      console.error('[GET error]:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results[0] || {});
+  });
+});
+
 // DELETE /api/requests/:requestId
 router.delete('/:requestId', (req, res) => {
-  const { requestId } = req.params;
-  const query = 'DELETE FROM blood_requests WHERE id = ?';
-
-  db.query(query, [requestId], (err) => {
+  console.log('[DELETE] params:', req.params);
+  const id = parseInt(req.params.requestId);
+  if (!id) return res.status(400).json({ error: 'Invalid ID' });
+  
+  db.query('DELETE FROM blood_requests WHERE id = ?', [id], (err) => {
     if (err) {
-      return res.status(500).json({ error: 'Failed to delete' });
+      console.error('[DELETE error]:', err);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
@@ -170,14 +343,16 @@ router.delete('/:requestId', (req, res) => {
 
 // PUT /api/requests/:requestId
 router.put('/:requestId', (req, res) => {
-  const { requestId } = req.params;
+  console.log('[PUT] params:', req.params, 'body:', req.body);
+  const id = parseInt(req.params.requestId);
   const { status } = req.body;
-
-  const query = 'UPDATE blood_requests SET status = ? WHERE id = ?';
-
-  db.query(query, [status, requestId], (err) => {
+  
+  if (!id || !status) return res.status(400).json({ error: 'Invalid ID or status' });
+  
+  db.query('UPDATE blood_requests SET status = ? WHERE id = ?', [status, id], (err) => {
     if (err) {
-      return res.status(500).json({ error: 'Failed to update' });
+      console.error('[PUT error]:', err);
+      return res.status(500).json({ error: err.message });
     }
     res.json({ success: true });
   });
