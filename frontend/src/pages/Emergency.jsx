@@ -255,11 +255,8 @@ function HospitalCard({ h, index, compatibleTypes }) {
         </a>
       </div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginTop:10 }}>
-        {compatibleTypes.filter(bt => (h.blood_stock?.[bt]??0) > 0).map(bt => {
-          const u = h.blood_stock?.[bt]??0; const low = u<=5
-          return <span key={bt} style={{ fontSize:11, padding:'3px 9px', borderRadius:7, fontWeight:900, background: low?'rgba(234,88,12,.1)':'rgba(34,197,94,.1)', color: low?'#ea580c':'#16a34a', border:`1.5px solid ${low?'rgba(234,88,12,.25)':'rgba(34,197,94,.25)'}` }}>{bt}: {u}</span>
-        })}
-      </div>
+  {/* Stock display removed */}
+</div>
     </motion.div>
   )
 }
@@ -831,17 +828,7 @@ function Emergency() {
               <button onClick={() => setShowMap(true)}  className={`em-toggle-btn ${showMap?'active':'inactive'}`}>🗺️ Map View</button>
             </div>
 
-            <div className="em-glass" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderRadius:14, border:'1px solid rgba(211,47,47,.15)', marginBottom:12 }}>
-              <span style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>Stock level</span>
-              <div style={{ display:'flex', gap:14 }}>
-                {[{ c:'#ea580c', l:'Low (≤5)' }, { c:'#16a34a', l:'Available' }].map(({ c, l }) => (
-                  <div key={l} style={{ display:'flex', alignItems:'center', gap:5 }}>
-                    <span style={{ width:8, height:8, borderRadius:'50%', background:c, boxShadow:`0 0 6px ${c}`, display:'inline-block', animation:'em-pulse 2s infinite' }}/>
-                    <span style={{ fontSize:11, fontWeight:700, color:'rgba(211,47,47,.5)' }}>{l}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+           {/* Stock level legend removed */}
 
             <div style={{ maxHeight:'calc(100vh - 310px)', overflowY:'auto', paddingRight:2 }}>
               {loadingHospitals ? (
@@ -921,13 +908,7 @@ function Emergency() {
                             <div style={{ minWidth:180 }}>
                               <p style={{ fontWeight:'bold', color:'#dc2626', marginBottom:2 }}>{h.name}</p>
                               <p style={{ fontSize:11, color:'#6b7280', marginBottom:6 }}>{h.address}</p>
-                              <p style={{ fontSize:11, fontWeight:'bold', marginBottom:3 }}>Compatible Blood:</p>
-                              <div style={{ display:'flex', flexWrap:'wrap', gap:2, marginBottom:6 }}>
-                                {compatibleTypes.filter(bt => (h.blood_stock?.[bt]??0)>0).map(bt => {
-                                  const u=h.blood_stock?.[bt]??0
-                                  return <span key={bt} style={{ fontSize:10, padding:'1px 4px', borderRadius:4, fontWeight:'bold', background:u<=5?'rgba(110,32,22,.12)':'#dcfce7', color:u<=5?'#ea580c':'#16a34a' }}>{bt}: {u}</span>
-                                })}
-                              </div>
+                              
                               <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color:'#dc2626', fontSize:12, fontWeight:'bold' }}>Get Directions →</a>
                             </div>
                           </Popup>
