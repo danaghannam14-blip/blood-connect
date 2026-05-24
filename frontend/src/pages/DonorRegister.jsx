@@ -8,274 +8,300 @@ const API = 'https://blood-bank-eqyr.onrender.com'
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
-  @keyframes bc-ping      { 75%,100% { transform:scale(2.2); opacity:0; } }
-  @keyframes bc-pulse     { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
-  @keyframes bc-float-b   { 0%,100%  { transform:translateY(0); } 50% { transform:translateY(-10px); } }
-  @keyframes bc-particle  { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.3; } 50% { transform:translateY(-28px) translateX(var(--px,6px)) scale(1.2); opacity:.8; } }
-  @keyframes bc-orb       { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.08); } 66% { transform:translateY(8px) translateX(-10px) scale(.96); } }
-  @keyframes bc-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-  @keyframes bc-spin8     { to { transform:rotate(360deg); } }
-  @keyframes bc-hb        { 0%,100% { transform:scale(1); } 14% { transform:scale(1.18); } 28% { transform:scale(1); } 42% { transform:scale(1.15); } }
-  @keyframes bc-shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-  @keyframes bc-blood-float { 0%,100% { transform:translateY(0) rotate(0deg); } 25% { transform:translateY(-40px) rotate(90deg); } 50% { transform:translateY(-20px) rotate(180deg); } 75% { transform:translateY(-60px) rotate(270deg); } }
-  @keyframes bc-dna-spin { to { transform:translateY(-100%) rotate(360deg); } }
-  @keyframes bc-heartbeat { 0%,100% { transform:scale(1) translateY(0); opacity:.6; } 10% { transform:scale(1.3) translateY(-5px); opacity:1; } 20% { transform:scale(1) translateY(0); opacity:.6; } 30% { transform:scale(1.15) translateY(-3px); opacity:.9; } }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { overflow-x: hidden; }
 
-  .bc-register-root {
+  @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
+  @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
+  @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+  @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
+  @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
+
+  .dr-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#f8f8f8,#efefef,#e8e8e8,rgba(136,189,242,.25),#f2f2f2);
+    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
     background-size:400% 400%;
-    animation:bc-gradient 14s ease infinite;
+    animation:gradient-shift 15s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
     overflow-x:hidden;
     position:relative;
+    color:#380101;
+    zoom: 0.82;
   }
 
-  body, html { margin: 0; padding: 0; }
-
-  .bc-glass {
-    background:rgba(255,255,255,.42);
-    backdrop-filter:blur(28px) saturate(180%);
-    -webkit-backdrop-filter:blur(28px) saturate(180%);
-    border:1px solid rgba(255,255,255,.72);
-    box-shadow:0 8px 32px rgba(211,47,47,.07),inset 0 0 20px rgba(255,255,255,.6);
+  .dr-glass {
+    background:rgba(255,255,255,.6);
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(180,180,180,.2);
+    box-shadow:0 8px 32px rgba(0,0,0,.08);
   }
 
-  .bc-glass-deep {
-    background:rgba(255,255,255,.35);
-    backdrop-filter:blur(40px) contrast(1.1);
-    -webkit-backdrop-filter:blur(40px) contrast(1.1);
-    border:1px solid rgba(255,255,255,.8);
-    box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
+  .dr-glass-deep {
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(30px) saturate(200%);
+    -webkit-backdrop-filter:blur(30px) saturate(200%);
+    border:1px solid rgba(180,180,180,.25);
+    box-shadow:0 16px 48px rgba(0,0,0,.1),inset 0 1px 1px rgba(255,255,255,.3);
   }
 
-  .bc-orb { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; animation:bc-orb var(--dur,8s) ease-in-out infinite; }
-  .bc-particle { position:fixed; border-radius:50%; pointer-events:none; animation:bc-particle var(--dur,5s) ease-in-out infinite; }
-
-  .bc-blood-cell {
-    position:fixed;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,rgba(255,107,107,.4),rgba(211,47,47,.25));
-    border:2px solid rgba(211,47,47,.3);
-    animation:bc-blood-float var(--dur,12s) ease-in-out infinite;
-    pointer-events:none;
-  }
-
-  .bc-blood-cell::before {
-    content:'';
+  .dr-float-orb {
     position:absolute;
-    inset:12px;
     border-radius:50%;
-    background:radial-gradient(circle at 40% 40%,rgba(255,255,255,.3),transparent);
+    filter:blur(80px);
+    pointer-events:none;
+    animation:float-orb 6s ease-in-out infinite;
   }
 
-  .bc-input {
+  .dr-input {
     width:100%;
-    padding:14px 18px;
-    border-radius:14px;
-    border:2px solid rgba(211,47,47,.15);
+    padding:clamp(13px,1.5vw,16px) clamp(16px,2vw,20px);
+    border-radius:clamp(12px,1.5vw,16px);
+    border:1.5px solid rgba(180,180,180,.2);
     background:rgba(255,255,255,.5);
     backdrop-filter:blur(20px);
     font-family:'Plus Jakarta Sans',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    color:#dc2626;
+    font-weight:600;
+    font-size:clamp(12px,1.1vw,14px);
+    color:#380101;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
-    box-sizing:border-box;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.3);
   }
 
-  .bc-input::placeholder { color:rgba(211,47,47,.35); }
-  .bc-input:focus { border-color:rgba(211,47,47,.5); background:rgba(255,255,255,.72); box-shadow:0 8px 24px rgba(211,47,47,.12); transform:translateY(-2px); }
+  .dr-input::placeholder { color:rgba(56,1,1,.4); }
 
-  .bc-select {
+  .dr-input:focus {
+    border-color:rgba(220,38,38,.4);
+    background:rgba(255,255,255,.7);
+    box-shadow:0 8px 24px rgba(220,38,38,.15),inset 0 1px 1px rgba(255,255,255,.3);
+    transform:translateY(-2px);
+  }
+
+  .dr-select {
     width:100%;
-    padding:14px 18px;
-    border-radius:14px;
-    border:2px solid rgba(211,47,47,.15);
+    padding:clamp(13px,1.5vw,16px) clamp(16px,2vw,20px);
+    border-radius:clamp(12px,1.5vw,16px);
+    border:1.5px solid rgba(180,180,180,.2);
     background:rgba(255,255,255,.5);
     backdrop-filter:blur(20px);
     font-family:'Plus Jakarta Sans',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    color:#dc2626;
+    font-weight:600;
+    font-size:clamp(12px,1.1vw,14px);
+    color:#380101;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
-    box-sizing:border-box;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.3);
     cursor:pointer;
   }
 
-  .bc-select:focus { border-color:rgba(211,47,47,.5); background:rgba(255,255,255,.72); box-shadow:0 8px 24px rgba(211,47,47,.12); transform:translateY(-2px); }
+  .dr-select:focus {
+    border-color:rgba(220,38,38,.4);
+    background:rgba(255,255,255,.7);
+    box-shadow:0 8px 24px rgba(220,38,38,.15),inset 0 1px 1px rgba(255,255,255,.3);
+    transform:translateY(-2px);
+  }
 
-  .bc-btn {
+  .dr-btn {
     position:relative;
     overflow:hidden;
     cursor:pointer;
     border:none;
     outline:none;
-    transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);
     font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:700;
+    border-radius:clamp(12px,1.5vw,16px);
   }
 
-  .bc-btn::after {
+  .dr-btn::before {
     content:'';
     position:absolute;
-    top:50%;
-    left:50%;
-    width:0;
-    height:0;
-    background:rgba(255,255,255,.28);
-    border-radius:50%;
-    transform:translate(-50%,-50%);
-    transition:width .4s,height .4s;
+    top:0;
+    left:-100%;
+    width:100%;
+    height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+    transition:left .5s;
   }
 
-  .bc-btn:hover::after { width:300px; height:300px; }
-  .bc-btn:hover { transform:translateY(-3px) scale(1.05); }
-  .bc-btn:active { transform:scale(.97); }
+  .dr-btn:hover::before { left:100%; }
 
-  .bc-btn-primary {
-    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+  .dr-btn-primary {
+    background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
     color:#faf7f7;
-    box-shadow:0 12px 32px rgba(211,47,47,.32);
+    box-shadow:0 10px 30px rgba(220,38,38,.35);
+    border:1px solid rgba(255,255,255,.15);
   }
-  .bc-btn-primary:hover { box-shadow:0 18px 48px rgba(211,47,47,.44); }
 
-  .bc-step-indicator {
-    width:40px;
-    height:40px;
+  .dr-btn-primary:hover {
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:0 20px 60px rgba(220,38,38,.5);
+  }
+
+  .dr-btn-secondary {
+    background:rgba(255,255,255,.7);
+    backdrop-filter:blur(10px);
+    border:1.5px solid rgba(180,180,180,.3);
+    color:#380101;
+  }
+
+  .dr-btn-secondary:hover {
+    background:rgba(255,255,255,.85);
+    border-color:rgba(180,180,180,.5);
+    transform:translateY(-2px);
+  }
+
+  .dr-step-indicator {
+    width:clamp(36px,4vw,44px);
+    height:clamp(36px,4vw,44px);
     border-radius:50%;
     display:flex;
     align-items:center;
     justify-content:center;
     font-weight:900;
-    font-size:14px;
+    font-size:clamp(12px,1.2vw,14px);
     transition:all .3s cubic-bezier(.34,1.56,.64,1);
   }
 
-  .bc-step-indicator.active {
+  .dr-step-indicator.active {
     background:linear-gradient(135deg,#dc2626,#ff6b6b);
     color:#faf7f7;
-    box-shadow:0 8px 24px rgba(211,47,47,.4);
+    box-shadow:0 8px 24px rgba(220,38,38,.4);
     transform:scale(1.15);
   }
 
-  .bc-step-indicator.completed {
+  .dr-step-indicator.completed {
     background:rgba(34,197,94,.15);
     color:#22c55e;
     border:2px solid #22c55e;
   }
 
-  .bc-step-indicator.inactive {
-    background:rgba(211,47,47,.08);
-    color:rgba(211,47,47,.4);
-    border:2px solid rgba(211,47,47,.15);
+  .dr-step-indicator.inactive {
+    background:rgba(220,38,38,.08);
+    color:rgba(220,38,38,.4);
+    border:2px solid rgba(220,38,38,.15);
   }
 
-  .bc-upload-zone {
-    border:2px dashed rgba(211,47,47,.3);
-    border-radius:20px;
+  .dr-upload-zone {
+    border:2px dashed rgba(220,38,38,.3);
+    border-radius:clamp(16px,2vw,22px);
     background:rgba(255,235,238,.3);
     transition:all .3s;
     cursor:pointer;
   }
 
-  .bc-upload-zone:hover {
+  .dr-upload-zone:hover {
     border-color:#dc2626;
     background:rgba(255,235,238,.5);
     transform:translateY(-2px);
   }
 
-  .bc-progress-bar {
-    height:6px;
-    background:rgba(211,47,47,.15);
-    border-radius:999px;
+  .dr-progress-bar {
+    height:5px;
+    background:rgba(220,38,38,.1);
+    border-radius:9999px;
     overflow:hidden;
     position:relative;
   }
 
-  .bc-progress-fill {
+  .dr-progress-fill {
     height:100%;
-    background:linear-gradient(90deg,#dc2626,#ff6b6b,#88bdf2);
-    background-size:200% 100%;
-    animation:bc-shimmer 2s linear infinite;
-    border-radius:999px;
+    background:linear-gradient(90deg,#dc2626,#991b1b);
+    border-radius:9999px;
+    box-shadow:0 0 16px rgba(220,38,38,.5);
     transition:width .5s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @media (max-width:1200px) {
+    .dr-root { zoom: 0.88; }
+  }
+
+  @media (max-width:1024px) {
+    .dr-root { zoom: 0.85; }
+  }
+
+  @media (max-width:768px) {
+    .dr-root { zoom: 0.75; }
+  }
+
+  @media (max-width:480px) {
+    .dr-root { zoom: 0.65; }
   }
 `
 
-if (typeof document !== 'undefined' && !document.getElementById('bc-register-styles')) {
+if (typeof document !== 'undefined' && !document.getElementById('dr-styles-unified')) {
   const s = document.createElement('style')
-  s.id = 'bc-register-styles'
+  s.id = 'dr-styles-unified'
   s.textContent = STYLES
   document.head.appendChild(s)
 }
 
-function AnimatedBackground() {
-  const bloodCells = Array.from({ length: 8 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 30 + 40,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    dur: (Math.random() * 8 + 10).toFixed(1),
-    delay: -(Math.random() * 8).toFixed(1),
-  }))
+/* ─── Animated Background Orbs ───────────────────────── */
+function AnimatedBackgroundOrbs() {
+  const orbs = [
+    { size: 'min(350px,32vw)', color: 'rgba(220,38,38,.1)', top: '-8%', left: '-5%', duration: 8 },
+    { size: 'min(300px,28vw)', color: 'rgba(180,180,180,.08)', top: '20%', right: '-8%', duration: 11 },
+    { size: 'min(320px,30vw)', color: 'rgba(220,38,38,.08)', bottom: '-12%', left: '8%', duration: 13 },
+    { size: 'min(280px,26vw)', color: 'rgba(180,180,180,.06)', bottom: '15%', right: '-5%', duration: 9 },
+  ]
 
-  const particles = Array.from({ length: 35 }, (_, i) => ({
+  const dots = Array.from({ length: 12 }, (_, i) => ({
     id: i,
-    w: Math.random() * 4 + 2,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    dur: (Math.random() * 4 + 3).toFixed(1),
-    delay: -(Math.random() * 4).toFixed(1),
-    px: ((Math.random() * 20 - 10).toFixed(0)) + 'px',
-    color: i % 3 === 0 ? 'rgba(211,47,47,.35)' : i % 3 === 1 ? 'rgba(136,189,242,.45)' : 'rgba(255,235,238,.7)',
+    size: Math.random() * 8 + 3,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
   }))
 
   return (
-    <div style={{ position:'fixed', top:0, left:0, width:'100%', height:'100%', overflow:'hidden', pointerEvents:'none', zIndex:0 }}>
-      {bloodCells.map(cell => (
-        <div
-          key={`cell-${cell.id}`}
-          className="bc-blood-cell"
+    <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {orbs.map((orb, i) => (
+        <motion.div
+          key={`orb-${i}`}
+          className="dr-float-orb"
           style={{
-            '--dur': `${cell.dur}s`,
-            width: cell.size,
-            height: cell.size,
-            left: `${cell.left}%`,
-            top: `${cell.top}%`,
-            animationDelay: `${cell.delay}s`,
+            width: orb.size,
+            height: orb.size,
+            background: orb.color,
+            top: orb.top,
+            right: orb.right,
+            left: orb.left,
+            bottom: orb.bottom,
           }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
 
-      {particles.map(p => (
-        <div
-          key={`p-${p.id}`}
-          className="bc-particle"
+      {dots.map((dot) => (
+        <motion.div
+          key={`dot-${dot.id}`}
           style={{
-            '--dur': `${p.dur}s`,
-            '--px': p.px,
-            width: p.w,
-            height: p.w,
-            left: `${p.left}%`,
-            top: `${p.top}%`,
-            background: p.color,
-            animationDelay: `${p.delay}s`,
+            position: 'fixed',
+            width: dot.size,
+            height: dot.size,
+            borderRadius: '50%',
+            background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+            left: `${dot.startX}%`,
+            top: `${dot.startY}%`,
+            boxShadow: `0 0 ${dot.size * 2}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+          }}
+          animate={{
+            y: [0, -200 - Math.random() * 100],
+            x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+            opacity: [0, 0.7, 0],
+          }}
+          transition={{
+            duration: dot.duration,
+            delay: dot.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
           }}
         />
       ))}
-
-      {[
-        { t:'8%', l:'5%', w:'min(420px,36vw)', c:'rgba(211,47,47,.17)', d:'0s' },
-        { b:'15%', r:'10%', w:'min(480px,40vw)', c:'rgba(136,189,242,.22)', d:'-3s' },
-        { t:'50%', r:'8%', w:'min(320px,28vw)', c:'rgba(255,235,238,.45)', d:'-6s' },
-      ].map((o, i) => (
-        <div key={`orb-${i}`} className="bc-orb" style={{ '--dur':'9s', width:o.w, height:o.w, background:o.c, top:o.t, bottom:o.b, left:o.l, right:o.r, animationDelay:o.d, zIndex:-1 }}/>
-      ))}
-    </div>
+    </motion.div>
   )
 }
 
@@ -423,7 +449,7 @@ function DonorRegister() {
         await axios.post(`${API}/api/analytics/event`, {
           eventType: 'donor_login'
         })
-        console.log('✅ Donor registration tracked')
+        console.log('Donor registration tracked')
       } catch (analyticsErr) {
         console.error('Analytics error:', analyticsErr)
       }
@@ -467,55 +493,57 @@ function DonorRegister() {
   const progress = (currentStep / 4) * 100
 
   return (
-    <div className="bc-register-root">
-      <AnimatedBackground />
+    <div className="dr-root">
+      <AnimatedBackgroundOrbs />
 
-      <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(20px,4vw,60px) clamp(16px,3vw,40px)' }}>
+      <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(16px,2.5vw,32px)' }}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
           transition={{ duration: 0.6 }}
-          style={{ width:'100%', maxWidth:700 }}
+          style={{ width:'100%', maxWidth: 'clamp(320px,90vw,700px)' }}
         >
 
-          <div style={{ textAlign:'center', marginBottom:'clamp(28px,4vw,48px)' }}>
+          {/* Header */}
+          <div style={{ textAlign:'center', marginBottom:'clamp(24px,3.5vw,40px)' }}>
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
-              style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:80, height:80, marginBottom:16, position:'relative' }}
+              style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width: 'clamp(60px,8vw,80px)', height: 'clamp(60px,8vw,80px)', marginBottom:'clamp(12px,1.5vw,16px)', position:'relative' }}
             >
-              <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(211,47,47,.15)', animation:'bc-ping 2s infinite' }}/>
-              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'#faf7f7' }}>
+              <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(220,38,38,.15)', animation:'pulse-ring 2s infinite' }}/>
+              <div style={{ width:'85%', height:'85%', borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg viewBox="0 0 100 130" style={{ width:'55%', height:'55%', fill:'#faf7f7' }}>
                   <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
-              Join the Heroes
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
+              Join as a Hero
             </h1>
-            <p style={{ fontSize:'clamp(13px,1.3vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:700, marginTop:12, letterSpacing:'.04em' }}>
-              Register to save lives across Lebanon
+            <p style={{ fontSize:'clamp(12px,1.2vw,14px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(8px,1vw,12px)', letterSpacing:'.06em', textTransform:'uppercase' }}>
+              Register to save lives
             </p>
           </div>
 
-          <div style={{ marginBottom:'clamp(32px,4.5vw,56px)' }}>
-            <div className="bc-progress-bar">
-              <div className="bc-progress-fill" style={{ width:`${progress}%` }}/>
+          {/* Progress Bar */}
+          <div style={{ marginBottom:'clamp(24px,3.5vw,40px)' }}>
+            <div className="dr-progress-bar">
+              <div className="dr-progress-fill" style={{ width:`${progress}%` }}/>
             </div>
-            <div style={{ display:'flex', justifyContent:'space-between', marginTop:20 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginTop:'clamp(16px,2vw,24px)', gap:'clamp(6px,1vw,12px)' }}>
               {[
                 { num: 1, label: 'Account' },
                 { num: 2, label: 'Age' },
-                { num: 3, label: 'Blood Type' },
+                { num: 3, label: 'Blood' },
                 { num: 4, label: 'Location' },
               ].map(step => (
-                <div key={step.num} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-                  <div className={`bc-step-indicator ${currentStep === step.num ? 'active' : currentStep > step.num ? 'completed' : 'inactive'}`}>
+                <div key={step.num} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'clamp(6px,0.8vw,8px)', flex: 1 }}>
+                  <div className={`dr-step-indicator ${currentStep === step.num ? 'active' : currentStep > step.num ? 'completed' : 'inactive'}`}>
                     {currentStep > step.num ? '✓' : step.num}
                   </div>
-                  <span style={{ fontSize:10, fontWeight:900, color: currentStep >= step.num ? '#dc2626' : 'rgba(211,47,47,.4)', textTransform:'uppercase', letterSpacing:'.15em' }}>
+                  <span style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color: currentStep >= step.num ? '#dc2626' : 'rgba(220,38,38,.4)', textTransform:'uppercase', letterSpacing:'.1em', textAlign:'center' }}>
                     {step.label}
                   </span>
                 </div>
@@ -523,9 +551,10 @@ function DonorRegister() {
             </div>
           </div>
 
-          <div className="bc-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba(64,88,120,.2)', position:'relative', overflow:'hidden' }}>
+          {/* Form Card */}
+          <div className="dr-glass-deep" style={{ borderRadius:'clamp(20px,3vw,28px)', padding:'clamp(24px,3.5vw,36px)', border:'1px solid rgba(180,180,180,.15)', position:'relative', overflow:'hidden' }}>
             
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#88bdf2,transparent)' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>
 
             <AnimatePresence>
               {message && (
@@ -533,10 +562,10 @@ function DonorRegister() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bc-glass"
-                  style={{ background:'rgba(34,197,94,.15)', border:'2px solid #22c55e', padding:14, borderRadius:16, marginBottom:20, textAlign:'center' }}
+                  className="dr-glass"
+                  style={{ background:'rgba(34,197,94,.15)', border:'1.5px solid rgba(34,197,94,.3)', padding:'clamp(12px,1.5vw,16px)', borderRadius:'clamp(12px,1.5vw,16px)', marginBottom:'clamp(16px,2vw,20px)', textAlign:'center' }}
                 >
-                  <p style={{ fontSize:13, fontWeight:700, color:'#22c55e', margin:0 }}>{message}</p>
+                  <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#22c55e', margin:0 }}>{message}</p>
                 </motion.div>
               )}
               {error && (
@@ -544,10 +573,10 @@ function DonorRegister() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bc-glass"
-                  style={{ background:'rgba(255,235,238,.8)', border:'2px solid rgba(211,47,47,.4)', padding:14, borderRadius:16, marginBottom:20, textAlign:'center' }}
+                  className="dr-glass"
+                  style={{ background:'rgba(220,38,38,.08)', border:'1.5px solid rgba(220,38,38,.3)', padding:'clamp(12px,1.5vw,16px)', borderRadius:'clamp(12px,1.5vw,16px)', marginBottom:'clamp(16px,2vw,20px)', textAlign:'center' }}
                 >
-                  <p style={{ fontSize:13, fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
+                  <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -563,35 +592,35 @@ function DonorRegister() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
-                    style={{ display:'flex', flexDirection:'column', gap:18 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,18px)' }}
                   >
                     <div>
-                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Full Name *</label>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Full Name</label>
                       <input
                         name="full_name"
                         placeholder="Your full name"
                         value={form.full_name}
                         onChange={handleChange}
-                        className="bc-input"
+                        className="dr-input"
                         required
                       />
                     </div>
 
                     <div>
-                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Email *</label>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Email</label>
                       <input
                         name="email"
                         type="email"
                         placeholder="you@example.com"
                         value={form.email}
                         onChange={handleChange}
-                        className="bc-input"
+                        className="dr-input"
                         required
                       />
                     </div>
 
                     <div>
-                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Password *</label>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Password</label>
                       <div style={{ position:'relative' }}>
                         <input
                           name="password"
@@ -599,16 +628,16 @@ function DonorRegister() {
                           placeholder="Create a strong password"
                           value={form.password}
                           onChange={handleChange}
-                          className="bc-input"
-                          style={{ paddingRight:50 }}
+                          className="dr-input"
+                          style={{ paddingRight: 'clamp(40px,5vw,50px)' }}
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          style={{ position:'absolute', right:16, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:4 }}
+                          style={{ position:'absolute', right:'clamp(12px,1.5vw,16px)', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center', justifyContent:'center' }}
                         >
-                          <svg viewBox="0 0 24 24" style={{ width:20, height:20, fill:'rgba(211,47,47,.5)' }}>
+                          <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
                             {showPassword ? (
                               <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
                             ) : (
@@ -620,7 +649,7 @@ function DonorRegister() {
                     </div>
 
                     <div>
-                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Phone Number</label>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Phone Number</label>
                       <div style={{ position:'relative' }}>
                         <input
                           name="phone"
@@ -629,10 +658,10 @@ function DonorRegister() {
                           placeholder="+961 XXXX XXXX"
                           value={form.phone}
                           onChange={handlePhoneChange}
-                          className="bc-input"
+                          className="dr-input"
                         />
                         {form.phone && (
-                          <span style={{ position:'absolute', right:16, top:'50%', transform:'translateY(-50%)', fontSize:12, color:'rgba(211,47,47,.5)', fontWeight:700 }}>
+                          <span style={{ position:'absolute', right:'clamp(12px,1.5vw,16px)', top:'50%', transform:'translateY(-50%)', fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', fontWeight:700 }}>
                             {form.phone.replace(/\D/g, '').length}/11
                           </span>
                         )}
@@ -649,22 +678,22 @@ function DonorRegister() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
-                    style={{ display:'flex', flexDirection:'column', gap:16 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,1.8vw,16px)' }}
                   >
-                    <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'#faf7f7' }}>
+                    <div className="dr-glass" style={{ background:'rgba(255,235,238,.4)', border:'1.5px solid rgba(220,38,38,.15)', borderRadius:'clamp(16px,2vw,20px)', padding:'clamp(16px,2vw,20px)' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:'clamp(10px,1.5vw,12px)', marginBottom:'clamp(12px,1.5vw,16px)' }}>
+                        <div style={{ width:'clamp(36px,5vw,44px)', height:'clamp(36px,5vw,44px)', borderRadius:'10px', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0 }}>
+                          <svg viewBox="0 0 24 24" style={{ width:'65%', height:'65%', fill:'#faf7f7' }}>
                             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                           </svg>
                         </div>
                         <div>
-                          <h3 style={{ fontSize:16, fontWeight:900, color:'#dc2626', margin:0 }}>ID Front</h3>
-                          <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'4px 0 0', fontWeight:600 }}>Verify your age</p>
+                          <h3 style={{ fontSize:'clamp(14px,1.3vw,16px)', fontWeight:700, color:'#dc2626', margin:0 }}>ID Front</h3>
+                          <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.6)', margin:'clamp(4px,0.5vw,6px) 0 0', fontWeight:600 }}>Verify your age</p>
                         </div>
                       </div>
 
-                      <label className="bc-upload-zone" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:32, marginBottom:16 }}>
+                      <label className="dr-upload-zone" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'clamp(24px,3vw,32px)', marginBottom:'clamp(12px,1.5vw,16px)' }}>
                         <input
                           type="file"
                           accept="image/*"
@@ -673,66 +702,68 @@ function DonorRegister() {
                         />
                         {frontFile ? (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#dc2626', marginBottom:8 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', fill:'#dc2626', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
                             </svg>
-                            <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0, textAlign:'center' }}>{frontFile.name}</p>
-                            <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:4 }}>Tap to change</p>
+                            <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0, textAlign:'center', wordBreak:'break-word' }}>{frontFile.name}</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Tap to change</p>
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:56, height:56, fill:'rgba(211,47,47,.4)', marginBottom:12 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(40px,5vw,48px)', height:'clamp(40px,5vw,48px)', fill:'rgba(56,1,1,.3)', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
-                            <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:0 }}>Upload ID Front</p>
-                            <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:6 }}>Show your face & age</p>
+                            <p style={{ fontSize:'clamp(13px,1.2vw,14px)', fontWeight:700, color:'#dc2626', margin:0 }}>Upload ID Front</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Show your face and age</p>
                           </>
                         )}
                       </label>
 
-                      <button
+                      <motion.button
                         type="button"
                         onClick={scanIdFront}
                         disabled={frontStatus === 'scanning' || !frontFile}
-                        className="bc-btn bc-btn-primary"
-                        style={{ width:'100%', padding:14, borderRadius:14, fontSize:14, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: frontStatus === 'scanning' || !frontFile ? 0.6 : 1 }}
+                        className="dr-btn dr-btn-primary"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: frontStatus === 'scanning' || !frontFile ? 0.6 : 1, pointerEvents: frontStatus === 'scanning' || !frontFile ? 'none' : 'auto' }}
                       >
                         {frontStatus === 'scanning' ? (
                           <>
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
+                              style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', border:'2.5px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                             />
                             Scanning...
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', fill:'#faf7f7' }}>
                               <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                             </svg>
                             Scan Front
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     </div>
 
                     {frontStatus === 'verified' && ageData.age && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bc-glass"
-                        style={{ padding:20, borderRadius:14, background:'rgba(34,197,94,.15)', border:'2px solid #22c55e' }}
+                        className="dr-glass"
+                        style={{ padding:'clamp(16px,2vw,20px)', borderRadius:'clamp(12px,1.5vw,16px)', background:'rgba(34,197,94,.15)', border:'1.5px solid rgba(34,197,94,.3)' }}
                       >
-                        <p style={{ fontSize:13, fontWeight:700, color:'#22c55e', margin:'0 0 12px 0', textAlign:'center' }}>
-                          ✓ Age Verified!
+                        <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#22c55e', margin:'0 0 clamp(8px,1vw,12px) 0', textAlign:'center', textTransform:'uppercase', letterSpacing:'.05em' }}>
+                          Age Verified
                         </p>
                         <div style={{ textAlign:'center' }}>
-                          <p style={{ fontSize:28, fontWeight:900, color:'#22c55e', margin:'0 0 8px 0' }}>
-                            {ageData.age} years old
+                          <p style={{ fontSize:'clamp(24px,3.5vw,32px)', fontWeight:900, color:'#22c55e', margin:'0 0 clamp(6px,1vw,8px) 0' }}>
+                            {ageData.age}
                           </p>
-                          <p style={{ fontSize:12, color:'rgba(34,197,94,.8)', margin:0, fontWeight:600 }}>
-                            DOB: {ageData.dob}
+                          <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(34,197,94,.75)', margin:0, fontWeight:600 }}>
+                            years old
                           </p>
                         </div>
                       </motion.div>
@@ -748,22 +779,22 @@ function DonorRegister() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
-                    style={{ display:'flex', flexDirection:'column', gap:16 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,1.8vw,16px)' }}
                   >
-                    <div className="bc-glass" style={{ background:'rgba(255,235,238,.4)', border:'2px solid rgba(211,47,47,.15)', borderRadius:20, padding:20 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-                        <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <svg viewBox="0 0 24 24" style={{ width:24, height:24, fill:'#faf7f7' }}>
+                    <div className="dr-glass" style={{ background:'rgba(255,235,238,.4)', border:'1.5px solid rgba(220,38,38,.15)', borderRadius:'clamp(16px,2vw,20px)', padding:'clamp(16px,2vw,20px)' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:'clamp(10px,1.5vw,12px)', marginBottom:'clamp(12px,1.5vw,16px)' }}>
+                        <div style={{ width:'clamp(36px,5vw,44px)', height:'clamp(36px,5vw,44px)', borderRadius:'10px', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0 }}>
+                          <svg viewBox="0 0 24 24" style={{ width:'65%', height:'65%', fill:'#faf7f7' }}>
                             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                           </svg>
                         </div>
                         <div>
-                          <h3 style={{ fontSize:16, fontWeight:900, color:'#dc2626', margin:0 }}>ID Back</h3>
-                          <p style={{ fontSize:11, color:'rgba(211,47,47,.6)', margin:'4px 0 0', fontWeight:600 }}>Extract blood type</p>
+                          <h3 style={{ fontSize:'clamp(14px,1.3vw,16px)', fontWeight:700, color:'#dc2626', margin:0 }}>ID Back</h3>
+                          <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.6)', margin:'clamp(4px,0.5vw,6px) 0 0', fontWeight:600 }}>Extract blood type</p>
                         </div>
                       </div>
 
-                      <label className="bc-upload-zone" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:32, marginBottom:16 }}>
+                      <label className="dr-upload-zone" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'clamp(24px,3vw,32px)', marginBottom:'clamp(12px,1.5vw,16px)' }}>
                         <input
                           type="file"
                           accept="image/*"
@@ -772,63 +803,65 @@ function DonorRegister() {
                         />
                         {backFile ? (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:48, height:48, fill:'#dc2626', marginBottom:8 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', fill:'#dc2626', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
                             </svg>
-                            <p style={{ fontSize:13, fontWeight:900, color:'#dc2626', margin:0, textAlign:'center' }}>{backFile.name}</p>
-                            <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:4 }}>Tap to change</p>
+                            <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0, textAlign:'center', wordBreak:'break-word' }}>{backFile.name}</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Tap to change</p>
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:56, height:56, fill:'rgba(211,47,47,.4)', marginBottom:12 }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(40px,5vw,48px)', height:'clamp(40px,5vw,48px)', fill:'rgba(56,1,1,.3)', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
-                            <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:0 }}>Upload ID Back</p>
-                            <p style={{ fontSize:11, color:'rgba(211,47,47,.5)', marginTop:6 }}>Show blood type & info</p>
+                            <p style={{ fontSize:'clamp(13px,1.2vw,14px)', fontWeight:700, color:'#dc2626', margin:0 }}>Upload ID Back</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Show blood type and info</p>
                           </>
                         )}
                       </label>
 
-                      <button
+                      <motion.button
                         type="button"
                         onClick={scanIdBack}
                         disabled={backStatus === 'scanning' || !backFile}
-                        className="bc-btn bc-btn-primary"
-                        style={{ width:'100%', padding:14, borderRadius:14, fontSize:14, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: backStatus === 'scanning' || !backFile ? 0.6 : 1 }}
+                        className="dr-btn dr-btn-primary"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: backStatus === 'scanning' || !backFile ? 0.6 : 1, pointerEvents: backStatus === 'scanning' || !backFile ? 'none' : 'auto' }}
                       >
                         {backStatus === 'scanning' ? (
                           <>
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
+                              style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', border:'2.5px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                             />
                             Scanning...
                           </>
                         ) : (
                           <>
-                            <svg viewBox="0 0 24 24" style={{ width:18, height:18, fill:'#faf7f7' }}>
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', fill:'#faf7f7' }}>
                               <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                             </svg>
                             Scan Back
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     </div>
 
                     {backStatus === 'verified' && form.blood_type && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        style={{ padding:24, borderRadius:14, background:'linear-gradient(135deg,rgba(211,47,47,.1),rgba(136,189,242,.1))', border:'2px solid rgba(211,47,47,.2)', textAlign:'center' }}
+                        style={{ padding:'clamp(20px,2.5vw,24px)', borderRadius:'clamp(12px,1.5vw,16px)', background:'linear-gradient(135deg,rgba(220,38,38,.08),rgba(220,38,38,.04))', border:'1.5px solid rgba(220,38,38,.2)', textAlign:'center' }}
                       >
-                        <p style={{ fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, margin:'0 0 16px 0', textTransform:'uppercase', letterSpacing:'.15em' }}>
-                          🩸 Blood Type
+                        <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.6)', fontWeight:700, margin:'0 0 clamp(10px,1.5vw,14px) 0', textTransform:'uppercase', letterSpacing:'.1em' }}>
+                          Blood Type
                         </p>
-                        <p style={{ fontSize:56, fontWeight:900, color:'#dc2626', margin:0, lineHeight:1 }}>
+                        <p style={{ fontSize:'clamp(40px,6vw,56px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1 }}>
                           {form.blood_type}
                         </p>
-                        <p style={{ fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, margin:'8px 0 0 0', textTransform:'uppercase', letterSpacing:'.1em' }}>
+                        <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.6)', fontWeight:700, margin:'clamp(6px,1vw,10px) 0 0', textTransform:'uppercase', letterSpacing:'.1em' }}>
                           Extracted from ID
                         </p>
                       </motion.div>
@@ -844,15 +877,15 @@ function DonorRegister() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
-                    style={{ display:'flex', flexDirection:'column', gap:18 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,18px)' }}
                   >
                     <div>
-                      <label style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>Select Your Governorate *</label>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Select Your Governorate</label>
                       <select
                         name="governorate"
                         value={form.governorate}
                         onChange={handleChange}
-                        className="bc-select"
+                        className="dr-select"
                         required
                       >
                         <option value="">Choose a governorate...</option>
@@ -866,23 +899,21 @@ function DonorRegister() {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bc-glass"
-                        style={{ padding:20, borderRadius:14, background:'rgba(136,189,242,.15)', border:'2px solid rgba(64,88,120,.3)', textAlign:'center' }}
+                        className="dr-glass"
+                        style={{ padding:'clamp(16px,2vw,20px)', borderRadius:'clamp(12px,1.5vw,16px)', background:'rgba(64,88,120,.08)', border:'1.5px solid rgba(64,88,120,.2)', textAlign:'center' }}
                       >
-                        <p style={{ fontSize:13, fontWeight:700, color:'rgba(64,88,120,.8)', margin:'0 0 12px 0' }}>
-                          📍 Location Selected
+                        <p style={{ fontSize:'clamp(11px,1vw,12px)', fontWeight:700, color:'rgba(64,88,120,.7)', margin:'0 0 clamp(8px,1vw,12px) 0', textTransform:'uppercase', letterSpacing:'.05em' }}>
+                          Location Selected
                         </p>
-                        <div style={{ textAlign:'center' }}>
-                          <p style={{ fontSize:24, fontWeight:900, color:'rgba(64,88,120,.9)', margin:0 }}>
-                            {form.governorate}
-                          </p>
-                        </div>
+                        <p style={{ fontSize:'clamp(18px,2.5vw,24px)', fontWeight:900, color:'rgba(64,88,120,.9)', margin:0 }}>
+                          {form.governorate}
+                        </p>
                       </motion.div>
                     )}
 
-                    <div className="bc-glass" style={{ background:'rgba(136,189,242,.1)', border:'2px solid rgba(64,88,120,.2)', borderRadius:14, padding:16 }}>
-                      <p style={{ fontSize:12, color:'rgba(153,27,27,.7)', fontWeight:600, margin:0, lineHeight:1.6 }}>
-                        📋 Your location helps us connect you with the nearest blood banks and donation centers in your area.
+                    <div className="dr-glass" style={{ background:'rgba(64,88,120,.08)', border:'1.5px solid rgba(64,88,120,.2)', borderRadius:'clamp(12px,1.5vw,16px)', padding:'clamp(12px,1.5vw,16px)' }}>
+                      <p style={{ fontSize:'clamp(11px,1vw,12px)', color:'rgba(56,1,1,.65)', fontWeight:600, margin:0, lineHeight:1.6 }}>
+                        Your location helps us connect you with the nearest blood banks and donation centers in your area.
                       </p>
                     </div>
                   </motion.div>
@@ -890,55 +921,61 @@ function DonorRegister() {
 
               </AnimatePresence>
 
-              <div style={{ display:'flex', gap:12, marginTop:32 }}>
+              {/* Navigation Buttons */}
+              <div style={{ display:'flex', gap:'clamp(10px,1.5vw,14px)', marginTop:'clamp(24px,3.5vw,32px)', flexWrap:'wrap' }}>
                 {currentStep > 1 && (
-                  <button
+                  <motion.button
                     type="button"
                     onClick={prevStep}
-                    className="bc-btn"
-                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, background:'rgba(255,255,255,.6)', color:'#dc2626', border:'2px solid rgba(211,47,47,.2)' }}
+                    className="dr-btn dr-btn-secondary"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ flex: currentStep === 4 ? 1 : '0 1 auto', padding:'clamp(12px,1.5vw,16px) clamp(16px,2vw,20px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700 }}
                   >
-                    ← Back
-                  </button>
+                    Back
+                  </motion.button>
                 )}
                 
                 {currentStep < 4 ? (
-                  <button
+                  <motion.button
                     type="button"
                     onClick={nextStep}
-                    className="bc-btn bc-btn-primary"
-                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900 }}
-                    disabled={(currentStep === 2 && frontStatus !== 'verified') || (currentStep === 3 && backStatus !== 'verified')}
+                    className="dr-btn dr-btn-primary"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ flex: 1, padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, opacity: (currentStep === 2 && frontStatus !== 'verified') || (currentStep === 3 && backStatus !== 'verified') ? 0.6 : 1, pointerEvents: (currentStep === 2 && frontStatus !== 'verified') || (currentStep === 3 && backStatus !== 'verified') ? 'none' : 'auto' }}
                   >
-                    Continue →
-                  </button>
+                    Continue
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
                     type="submit"
                     disabled={submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate}
-                    className="bc-btn bc-btn-primary"
-                    style={{ flex:1, padding:14, borderRadius:14, fontSize:14, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate ? 0.6 : 1 }}
+                    className="dr-btn dr-btn-primary"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ flex: 1, padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate ? 0.6 : 1, pointerEvents: submitting || frontStatus !== 'verified' || backStatus !== 'verified' || !form.blood_type || !form.governorate ? 'none' : 'auto' }}
                   >
                     {submitting ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
+                          style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', border:'2.5px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                         />
-                        Creating Account...
+                        Creating...
                       </>
                     ) : (
                       'Become a Hero'
                     )}
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </form>
 
-            <p style={{ textAlign:'center', fontSize:12, color:'rgba(211,47,47,.6)', fontWeight:700, marginTop:24, marginBottom:0 }}>
+            <p style={{ textAlign:'center', fontSize:'clamp(11px,1vw,12px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(20px,2.5vw,28px)', marginBottom:0 }}>
               Already have an account?{' '}
-              <span onClick={() => navigate('/login')} style={{ color:'#dc2626', cursor:'pointer', fontWeight:900, textDecoration:'underline' }}>
+              <span onClick={() => navigate('/login')} style={{ color:'#dc2626', cursor:'pointer', fontWeight:900, textDecoration:'none', transition:'all .2s' }} onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}>
                 Sign In
               </span>
             </p>

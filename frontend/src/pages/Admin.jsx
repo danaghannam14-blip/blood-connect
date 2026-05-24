@@ -10,7 +10,7 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
 
 console.log('[Admin.jsx] API endpoint:', API);
 
-/* ─── Premium Admin Styles ─────────────────────────────────── */
+/* ─── Premium Admin Styles (Unified Design System) ─────────────────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
@@ -144,6 +144,11 @@ const STYLES = `
   footer {
     border-top:1px solid rgba(140,140,140,.1);
   }
+
+  @media (max-width:960px) {
+    .ad-header-inner { flex-wrap: wrap; }
+    .ad-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  }
 `
 
 if (typeof document !== 'undefined' && !document.getElementById('ad-styles-premium')) {
@@ -198,6 +203,7 @@ function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
         padding: '24px',
         position: 'relative',
         overflow: 'hidden',
+        border: '1px solid rgba(180,180,180,.2)',
       }}
     >
       <div style={{ display:'flex', alignItems:'center', gap:16, position:'relative', zIndex:1 }}>
@@ -205,7 +211,7 @@ function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
           width:56,
           height:56,
           background:`linear-gradient(135deg, ${color}15, ${color}25)`,
-          borderRadius:16,
+          borderRadius:14,
           display:'flex',
           alignItems:'center',
           justifyContent:'center',
@@ -215,7 +221,7 @@ function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
         </div>
         <div>
           <p style={{ fontSize:'28px', fontWeight:900, color, margin:0, lineHeight:1 }}>{value}</p>
-          <p style={{ fontSize:10, fontWeight:900, color:'rgba(56,1,1,.4)', textTransform:'uppercase', letterSpacing:'.2em', margin:'6px 0 0', lineHeight:1 }}>{label}</p>
+          <p style={{ fontSize:10, fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.15em', margin:'8px 0 0', lineHeight:1 }}>{label}</p>
         </div>
       </div>
     </motion.div>
@@ -304,10 +310,10 @@ function Admin() {
       }
       
       setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'confirmed' } : r))
-      alert('✅ Request confirmed! Donor will see this on their dashboard.')
+      alert('Request confirmed! Donor will see this on their dashboard.')
       loadData()
     } catch (err) {
-      alert(`❌ Error: ${err.message}`)
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -324,10 +330,10 @@ function Admin() {
       }
       
       setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'no_show' } : r))
-      alert('❌ Request marked as "didn\'t show up". Will appear in supply blood section for admin.')
+      alert('Request marked as "didn\'t show up". Will appear in supply blood section.')
       loadData()
     } catch (err) {
-      alert(`❌ Error: ${err.message}`)
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -339,10 +345,10 @@ function Admin() {
       // Also delete from emergency_donations
       await axios.delete(`${API}/api/blood-requests/${id}`)
       setRequests(requests.filter(r => r.id !== id))
-      alert('✅ Request deleted from everywhere!')
+      alert('Request deleted.')
       loadData()
     } catch (err) {
-      alert(`❌ Error: ${err.message}`)
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -354,13 +360,13 @@ function Admin() {
       console.log('Donation found:', donation)
 
       if (!donation) {
-        alert('❌ Donation not found')
+        alert('Donation not found')
         setConfirmingId(null)
         return
       }
 
       if (!donation.patient_email) {
-        alert('❌ Patient email is missing from donation record')
+        alert('Patient email is missing from donation record')
         console.error('Missing patient_email in donation:', donation)
         setConfirmingId(null)
         return
@@ -373,11 +379,11 @@ function Admin() {
         donorName: donation.donor_name
       })
       console.log('Supply blood response:', response.data)
-      alert('✅ Blood supplied from BCC Hamra bank to hospital! Patient notified.')
+      alert('Blood supplied from BCC Hamra bank to hospital. Patient notified.')
       loadData()
     } catch (err) {
       console.error('Supply blood error:', err)
-      alert(`❌ Error: ${err.response?.data?.error || err.message}`)
+      alert(`Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingId(null)
     }
@@ -389,9 +395,9 @@ function Admin() {
     try {
       await axios.delete(`${API}/api/donors/${donorId}`)
       setDonors(donors.filter(d => d.id !== donorId))
-      alert('✅ Donor deleted!')
+      alert('Donor deleted.')
     } catch (err) {
-      alert(`❌ Error: ${err.message}`)
+      alert(`Error: ${err.message}`)
     }
   }
 
@@ -401,12 +407,12 @@ function Admin() {
     setPasswordMessage('')
 
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      setPasswordMessage('❌ Passwords do not match')
+      setPasswordMessage('Passwords do not match')
       return
     }
 
     if (passwordForm.new_password.length < 6) {
-      setPasswordMessage('❌ Password must be at least 6 characters')
+      setPasswordMessage('Password must be at least 6 characters')
       return
     }
 
@@ -417,10 +423,10 @@ function Admin() {
         old_password: passwordForm.old_password,
         new_password: passwordForm.new_password
       })
-      setPasswordMessage('✅ Password changed successfully!')
+      setPasswordMessage('Password changed successfully!')
       setPasswordForm({ old_password: '', new_password: '', confirm_password: '' })
     } catch (err) {
-      setPasswordMessage(`❌ Error: ${err.response?.data?.message || err.message}`)
+      setPasswordMessage(`Error: ${err.response?.data?.message || err.message}`)
     }
   }
 
@@ -430,7 +436,7 @@ function Admin() {
     setAdminMessage('')
 
     if (!newAdminForm.email || !newAdminForm.password) {
-      setAdminMessage('❌ Please fill all fields')
+      setAdminMessage('Please fill all fields')
       return
     }
 
@@ -439,11 +445,11 @@ function Admin() {
         email: newAdminForm.email,
         password: newAdminForm.password
       })
-      setAdminMessage('✅ Admin created successfully!')
+      setAdminMessage('Admin created successfully!')
       setNewAdminForm({ email: '', password: '' })
       loadData()
     } catch (err) {
-      setAdminMessage(`❌ Error: ${err.response?.data?.message || err.message}`)
+      setAdminMessage(`Error: ${err.response?.data?.message || err.message}`)
     }
   }
 
@@ -465,6 +471,23 @@ function Admin() {
   if (tab === 'pending') filteredRequests = requests.filter(r => r.status === 'pending')
   if (tab === 'confirmed') filteredRequests = requests.filter(r => r.status === 'confirmed')
   if (tab === 'no_show') filteredRequests = requests.filter(r => r.status === 'no_show')
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    },
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] },
+    },
+  }
 
   return (
     <div className="ad-root">
@@ -494,8 +517,12 @@ function Admin() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
-              whileHover={{ scale: 1.12 }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
             >
               <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
                 <defs>
@@ -506,14 +533,15 @@ function Admin() {
                   </linearGradient>
                 </defs>
                 <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
               </svg>
             </motion.div>
             
             <div>
-              <motion.div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }}>
+              <motion.div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} animate={{ letterSpacing: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity }}>
                 BloodConnect
               </motion.div>
-              <div style={{ fontSize: 10, color: 'rgba(56,1,1,.5)', fontWeight: 700 }}>ADMIN</div>
+              <div style={{ fontSize: 9, color: 'rgba(56,1,1,.5)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', margin: '2px 0 0' }}>Admin Panel</div>
             </div>
           </motion.div>
 
@@ -522,7 +550,8 @@ function Admin() {
           <motion.button
             onClick={handleLogout}
             className="ad-btn ad-btn-primary"
-            whileHover={{ scale: 1.08 }}
+            whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
+            whileTap={{ scale: 0.92 }}
             style={{ padding: '13px 26px', borderRadius: 24, fontSize: 13, fontWeight: 700 }}
           >
             Logout
@@ -530,27 +559,68 @@ function Admin() {
         </div>
       </motion.header>
 
-      <main style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '40px clamp(20px,3vw,50px)', display: 'flex', flexDirection: 'column', gap: '60px' }}>
+      <main style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '40px clamp(20px,3vw,50px)', display: 'flex', flexDirection: 'column', gap: '50px' }}>
 
         {/* STATS */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: visible ? 1 : 0 }} transition={{ staggerChildren: 0.1, delayChildren: 0.2 }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#1f2937' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={requests.length} label="Total Requests" color="#1f2937" delay={0.1} />
-          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EA580C' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={pendingRequests} label="Pending" color="#EA580C" delay={0.2} />
-          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>} value={confirmedRequests} label="Confirmed" color="#22C55E" delay={0.3} />
-          <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EF4444' }}><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>} value={didntShowUpRequests} label="Didn't Show Up" color="#EF4444" delay={0.4} />
+        <motion.div
+          className="ad-stats-grid"
+          initial="hidden"
+          animate={visible ? "show" : "hidden"}
+          variants={container}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}
+        >
+          <motion.div variants={item}>
+            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#1f2937' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={requests.length} label="Total Requests" color="#1f2937" delay={0} />
+          </motion.div>
+          <motion.div variants={item}>
+            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EA580C' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={pendingRequests} label="Pending" color="#EA580C" delay={0.1} />
+          </motion.div>
+          <motion.div variants={item}>
+            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>} value={confirmedRequests} label="Confirmed" color="#22C55E" delay={0.2} />
+          </motion.div>
+          <motion.div variants={item}>
+            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EF4444' }}><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>} value={didntShowUpRequests} label="Didn't Show Up" color="#EF4444" delay={0.3} />
+          </motion.div>
         </motion.div>
 
         {/* TABS */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }} transition={{ delay: 0.3 }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {tabs.map((t) => {
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}
+        >
+          {tabs.map((t, idx) => {
             let count = requests.length
             if (t === 'pending') count = pendingRequests
             if (t === 'confirmed') count = confirmedRequests
             if (t === 'no_show') count = didntShowUpRequests
             
+            const tabLabels = {
+              'all': `All (${count})`,
+              'pending': `Pending (${count})`,
+              'confirmed': `Confirmed (${count})`,
+              'no_show': `Didn't Show (${count})`,
+              'donors': 'Donors',
+              'hospitals': 'Hospitals',
+              'settings': 'Settings'
+            }
+            
             return (
-              <motion.button key={t} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setTab(t)} className={`ad-btn ad-tab-btn ${tab === t ? 'active' : ''}`} style={{ padding: '10px 18px', borderRadius: 14, fontSize: 13, fontWeight: 900 }}>
-                {t === 'all' ? `📋 All (${count})` : t === 'pending' ? `⏳ Pending (${count})` : t === 'confirmed' ? `✅ Confirmed (${count})` : t === 'no_show' ? `❌ Didn't Show (${count})` : t === 'donors' ? '👥 Donors' : t === 'hospitals' ? '🏥 Hospitals' : '⚙️ Settings'}
+              <motion.button
+                key={t}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setTab(t)}
+                className={`ad-btn ad-tab-btn ${tab === t ? 'active' : ''}`}
+                style={{
+                  padding: '11px 20px',
+                  borderRadius: 16,
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                {tabLabels[t]}
               </motion.button>
             )
           })}
@@ -558,22 +628,22 @@ function Admin() {
 
         {loading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep" style={{ borderRadius:'28px', padding:'60px', textAlign:'center' }}>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width:70, height:70, margin:'0 auto', border:'4px solid rgba(220,38,38,.2)', borderTopColor:'#dc2626', borderRadius:'50%' }} />
-            <p style={{ marginTop:20, fontSize:14, fontWeight:700, color:'rgba(56,1,1,.6)' }}>Loading dashboard...</p>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} style={{ width:60, height:60, margin:'0 auto', border:'3px solid rgba(220,38,38,.15)', borderTopColor:'#dc2626', borderRadius:'50%' }} />
+            <p style={{ marginTop:20, fontSize:14, fontWeight:600, color:'rgba(56,1,1,.6)' }}>Loading dashboard</p>
           </motion.div>
         )}
 
         {!loading && (
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
-                <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>
-                  {tab === 'all' ? '📋 All Hospital Blood Requests' : tab === 'pending' ? '⏳ Pending Requests' : tab === 'confirmed' ? '✅ Confirmed Requests' : '❌ Didn\'t Show Up'}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
+                <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 28px 0', fontFamily:"'Fraunces',serif" }}>
+                  {tab === 'all' ? 'All Hospital Blood Requests' : tab === 'pending' ? 'Pending Requests' : tab === 'confirmed' ? 'Confirmed Requests' : 'Didn\'t Show Up'}
                 </h2>
                 {filteredRequests.length === 0 ? (
-                  <div style={{ textAlign:'center', padding:'60px 0' }}>
-                    <p style={{ fontSize:48, margin:0 }}>📭</p>
-                    <p style={{ color:'rgba(56,1,1,.4)', fontSize:14, marginTop:16 }}>No requests in this category</p>
+                  <div style={{ textAlign:'center', padding:'60px 20px' }}>
+                    <p style={{ fontSize:48, margin:0, opacity: 0.3 }}>-</p>
+                    <p style={{ color:'rgba(56,1,1,.4)', fontSize:14, marginTop:16, fontWeight: 600 }}>No requests in this category</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -583,10 +653,10 @@ function Admin() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
+                        className="ad-glass ad-card-hover"
                         style={{
-                          background: 'rgba(255,255,255,.4)',
-                          borderRadius: 16,
-                          padding: 18,
+                          borderRadius: 18,
+                          padding: 20,
                           border: '1px solid rgba(180,180,180,.2)',
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -595,27 +665,27 @@ function Admin() {
                           gap: 16
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 300 }}>
-                          <p style={{ fontSize: 14, fontWeight: 900, color: '#1f2937', margin: '0 0 8px 0' }}>
-                            🏥 {request.hospital_name || 'Unknown Hospital'}
+                        <div style={{ flex: 1, minWidth: 280 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 10px 0' }}>
+                            {request.hospital_name || 'Unknown Hospital'}
                           </p>
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
                             <span style={{ fontSize: 20, fontWeight: 900, color: '#dc2626' }}>{request.blood_type}</span>
-                            <span style={{ fontSize: 10, fontWeight: 900, padding: '6px 12px', borderRadius: 9, background: 'rgba(234,88,12,.15)', color: '#EA580C', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '6px 12px', borderRadius: 9, background: 'rgba(234,88,12,.12)', color: '#EA580C', textTransform: 'uppercase', letterSpacing: '.1em' }}>
                               {request.urgency?.toUpperCase() || 'URGENT'}
                             </span>
-                            <span style={{ fontSize: 10, fontWeight: 900, padding: '6px 12px', borderRadius: 9, background: request.status === 'pending' ? 'rgba(234,88,12,.15)' : 'rgba(34,197,94,.15)', color: request.status === 'pending' ? '#EA580C' : '#22c55e', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '6px 12px', borderRadius: 9, background: request.status === 'pending' ? 'rgba(234,88,12,.12)' : 'rgba(34,197,94,.12)', color: request.status === 'pending' ? '#EA580C' : '#22c55e', textTransform: 'uppercase', letterSpacing: '.1em' }}>
                               {request.status?.toUpperCase() || 'PENDING'}
                             </span>
                           </div>
-                          <p style={{ fontSize: 13, color: '#4b5563', margin: '8px 0', fontWeight: 700 }}>
-                            📦 {request.quantity_needed} units needed
+                          <p style={{ fontSize: 13, color: '#6b7280', margin: '8px 0 4px', fontWeight: 600 }}>
+                            {request.quantity_needed} units needed
                           </p>
-                          <p style={{ fontSize: 11, color: 'rgba(31,41,55,.6)', margin: '4px 0 0', fontWeight: 600 }}>
-                            📅 {new Date(request.created_at).toLocaleDateString('en-GB')}
+                          <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
+                            {new Date(request.created_at).toLocaleDateString('en-GB')}
                           </p>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                           {request.status === 'pending' && (
                             <>
                               <motion.button
@@ -623,18 +693,18 @@ function Admin() {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleConfirmed(request.id)}
                                 className="ad-btn ad-btn-primary"
-                                style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12, background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                                style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12, background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
                               >
-                                ✅ Confirmed
+                                Confirmed
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleDidntShowUp(request.id)}
                                 className="ad-btn ad-btn-secondary"
-                                style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12, color: '#ef4444', borderColor: '#fca5a5' }}
+                                style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12, color: '#ef4444' }}
                               >
-                                ❌ Didn't Show
+                                Didn't Show
                               </motion.button>
                             </>
                           )}
@@ -643,9 +713,9 @@ function Admin() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => deleteRequest(request.id)}
                             className="ad-btn ad-btn-secondary"
-                            style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12 }}
+                            style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12 }}
                           >
-                            🗑️ Delete
+                            Delete
                           </motion.button>
                         </div>
                       </motion.div>
@@ -657,41 +727,50 @@ function Admin() {
           </AnimatePresence>
         )}
 
-        {/* ✅ SUPPLY BLOOD SECTION - Only shows when donors "didn't show up" */}
+        {/* SUPPLY BLOOD SECTION */}
         {awaitingDonations.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,.12), rgba(255,107,107,.06))', borderRadius: 28, padding: 32, border: '2px solid #dc2626' }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="ad-glass-deep"
+            style={{
+              borderRadius: 28,
+              padding: 'clamp(28px,3.5vw,44px)',
+              border: '2px solid rgba(220,38,38,.2)',
+            }}
           >
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>
-              🩸 BCC Hamra Supply Blood ({awaitingDonations.length})
+            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#dc2626', margin:'0 0 16px 0', fontFamily:"'Fraunces',serif" }}>
+              BCC Hamra Supply Bank ({awaitingDonations.length})
             </h2>
-            <p style={{ fontSize: 13, color: 'rgba(31,41,55,.6)', margin: '0 0 20px 0', fontWeight: 600 }}>
-              When donors didn't show up, BCC Hamra (main center) supplies blood from its bank to hospitals across Lebanon:
+            <p style={{ fontSize: 13, color: 'rgba(56,1,1,.6)', margin: '0 0 24px 0', fontWeight: 500, lineHeight: 1.6 }}>
+              When donors don't show up, blood is supplied from BCC Hamra's bank to hospitals across Lebanon.
             </p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {awaitingDonations.map((donation) => (
-                <div
+                <motion.div
                   key={donation.id}
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="ad-glass ad-card-hover"
                   style={{
-                    background: 'rgba(254,226,226,.6)',
                     borderRadius: 18,
                     padding: 18,
-                    border: '2px solid rgba(220,38,38,.4)',
+                    border: '1px solid rgba(220,38,38,.2)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: 16,
+                    flexWrap: 'wrap'
                   }}
                 >
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} • Hospital: {donation.patient_email}
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', margin: '0 0 6px 0' }}>
+                      {donation.blood_type} Blood
                     </p>
-                    <p style={{ fontSize: 12, color: 'rgba(211,47,47,.7)', margin: '0', fontWeight: 700 }}>
-                      ❌ {donation.donor_name || 'Donor'} didn't show up • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                    <p style={{ fontSize: 12, color: 'rgba(56,1,1,.6)', margin: '0', fontWeight: 600 }}>
+                      Hospital: {donation.patient_email} · {new Date(donation.created_at).toLocaleDateString('en-GB')}
                     </p>
                   </div>
                   <motion.button
@@ -699,22 +778,20 @@ function Admin() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleSupplyBlood(donation.id)}
                     disabled={confirmingId === donation.id}
+                    className="ad-btn ad-btn-primary"
                     style={{
-                      background: confirmingId === donation.id ? '#ccc' : 'linear-gradient(135deg, #ef4444, #dc2626)',
-                      color: '#fff',
-                      border: 'none',
                       padding: '9px 18px',
-                      borderRadius: 10,
-                      fontWeight: 900,
+                      borderRadius: 12,
+                      fontWeight: 700,
                       fontSize: 12,
+                      opacity: confirmingId === donation.id ? 0.7 : 1,
                       cursor: confirmingId === donation.id ? 'not-allowed' : 'pointer',
-                      whiteSpace: 'nowrap',
-                      opacity: confirmingId === donation.id ? 0.7 : 1
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    {confirmingId === donation.id ? '⏳ Supplying...' : '🏥 Supply Blood'}
+                    {confirmingId === donation.id ? 'Supplying...' : 'Supply Blood'}
                   </motion.button>
-                </div>
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -724,39 +801,48 @@ function Admin() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            style={{ background: 'linear-gradient(135deg, rgba(34,197,94,.08), rgba(134,239,172,.04))', borderRadius: 28, padding: 32, border: '2px solid rgba(34,197,94,.3)' }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="ad-glass-deep"
+            style={{
+              borderRadius: 28,
+              padding: 'clamp(28px,3.5vw,44px)',
+              border: '2px solid rgba(34,197,94,.2)',
+            }}
           >
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#22c55e', margin: '0 0 20px 0' }}>
-              ✅ Confirmed Donor Donations (BCC Hamra Center)
+            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#22c55e', margin:'0 0 20px 0', fontFamily:"'Fraunces',serif" }}>
+              Confirmed Donor Donations
             </h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {confirmedDonations.map((donation) => (
-                <div
+                <motion.div
                   key={donation.id}
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="ad-glass ad-card-hover"
                   style={{
-                    background: 'rgba(236,253,245,.5)',
                     borderRadius: 18,
                     padding: 18,
-                    border: '2px solid rgba(34,197,94,.3)',
+                    border: '1px solid rgba(34,197,94,.2)',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: 16,
+                    flexWrap: 'wrap'
                   }}
                 >
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 900, color: '#22c55e', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} • {donation.donor_name || 'Anonymous Donor'}
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', margin: '0 0 6px 0' }}>
+                      {donation.blood_type} Blood
                     </p>
-                    <p style={{ fontSize: 11, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
-                      ✅ Confirmed & Available • {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                    <p style={{ fontSize: 12, color: 'rgba(56,1,1,.6)', margin: '0', fontWeight: 600 }}>
+                      {donation.donor_name || 'Anonymous Donor'} · {new Date(donation.created_at).toLocaleDateString('en-GB')}
                     </p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.1)', borderRadius: 12 }}>
                     Ready
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -764,25 +850,40 @@ function Admin() {
 
         {/* DONORS TAB */}
         {tab === 'donors' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
-            <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>👥 Donor Management</h2>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
+            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Donor Management</h2>
             {donors.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'60px 0' }}>
-                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)' }}>No donors found</p>
+              <div style={{ textAlign:'center', padding:'60px 20px' }}>
+                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)', fontWeight: 600 }}>No donors found</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '600px', overflowY: 'auto' }}>
                 {donors.map((donor) => (
-                  <div key={donor.id} style={{ background: 'rgba(255,255,255,.4)', borderRadius: 16, padding: 18, border: '1px solid rgba(180,180,180,.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <motion.div
+                    key={donor.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="ad-glass ad-card-hover"
+                    style={{
+                      borderRadius: 16,
+                      padding: 18,
+                      border: '1px solid rgba(180,180,180,.2)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 16,
+                      flexWrap: 'wrap'
+                    }}
+                  >
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 900, color: '#1f2937', margin: '0 0 6px 0' }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 6px 0' }}>
                         {donor.full_name}
                       </p>
-                      <p style={{ fontSize: 11, color: 'rgba(31,41,55,.6)', margin: '0 0 4px 0' }}>
-                        📧 {donor.email}
+                      <p style={{ fontSize: 11, color: 'rgba(56,1,1,.6)', margin: '0 0 4px 0', fontWeight: 500 }}>
+                        {donor.email}
                       </p>
-                      <p style={{ fontSize: 11, color: 'rgba(31,41,55,.6)', margin: 0 }}>
-                        🩸 {donor.blood_type} • 📍 {donor.governorate}
+                      <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
+                        {donor.blood_type} · {donor.governorate}
                       </p>
                     </div>
                     <motion.button
@@ -790,11 +891,11 @@ function Admin() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleDeleteDonor(donor.id)}
                       className="ad-btn ad-btn-secondary"
-                      style={{ padding: '9px 18px', borderRadius: 10, fontWeight: 900, fontSize: 12 }}
+                      style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12 }}
                     >
-                      🗑️ Delete
+                      Delete
                     </motion.button>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -803,36 +904,46 @@ function Admin() {
 
         {/* HOSPITALS TAB */}
         {tab === 'hospitals' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
-            <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>🏥 Hospital Partners</h2>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
+            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Hospital Partners</h2>
             <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.06 }}
                 onClick={() => navigate('/hospital-partners')}
                 className="ad-btn ad-btn-primary"
-                style={{ padding: '12px 24px', borderRadius: 14, fontWeight: 900, fontSize: 14 }}
+                style={{ padding: '12px 24px', borderRadius: 16, fontWeight: 700, fontSize: 13 }}
               >
                 View Hospital Partner
               </motion.button>
             </div>
             {hospitals.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'60px 0' }}>
-                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)' }}>No hospital partners</p>
+              <div style={{ textAlign:'center', padding:'60px 20px' }}>
+                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)', fontWeight: 600 }}>No hospital partners</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                 {hospitals.map((hospital) => (
-                  <div key={hospital.id} style={{ background: 'rgba(255,255,255,.4)', borderRadius: 16, padding: 18, border: '1px solid rgba(180,180,180,.2)' }}>
-                    <p style={{ fontSize: 14, fontWeight: 900, color: '#1f2937', margin: '0 0 8px 0' }}>
+                  <motion.div
+                    key={hospital.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="ad-glass ad-card-hover"
+                    style={{
+                      borderRadius: 16,
+                      padding: 18,
+                      border: '1px solid rgba(180,180,180,.2)',
+                    }}
+                  >
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 10px 0' }}>
                       {hospital.name}
                     </p>
-                    <p style={{ fontSize: 11, color: 'rgba(31,41,55,.6)', margin: '0 0 4px 0' }}>
-                      📍 {hospital.address}
+                    <p style={{ fontSize: 11, color: 'rgba(56,1,1,.6)', margin: '0 0 6px 0', fontWeight: 500 }}>
+                      {hospital.address}
                     </p>
-                    <p style={{ fontSize: 11, color: 'rgba(31,41,55,.6)', margin: 0 }}>
-                      📧 {hospital.email}
+                    <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
+                      {hospital.email}
                     </p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -841,62 +952,66 @@ function Admin() {
 
         {/* SETTINGS TAB */}
         {tab === 'settings' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
             {/* Change Password */}
-            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
-              <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>🔒 Change Password</h2>
+            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
+              <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Change Password</h2>
               {passwordMessage && (
-                <div style={{
-                  background: passwordMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
-                  border: `2px solid ${passwordMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
-                  padding: 14,
-                  borderRadius: 14,
-                  marginBottom: 20,
-                  textAlign: 'center',
-                  color: passwordMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
-                  fontWeight: 700,
-                  fontSize: 13
-                }}>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: passwordMessage.startsWith('Password') ? 'rgba(34,197,94,.08)' : 'rgba(220,38,38,.08)',
+                    border: `1.5px solid ${passwordMessage.startsWith('Password') ? 'rgba(34,197,94,.3)' : 'rgba(220,38,38,.3)'}`,
+                    padding: 16,
+                    borderRadius: 16,
+                    marginBottom: 24,
+                    textAlign: 'center',
+                    color: passwordMessage.startsWith('Password') ? '#22c55e' : '#dc2626',
+                    fontWeight: 600,
+                    fontSize: 13
+                  }}
+                >
                   {passwordMessage}
-                </div>
+                </motion.div>
               )}
-              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(31,41,55,.5)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Current Password</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Current Password</label>
                   <input
                     type="password"
                     value={passwordForm.old_password}
                     onChange={e => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.5)', color: '#1f2937' }}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
                     required
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(31,41,55,.5)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>New Password</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>New Password</label>
                   <input
                     type="password"
                     value={passwordForm.new_password}
                     onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.5)', color: '#1f2937' }}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
                     required
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(31,41,55,.5)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Confirm Password</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Confirm Password</label>
                   <input
                     type="password"
                     value={passwordForm.confirm_password}
                     onChange={e => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.5)', color: '#1f2937' }}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
                     required
                   />
                 </div>
                 <motion.button
                   type="submit"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
                   whileTap={{ scale: 0.98 }}
                   className="ad-btn ad-btn-primary"
-                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 900 }}
+                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 700, marginTop: 6 }}
                 >
                   Update Password
                 </motion.button>
@@ -904,50 +1019,54 @@ function Admin() {
             </motion.div>
 
             {/* Add Admin */}
-            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding:'32px' }}>
-              <h2 style={{ fontSize:22, fontWeight:900, color:'#1f2937', marginBottom:20 }}>👤 Add New Admin</h2>
+            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
+              <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Add New Admin</h2>
               {adminMessage && (
-                <div style={{
-                  background: adminMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
-                  border: `2px solid ${adminMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
-                  padding: 14,
-                  borderRadius: 14,
-                  marginBottom: 20,
-                  textAlign: 'center',
-                  color: adminMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
-                  fontWeight: 700,
-                  fontSize: 13
-                }}>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: adminMessage.startsWith('Admin') ? 'rgba(34,197,94,.08)' : 'rgba(220,38,38,.08)',
+                    border: `1.5px solid ${adminMessage.startsWith('Admin') ? 'rgba(34,197,94,.3)' : 'rgba(220,38,38,.3)'}`,
+                    padding: 16,
+                    borderRadius: 16,
+                    marginBottom: 24,
+                    textAlign: 'center',
+                    color: adminMessage.startsWith('Admin') ? '#22c55e' : '#dc2626',
+                    fontWeight: 600,
+                    fontSize: 13
+                  }}
+                >
                   {adminMessage}
-                </div>
+                </motion.div>
               )}
-              <form onSubmit={handleAddAdmin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <form onSubmit={handleAddAdmin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(31,41,55,.5)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Email</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Email</label>
                   <input
                     type="email"
                     value={newAdminForm.email}
                     onChange={e => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.5)', color: '#1f2937' }}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
                     required
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(31,41,55,.5)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Password</label>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Password</label>
                   <input
                     type="password"
                     value={newAdminForm.password}
                     onChange={e => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.5)', color: '#1f2937' }}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
                     required
                   />
                 </div>
                 <motion.button
                   type="submit"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
                   whileTap={{ scale: 0.98 }}
                   className="ad-btn ad-btn-primary"
-                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 900 }}
+                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 700, marginTop: 6 }}
                 >
                   Add Admin
                 </motion.button>
@@ -958,9 +1077,21 @@ function Admin() {
 
       </main>
 
-      <motion.footer className="ad-glass" style={{ marginTop: 'clamp(60px,8vw,120px)', borderTop: '1px solid rgba(180,180,180,.15)', background: 'rgba(255,255,255,.3)' }} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+      {/* Footer */}
+      <motion.footer
+        className="ad-glass"
+        style={{
+          marginTop: 'clamp(60px,8vw,120px)',
+          borderTop: '1px solid rgba(180,180,180,.15)',
+          background: 'rgba(255,255,255,.3)',
+        }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+      >
         <div style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(44px,5vw,72px) clamp(16px,3.5vw,44px)', textAlign: 'center' }}>
-          <p style={{ color: 'rgba(56,1,1,.5)', fontSize: 'clamp(9px,.9vw,11px)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.18em', margin: 0 }}>
+          <p style={{ color: 'rgba(56,1,1,.5)', fontSize: 'clamp(9px,.9vw,11px)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.15em', margin: 0 }}>
             © 2026 BloodConnect Admin Panel · Dana Ghannam & Lynn Anani · Lebanon
           </p>
         </div>
