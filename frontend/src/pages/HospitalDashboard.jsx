@@ -110,7 +110,7 @@ function HospitalDashboard() {
 
     setSubmitting(true)
     try {
-      const response = await axios.post(`${API}/api/requests/create`, {
+      const response = await axios.post(`${API}/api/blood-requests/create`, {
         hospital_id: hospital.id,
         blood_type: form.blood_type,
         quantity_needed: parseInt(form.quantity_needed),
@@ -146,13 +146,34 @@ function HospitalDashboard() {
   const handleConfirmDonation = async (donationId) => {
     setConfirmingId(donationId)
     try {
-      await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
-        notificationId: donationId,
-        hospitalId: hospital.id
+      // Get the donation to extract blood type and patient email
+      const donation = awaitingDonations.find(d => d.id === donationId)
+      console.log('Donation found:', donation)
+      
+      if (!donation) {
+        alert('❌ Donation not found')
+        setConfirmingId(null)
+        return
+      }
+
+      if (!donation.patient_email) {
+        alert('❌ Patient email is missing from donation record')
+        console.error('Missing patient_email in donation:', donation)
+        setConfirmingId(null)
+        return
+      }
+
+      const response = await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
+        donationId: donationId,
+        hospitalId: hospital.id,
+        bloodType: donation.blood_type,
+        patientEmail: donation.patient_email
       })
-      alert('✅ Donation confirmed!')
+      console.log('Confirm response:', response.data)
+      alert('✅ Donation confirmed! Patient notified.')
       loadData()
     } catch (err) {
+      console.error('Confirm error:', err)
       alert(`❌ Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingId(null)
@@ -289,7 +310,7 @@ function HospitalDashboard() {
                 >
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} • {donation.donor_name}
+                      {donation.blood_type} • {donation.donor_name || 'Anonymous Donor'}
                     </p>
                     <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0', fontWeight: 700 }}>
                       ⏳ Awaiting confirmation • {new Date(donation.created_at).toLocaleDateString('en-GB')}
@@ -347,7 +368,7 @@ function HospitalDashboard() {
                 >
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 900, color: '#22c55e', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} • {donation.donor_name}
+                      {donation.blood_type} • {donation.donor_name || 'Anonymous Donor'}
                     </p>
                     <p style={{ fontSize: 11, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
                       ✅ Confirmed • {new Date(donation.created_at).toLocaleDateString('en-GB')}
@@ -624,14 +645,14 @@ function HospitalDashboard() {
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.05 }}
             >
-              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bt) => {
+              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bt, idx) => {
                 const units = bloodStock[bt] ?? 0
                 const dotColor = units === 0 ? '#DC2626' : units <= 5 ? '#EA580C' : '#22C55E'
                 const bgColor = units === 0 ? 'rgba(220,38,38,.15)' : units <= 5 ? 'rgba(234,88,12,.15)' : 'rgba(34,197,94,.15)'
                 
                 return (
                   <div
-                    key={bt}
+                    key={`blood-stock-${bt}-${idx}`}
                     style={{
                       borderRadius: 16,
                       padding: 14,

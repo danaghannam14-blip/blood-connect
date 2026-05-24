@@ -389,161 +389,157 @@ function Dashboard() {
             </h3>
             <AnimatePresence>
               {emergencyNotifications.map((notif, idx) => (
-                <motion.div
-                  key={notif.notification_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: idx * 0.05 }}
-                  onClick={() => notif.status === 'pending' && setExpandedNotif(expandedNotif === notif.notification_id ? null : notif.notification_id)}
-                  className="dd-glass dd-card-hover"
-                  style={{
-                    borderRadius:16, padding:16, marginBottom:12,
-                    background:'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)',
-                    border:'2px solid #fca5a5',
-                    cursor: notif.status === 'pending' ? 'pointer' : 'default',
-                    display:'flex', justifyContent:'space-between', alignItems:'center'
-                  }}
-                >
-                  <div>
-                    <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:'0 0 4px 0' }}>
-                      {notif.blood_type} Blood Needed
-                    </p>
-                    <p style={{ fontSize:11, color:'#991b1b', margin:'0 0 4px 0', fontWeight:700 }}>
-                      📍 {notif.governorate}
-                    </p>
-                    {notif.status === 'pending' && (
-                      <p style={{ fontSize:11, color:'#991b1b', margin:0, fontWeight:600 }}>
-                        Click to confirm donation location →
-                      </p>
-                    )}
-                  </div>
+                <div key={notif.id}>
                   <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: idx * 0.05 }}
+                    onClick={() => notif.status === 'pending' && setExpandedNotif(expandedNotif === notif.id ? null : notif.id)}
+                    className="dd-glass dd-card-hover"
                     style={{
-                      background: notif.status === 'pending' ? '#FFA500' : notif.status === 'awaiting_confirmation' ? '#9CA3AF' : '#22c55e',
-                      color:'#fff', padding:'6px 12px', borderRadius:8, fontSize:10, fontWeight:900,
-                      textTransform:'uppercase', whiteSpace:'nowrap'
+                      borderRadius:16, padding:16, marginBottom:12,
+                      background:'linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)',
+                      border:'2px solid #fca5a5',
+                      cursor: notif.status === 'pending' ? 'pointer' : 'default',
+                      display:'flex', justifyContent:'space-between', alignItems:'center'
                     }}
                   >
-                    {notif.status === 'pending' && '⏳ Pending'}
-                    {notif.status === 'awaiting_confirmation' && '⏸️ Confirming'}
-                    {notif.status === 'confirmed' && '✅ Confirmed'}
-                  </motion.div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {/* Expanded Emergency Notification */}
-            <AnimatePresence>
-              {emergencyNotifications.map((notif) => expandedNotif === notif.notification_id && notif.status === 'pending' && (
-                <motion.div
-                  key={`expand-${notif.notification_id}`}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  style={{
-                    borderTop:'2px solid rgba(220,38,38,.2)', paddingTop:12, marginTop:12,
-                    background:'rgba(255,255,255,.8)', borderRadius:12, padding:12
-                  }}
-                >
-                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    {/* Center Donation Option (only for Beirut) - SPECIAL */}
-                    {donor?.governorate === 'Beirut' && (
-                      <motion.button
-                        whileHover={{ scale: 1.06, boxShadow: '0 12px 40px rgba(220, 38, 38, 0.4)' }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDonateAtCenter(notif.notification_id)
-                        }}
-                        disabled={confirmingId === notif.notification_id}
-                        style={{
-                          background: confirmingId === notif.notification_id 
-                            ? '#ccc' 
-                            : 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
-                          color:'#fff', 
-                          border:'2px solid rgba(220, 38, 38, 0.6)',
-                          padding:'14px 20px', 
-                          borderRadius:12,
-                          fontWeight:900, 
-                          fontSize:14,
-                          cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
-                          opacity: confirmingId === notif.notification_id ? 0.7 : 1,
-                          boxShadow: '0 8px 20px rgba(220, 38, 38, 0.3)',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-                        }}
-                      >
-                        {confirmingId === notif.notification_id ? '⏳ Confirming...' : '👑 Donate at BCC Hamra Center (Featured)'}
-                      </motion.button>
-                    )}
-
-                    {/* Hospital Donation Option - Show hospitals from donor's governorate */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowHospitalSelect(showHospitalSelect === notif.notification_id ? null : notif.notification_id)
-                      }}
-                      disabled={confirmingId === notif.notification_id}
+                    <div>
+                      <p style={{ fontSize:14, fontWeight:900, color:'#dc2626', margin:'0 0 4px 0' }}>
+                        {notif.blood_type} Blood Needed
+                      </p>
+                      <p style={{ fontSize:11, color:'#991b1b', margin:'0 0 4px 0', fontWeight:700 }}>
+                        📍 {notif.governorate}
+                      </p>
+                      {notif.status === 'pending' && (
+                        <p style={{ fontSize:11, color:'#991b1b', margin:0, fontWeight:600 }}>
+                          Click to confirm donation location →
+                        </p>
+                      )}
+                    </div>
+                    <motion.div
                       style={{
-                        background: confirmingId === notif.notification_id ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                        color:'#fff', border:'none', padding:'12px 16px', borderRadius:8,
-                        fontWeight:900, fontSize:13, cursor:confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
-                        opacity: confirmingId === notif.notification_id ? 0.7 : 1
+                        background: notif.status === 'pending' ? '#FFA500' : notif.status === 'awaiting_confirmation' ? '#9CA3AF' : '#22c55e',
+                        color:'#fff', padding:'6px 12px', borderRadius:8, fontSize:10, fontWeight:900,
+                        textTransform:'uppercase', whiteSpace:'nowrap'
                       }}
                     >
-                      🏥 Donate at a Hospital in {donor?.governorate}
-                    </motion.button>
+                      {notif.status === 'pending' && '⏳ Pending'}
+                      {notif.status === 'awaiting_confirmation' && '⏸️ Confirming'}
+                      {notif.status === 'confirmed' && '✅ Confirmed'}
+                    </motion.div>
+                  </motion.div>
 
-                    {/* Hospital Selection Dropdown */}
-                    <AnimatePresence>
-                      {showHospitalSelect === notif.notification_id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8, padding:12, background:'rgba(255,255,255,.6)', borderRadius:8 }}
+                  {/* Expanded Emergency Notification - INSIDE THE MAP */}
+                  {expandedNotif === notif.id && notif.status === 'pending' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{
+                        borderTop:'2px solid rgba(220,38,38,.2)', paddingTop:12, marginTop:12, marginBottom:12,
+                        background:'rgba(255,255,255,.8)', borderRadius:12, padding:12
+                      }}
+                    >
+                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                        {/* Center Donation Option (only for Beirut) - SPECIAL */}
+                        {donor?.governorate === 'Beirut' && (
+                          <motion.button
+                            whileHover={{ scale: 1.06, boxShadow: '0 12px 40px rgba(220, 38, 38, 0.4)' }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDonateAtCenter(notif.id)
+                            }}
+                            disabled={confirmingId === notif.id}
+                            style={{
+                              background: confirmingId === notif.id 
+                                ? '#ccc' 
+                                : 'linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)',
+                              color:'#fff', 
+                              border:'2px solid rgba(220, 38, 38, 0.6)',
+                              padding:'14px 20px', 
+                              borderRadius:12,
+                              fontWeight:900, 
+                              fontSize:14,
+                              cursor:confirmingId === notif.id ? 'not-allowed' : 'pointer',
+                              opacity: confirmingId === notif.id ? 0.7 : 1,
+                              boxShadow: '0 8px 20px rgba(220, 38, 38, 0.3)',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                            }}
+                          >
+                            {confirmingId === notif.id ? '⏳ Confirming...' : '👑 Donate at BCC Hamra Center (Featured)'}
+                          </motion.button>
+                        )}
+
+                        {/* Hospital Donation Option - Show hospitals from donor's governorate */}
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowHospitalSelect(showHospitalSelect === notif.id ? null : notif.id)
+                          }}
+                          disabled={confirmingId === notif.id}
+                          style={{
+                            background: confirmingId === notif.id ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                            color:'#fff', border:'none', padding:'12px 16px', borderRadius:8,
+                            fontWeight:900, fontSize:13, cursor:confirmingId === notif.id ? 'not-allowed' : 'pointer',
+                            opacity: confirmingId === notif.id ? 0.7 : 1
+                          }}
                         >
-                          <p style={{ fontSize:10, fontWeight:700, color:'#666', margin:'0 0 8px 0', textTransform:'uppercase', letterSpacing:'.05em' }}>
-                            🏥 Select a hospital in {donor?.governorate}:
-                          </p>
-                          {hospitals
-                            .filter(h => h.governorate === donor?.governorate)
-                            .length > 0 ? (
-                            hospitals
-                              .filter(h => h.governorate === donor?.governorate)
-                              .map(hospital => (
-                              <motion.button
-                                key={hospital.id}
-                                whileHover={{ scale: 1.02 }}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDonateAtHospital(notif.notification_id, hospital.id)
-                                }}
-                                disabled={confirmingId === notif.notification_id}
-                                style={{
-                                  background:'#fff', border:'2px solid #3b82f6', padding:'10px 12px',
-                                  borderRadius:6, fontSize:12, fontWeight:700, color:'#3b82f6',
-                                  cursor: confirmingId === notif.notification_id ? 'not-allowed' : 'pointer',
-                                  textAlign:'left', opacity: confirmingId === notif.notification_id ? 0.7 : 1,
-                                  transition: 'all 0.2s'
-                                }}
-                              >
-                                {hospital.name}
-                              </motion.button>
-                            ))
-                          ) : (
-                            <p style={{ fontSize:11, color:'#999', margin:0, fontStyle:'italic', padding:'8px' }}>
-                              No hospitals found in {donor?.governorate}. Please try the center option if available.
+                          🏥 Donate at a Hospital in {donor?.governorate}
+                        </motion.button>
+
+                        {/* Hospital Selection Dropdown */}
+                        {showHospitalSelect === notif.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8, padding:12, background:'rgba(255,255,255,.6)', borderRadius:8 }}
+                          >
+                            <p style={{ fontSize:10, fontWeight:700, color:'#666', margin:'0 0 8px 0', textTransform:'uppercase', letterSpacing:'.05em' }}>
+                              🏥 Select a hospital in {donor?.governorate}:
                             </p>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
+                            {hospitals
+                              .filter(h => h.governorate === donor?.governorate)
+                              .length > 0 ? (
+                              hospitals
+                                .filter(h => h.governorate === donor?.governorate)
+                                .map(hospital => (
+                                <motion.button
+                                  key={hospital.id}
+                                  whileHover={{ scale: 1.02 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDonateAtHospital(notif.id, hospital.id)
+                                  }}
+                                  disabled={confirmingId === notif.id}
+                                  style={{
+                                    background:'#fff', border:'2px solid #3b82f6', padding:'10px 12px',
+                                    borderRadius:6, fontSize:12, fontWeight:700, color:'#3b82f6',
+                                    cursor: confirmingId === notif.id ? 'not-allowed' : 'pointer',
+                                    textAlign:'left', opacity: confirmingId === notif.id ? 0.7 : 1,
+                                    transition: 'all 0.2s'
+                                  }}
+                                >
+                                  {hospital.name}
+                                </motion.button>
+                              ))
+                            ) : (
+                              <p style={{ fontSize:11, color:'#999', margin:0, fontStyle:'italic', padding:'8px' }}>
+                                No hospitals found in {donor?.governorate}. Please try the center option if available.
+                              </p>
+                            )}
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               ))}
             </AnimatePresence>
           </motion.div>
