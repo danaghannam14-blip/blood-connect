@@ -1,1101 +1,616 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
-// ✅ FIX 1: API Auto-Detection (localhost vs production)
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://blood-bank-eqyr.onrender.com'
 
-console.log('[Admin.jsx] API endpoint:', API);
-
-/* ─── Premium Admin Styles (Unified Design System) ─────────────────────────────────── */
-const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { overflow-x: hidden; }
-
-  @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
-  @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
-  @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-  @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
-  @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
-
-  .ad-root {
-    min-height:100vh;
-    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
-    background-size:400% 400%;
-    animation:gradient-shift 15s ease infinite;
-    font-family:'Plus Jakarta Sans',sans-serif;
-    overflow-x:hidden;
-    position:relative;
-    color:#380101;
-  }
-
-  .ad-glass {
-    background:rgba(255,255,255,.6);
-    backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid rgba(180,180,180,.2);
-    box-shadow:0 8px 32px rgba(0,0,0,.08);
-  }
-  
-  .ad-glass-deep {
-    background:rgba(255,255,255,.5);
-    backdrop-filter:blur(30px) saturate(200%);
-    -webkit-backdrop-filter:blur(30px) saturate(200%);
-    border:1px solid rgba(180,180,180,.25);
-    box-shadow:0 16px 48px rgba(0,0,0,.1),inset 0 1px 1px rgba(255,255,255,.3);
-  }
-
-  .ad-header {
-    position:sticky;top:0;z-index:50;
-    background:rgba(248,248,248,.85);
-    backdrop-filter:blur(20px) saturate(200%);
-    -webkit-backdrop-filter:blur(20px) saturate(200%);
-    border-bottom:1px solid rgba(180,180,180,.15);
-    box-shadow:0 4px 30px rgba(0,0,0,.08);
-  }
-  
-  .ad-header-inner {
-    max-width:1360px;margin:0 auto;
-    display:flex;justify-content:space-between;align-items:center;
-    padding:14px clamp(16px,3.5vw,44px);
-    gap:clamp(16px,2.5vw,32px);
-  }
-
-  .ad-btn {
-    position:relative;overflow:hidden;cursor:pointer;
-    border:none;outline:none;
-    transition:all .3s cubic-bezier(.34,1.56,.64,1);
-    font-family:'Plus Jakarta Sans',sans-serif;
-    font-weight:700;
-  }
-
-  .ad-btn::before {
-    content:'';position:absolute;top:0;left:-100%;
-    width:100%;height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
-    transition:left .5s;
-  }
-
-  .ad-btn:hover::before { left:100%; }
-
-  .ad-btn-primary {
-    background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
-    color:#faf7f7;
-    box-shadow:0 10px 30px rgba(220,38,38,.35);
-    border:1px solid rgba(255,255,255,.15);
-  }
-
-  .ad-btn-primary:hover {
-    transform:translateY(-3px) scale(1.02);
-    box-shadow:0 20px 60px rgba(220,38,38,.5);
-  }
-
-  .ad-btn-secondary {
-    background:rgba(255,255,255,.7);
-    backdrop-filter:blur(10px);
-    border:1.5px solid rgba(180,180,180,.3) !important;
-    color:#380101;
-  }
-
-  .ad-btn-secondary:hover {
-    background:rgba(255,255,255,.85);
-    border-color:rgba(180,180,180,.5) !important;
-    transform:translateY(-2px);
-  }
-
-  .ad-float-orb {
-    position:absolute;
-    border-radius:50%;
-    filter:blur(80px);
-    pointer-events:none;
-    animation:float-orb 6s ease-in-out infinite;
-  }
-
-  .ad-card-hover {
-    transition:all .4s cubic-bezier(.22,1,.36,1);
-  }
-
-  .ad-card-hover:hover {
-    transform:translateY(-8px) scale(1.02);
-    box-shadow:0 32px 80px rgba(220,38,38,.2) !important;
-  }
-
-  .ad-tab-btn {
-    position:relative;overflow:hidden;
-    background:rgba(255,255,255,.5);
-    border:1.5px solid rgba(180,180,180,.3);
-    color:#380101;
-    font-weight:700;
-    transition:all .3s cubic-bezier(.22,1,.36,1);
-  }
-
-  .ad-tab-btn.active {
-    background:linear-gradient(135deg,#dc2626,#991b1b);
-    color:#faf7f7;
-    border-color:transparent;
-    box-shadow:0 10px 28px rgba(220,38,38,.3);
-  }
-
-  footer {
-    border-top:1px solid rgba(140,140,140,.1);
-  }
-
-  @media (max-width:960px) {
-    .ad-header-inner { flex-wrap: wrap; }
-    .ad-stats-grid { grid-template-columns: 1fr 1fr !important; }
-  }
-`
-
-if (typeof document !== 'undefined' && !document.getElementById('ad-styles-premium')) {
-  const s = document.createElement('style')
-  s.id = 'ad-styles-premium'
-  s.textContent = STYLES
-  document.head.appendChild(s)
-}
-
-/* ─── Animated Background Orbs ───────────────────────── */
-function AnimatedBackgroundOrbs() {
-  const orbs = [
-    { size: 'min(350px,32vw)', color: 'rgba(220,38,38,.1)', top: '-8%', left: '-5%', duration: 8 },
-    { size: 'min(300px,28vw)', color: 'rgba(180,180,180,.08)', top: '20%', right: '-8%', duration: 11 },
-    { size: 'min(320px,30vw)', color: 'rgba(220,38,38,.08)', bottom: '-12%', left: '8%', duration: 13 },
-    { size: 'min(280px,26vw)', color: 'rgba(180,180,180,.06)', bottom: '15%', right: '-5%', duration: 9 },
-  ]
-
-  return (
-    <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      {orbs.map((orb, i) => (
-        <motion.div
-          key={`orb-${i}`}
-          className="ad-float-orb"
-          style={{
-            width: orb.size,
-            height: orb.size,
-            background: orb.color,
-            top: orb.top,
-            right: orb.right,
-            left: orb.left,
-            bottom: orb.bottom,
-          }}
-          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
-          transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      ))}
-    </motion.div>
-  )
-}
-
-/* ─── Stat Card Component ─────────────────────────────────── */
-function StatCard({ icon, value, label, color = '#dc2626', delay = 0 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.5, type: 'spring' }}
-      className="ad-glass ad-card-hover"
-      style={{
-        borderRadius: '20px',
-        padding: '24px',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(180,180,180,.2)',
-      }}
-    >
-      <div style={{ display:'flex', alignItems:'center', gap:16, position:'relative', zIndex:1 }}>
-        <div style={{
-          width:56,
-          height:56,
-          background:`linear-gradient(135deg, ${color}15, ${color}25)`,
-          borderRadius:14,
-          display:'flex',
-          alignItems:'center',
-          justifyContent:'center',
-          flexShrink:0,
-        }}>
-          {icon}
-        </div>
-        <div>
-          <p style={{ fontSize:'28px', fontWeight:900, color, margin:0, lineHeight:1 }}>{value}</p>
-          <p style={{ fontSize:10, fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.15em', margin:'8px 0 0', lineHeight:1 }}>{label}</p>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─── Admin Dashboard ─────────────────────────────────────── */
 function Admin() {
   const navigate = useNavigate()
-  const [authed, setAuthed] = useState(false)
-  const [requests, setRequests] = useState([])
-  const [tab, setTab] = useState('all')
-  const [loading, setLoading] = useState(true)
-  const [visible, setVisible] = useState(false)
   
-  // ✅ Emergency donations state
-  const [awaitingDonations, setAwaitingDonations] = useState([])
-  const [confirmedDonations, setConfirmedDonations] = useState([])
-  const [confirmingId, setConfirmingId] = useState(null)
-
-  // ✅ Donors, Hospitals, Admin management
+  // ✅ STATE
+  const [admin, setAdmin] = useState(null)
+  const [activeTab, setActiveTab] = useState('donations')
+  const [loading, setLoading] = useState(true)
+  
+  // Donors
   const [donors, setDonors] = useState([])
-  const [hospitals, setHospitals] = useState([])
+  
+  // Admins
   const [admins, setAdmins] = useState([])
-  const [passwordForm, setPasswordForm] = useState({ old_password: '', new_password: '', confirm_password: '' })
-  const [passwordMessage, setPasswordMessage] = useState('')
   const [newAdminForm, setNewAdminForm] = useState({ email: '', password: '' })
   const [adminMessage, setAdminMessage] = useState('')
+  
+  // Donations
+  const [bccDonations, setBccDonations] = useState([])
+  const [noShowDonations, setNoShowDonations] = useState([])
+  const [confirmingId, setConfirmingId] = useState(null)
+  
+  // Password change
+  const [passwordForm, setPasswordForm] = useState({ old_password: '', new_password: '', confirm_password: '' })
+  const [passwordMessage, setPasswordMessage] = useState('')
 
+  // ✅ INIT
   useEffect(() => {
-    setTimeout(() => setVisible(true), 60)
-  }, [])
-
-  // ✅ Check authentication
-  useEffect(() => {
-    const adminData = localStorage.getItem('adminData')
-    console.log('[Admin.jsx] Checking auth, adminData:', !!adminData);
-    if (adminData) {
-      setAuthed(true)
-      loadData()
-    } else {
-      navigate('/login')
+    const data = localStorage.getItem('adminData')
+    
+    if (!data) {
+      navigate('/admin/login')
+      return
     }
+    
+    setAdmin(JSON.parse(data))
+    loadData()
   }, [navigate])
 
-  // ✅ Load requests from backend
+  // ✅ LOAD ALL DATA
   const loadData = async () => {
-    console.log('[Admin.jsx] loadData() called, fetching from:', API);
     setLoading(true)
     try {
-      const response = await axios.get(`${API}/api/requests`)
-      console.log('[Admin.jsx] Response received:', response.data);
-      setRequests(response.data || [])
+      // Load donors (registered donors only)
+      const donorsRes = await axios.get(`${API}/api/admin/donors`)
+      setDonors(donorsRes.data || [])
       
-      // ✅ Load emergency donations for BCC Hamra center
-      try {
-        const emergencyRes = await axios.get(`${API}/api/blood-requests/center-donations`)
-        const donations = emergencyRes.data || []
-        setAwaitingDonations(donations.filter(d => d.status === 'no_show'))
-        setConfirmedDonations(donations.filter(d => d.status === 'confirmed'))
-        console.log('[Admin.jsx] Emergency donations loaded:', donations.length)
-      } catch (err) {
-        console.error('[Admin.jsx] Error loading emergency donations:', err.message)
-      }
+      // Load admins
+      const adminsRes = await axios.get(`${API}/api/admin/admins`)
+      setAdmins(adminsRes.data || [])
+      
+      // Load BCC Hamra donations (awaiting_confirmation or confirmed)
+      const bccRes = await axios.get(`${API}/api/blood-requests/center-donations`)
+      const bccData = bccRes.data || []
+      setBccDonations(bccData.filter(d => d.status === 'awaiting_confirmation'))
+      
+      // Load no-show donations (from blood_requests where status = 'ns')
+      const noShowRes = await axios.get(`${API}/api/admin/requests`)
+      setNoShowDonations(noShowRes.data.filter(r => r.status === 'ns') || [])
     } catch (err) {
-      console.error('[Admin.jsx] Error loading requests:', err.message)
-      if (err.response) {
-        console.error('[Admin.jsx] Response error:', err.response.status, err.response.data)
-      }
-      setRequests([])
+      console.error('Error loading data:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  // ✅ MARK REQUEST AS CONFIRMED (syncs to donor dashboard)
-  const handleConfirmed = async (requestId) => {
+  // ✅ DELETE DONOR
+  const handleDeleteDonor = async (donorId) => {
+    if (!window.confirm('Delete this donor? This action cannot be undone.')) return
     try {
-      // Update blood_requests status to "confirmed"
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'confirmed' })
-      
-      // Also update corresponding emergency_donations record
-      const request = requests.find(r => r.id === requestId)
-      if (request) {
-        await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'confirmed' })
-      }
-      
-      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'confirmed' } : r))
-      alert('Request confirmed! Donor will see this on their dashboard.')
-      loadData()
+      await axios.delete(`${API}/api/admin/donors/${donorId}`)
+      setDonors(donors.filter(d => d.id !== donorId))
+      alert('✅ Donor deleted successfully!')
     } catch (err) {
-      alert(`Error: ${err.message}`)
+      console.error('Delete error:', err)
+      alert(`❌ Error: ${err.response?.data?.error || err.message}`)
     }
   }
 
-  // ✅ MARK REQUEST AS "DIDN'T SHOW UP" (moves to admin supply blood section)
-  const handleDidntShowUp = async (requestId) => {
+  // ✅ ADD NEW ADMIN
+  const handleAddAdmin = async () => {
+    setAdminMessage('')
+    
+    if (!newAdminForm.email || !newAdminForm.password) {
+      setAdminMessage('❌ Email and password required')
+      return
+    }
+    
+    // Validate email ends with @bloodconnect.com
+    if (!newAdminForm.email.endsWith('@bloodconnect.com')) {
+      setAdminMessage('❌ Email must end with @bloodconnect.com')
+      return
+    }
+    
+    if (newAdminForm.password.length < 6) {
+      setAdminMessage('❌ Password must be at least 6 characters')
+      return
+    }
+    
     try {
-      // Update blood_requests status to "no_show"
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'no_show' })
-      
-      // Also update corresponding emergency_donations record
-      const request = requests.find(r => r.id === requestId)
-      if (request) {
-        await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'no_show' })
-      }
-      
-      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'no_show' } : r))
-      alert('Request marked as "didn\'t show up". Will appear in supply blood section.')
+      const res = await axios.post(`${API}/api/admin/add-admin`, {
+        email: newAdminForm.email,
+        password: newAdminForm.password
+      })
+      setAdminMessage('✅ Admin created successfully!')
+      setNewAdminForm({ email: '', password: '' })
       loadData()
     } catch (err) {
-      alert(`Error: ${err.message}`)
+      setAdminMessage(`❌ Error: ${err.response?.data?.error || err.message}`)
     }
   }
 
-  // ✅ DELETE REQUEST (removes from everywhere)
-  const deleteRequest = async (id) => {
-    if (!window.confirm('Delete this request completely?')) return
+  // ✅ CHANGE PASSWORD
+  const handleChangePassword = async () => {
+    setPasswordMessage('')
+    
+    if (!passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
+      setPasswordMessage('❌ All fields required')
+      return
+    }
+    
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      setPasswordMessage('❌ Passwords do not match')
+      return
+    }
+    
     try {
-      await axios.delete(`${API}/api/requests/${id}`)
-      // Also delete from emergency_donations
-      await axios.delete(`${API}/api/blood-requests/${id}`)
-      setRequests(requests.filter(r => r.id !== id))
-      alert('Request deleted.')
-      loadData()
+      await axios.put(`${API}/api/admin/change-password`, {
+        old_password: passwordForm.old_password,
+        new_password: passwordForm.new_password
+      })
+      setPasswordMessage('✅ Password changed!')
+      setPasswordForm({ old_password: '', new_password: '', confirm_password: '' })
     } catch (err) {
-      alert(`Error: ${err.message}`)
+      setPasswordMessage(`❌ Error: ${err.response?.data?.error || err.message}`)
     }
   }
 
-  // ✅ SUPPLY BLOOD FOR HOSPITAL (when donor didn't show up)
-  const handleSupplyBlood = async (donationId) => {
+  // ✅ CONFIRM BCC HAMRA DONATION
+  const handleConfirmBccDonation = async (donationId) => {
     setConfirmingId(donationId)
     try {
-      const donation = awaitingDonations.find(d => d.id === donationId)
-      console.log('Donation found:', donation)
-
-      if (!donation) {
-        alert('Donation not found')
+      const donation = bccDonations.find(d => d.id === donationId)
+      
+      if (!donation || !donation.patient_email) {
+        alert('❌ Donation or patient email missing')
         setConfirmingId(null)
         return
       }
-
-      if (!donation.patient_email) {
-        alert('Patient email is missing from donation record')
-        console.error('Missing patient_email in donation:', donation)
-        setConfirmingId(null)
-        return
-      }
-
-      const response = await axios.post(`${API}/api/blood-requests/admin-confirm`, {
+      
+      // Call admin-confirm endpoint
+      const res = await axios.post(`${API}/api/blood-requests/admin-confirm`, {
         donationId: donationId,
         bloodType: donation.blood_type,
-        patientEmail: donation.patient_email,
-        donorName: donation.donor_name
+        patientEmail: donation.patient_email
       })
-      console.log('Supply blood response:', response.data)
-      alert('Blood supplied from BCC Hamra bank to hospital. Patient notified.')
+      
+      alert('✅ Donation confirmed! Patient and donor notified.')
       loadData()
     } catch (err) {
-      console.error('Supply blood error:', err)
-      alert(`Error: ${err.response?.data?.error || err.message}`)
+      console.error('Confirm error:', err)
+      alert(`❌ Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingId(null)
     }
   }
 
-  // ✅ DELETE DONOR
-  const handleDeleteDonor = async (donorId) => {
-    if (!window.confirm('Delete this donor? This cannot be undone.')) return
-    try {
-      await axios.delete(`${API}/api/donors/${donorId}`)
-      setDonors(donors.filter(d => d.id !== donorId))
-      alert('Donor deleted.')
-    } catch (err) {
-      alert(`Error: ${err.message}`)
-    }
-  }
-
-  // ✅ CHANGE PASSWORD
-  const handleChangePassword = async (e) => {
-    e.preventDefault()
-    setPasswordMessage('')
-
-    if (passwordForm.new_password !== passwordForm.confirm_password) {
-      setPasswordMessage('Passwords do not match')
-      return
-    }
-
-    if (passwordForm.new_password.length < 6) {
-      setPasswordMessage('Password must be at least 6 characters')
-      return
-    }
-
-    try {
-      const adminData = JSON.parse(localStorage.getItem('adminData'))
-      await axios.put(`${API}/api/admin/change-password`, {
-        admin_id: adminData.id,
-        old_password: passwordForm.old_password,
-        new_password: passwordForm.new_password
-      })
-      setPasswordMessage('Password changed successfully!')
-      setPasswordForm({ old_password: '', new_password: '', confirm_password: '' })
-    } catch (err) {
-      setPasswordMessage(`Error: ${err.response?.data?.message || err.message}`)
-    }
-  }
-
-  // ✅ ADD NEW ADMIN
-  const handleAddAdmin = async (e) => {
-    e.preventDefault()
-    setAdminMessage('')
-
-    if (!newAdminForm.email || !newAdminForm.password) {
-      setAdminMessage('Please fill all fields')
-      return
-    }
-
-    try {
-      await axios.post(`${API}/api/admin/create`, {
-        email: newAdminForm.email,
-        password: newAdminForm.password
-      })
-      setAdminMessage('Admin created successfully!')
-      setNewAdminForm({ email: '', password: '' })
-      loadData()
-    } catch (err) {
-      setAdminMessage(`Error: ${err.response?.data?.message || err.message}`)
-    }
-  }
-
+  // ✅ LOGOUT
   const handleLogout = () => {
     localStorage.removeItem('adminData')
-    navigate('/login')
+    navigate('/')
   }
 
-  if (!authed) return null
-
-  const pendingRequests = requests.filter(r => r.status === 'pending').length
-  const confirmedRequests = requests.filter(r => r.status === 'confirmed').length
-  const didntShowUpRequests = requests.filter(r => r.status === 'no_show').length
-
-  const tabs = ['all', 'pending', 'confirmed', 'no_show', 'donors', 'hospitals', 'settings']
-
-  // Filtered requests based on tab
-  let filteredRequests = requests
-  if (tab === 'pending') filteredRequests = requests.filter(r => r.status === 'pending')
-  if (tab === 'confirmed') filteredRequests = requests.filter(r => r.status === 'confirmed')
-  if (tab === 'no_show') filteredRequests = requests.filter(r => r.status === 'no_show')
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] },
-    },
-  }
+  if (!admin) return null
 
   return (
-    <div className="ad-root">
-      <AnimatedBackgroundOrbs />
-
-      {/* Header */}
-      <motion.header
-        className="ad-header"
-        style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      
+      {/* HEADER */}
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,.9)', borderBottom: '2px solid rgba(211,47,47,.2)', backdropFilter: 'blur(40px)' }}
       >
-        <div className="ad-header-inner">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
-            onClick={() => navigate('/')}
-            whileHover={{ x: 3 }}
-          >
-            <motion.div
-              style={{
-                width: 50,
-                height: 50,
-                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-                borderRadius: 14,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
-              animate={{ rotateY: [0, 360] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-            >
-              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
-                <defs>
-                  <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#ff6b6b" />
-                    <stop offset="50%" stopColor="#dc2626" />
-                    <stop offset="100%" stopColor="#991b1b" />
-                  </linearGradient>
-                </defs>
-                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
-                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
-              </svg>
-            </motion.div>
-            
-            <div>
-              <motion.div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} animate={{ letterSpacing: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity }}>
-                BloodConnect
-              </motion.div>
-              <div style={{ fontSize: 9, color: 'rgba(56,1,1,.5)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', margin: '2px 0 0' }}>Admin Panel</div>
+        <div style={{ maxWidth: 1360, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 22 }}>
+              A
             </div>
-          </motion.div>
-
-          <div style={{ flex: 1 }} />
-
+            <div>
+              <h1 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }}>BloodConnect Admin</h1>
+              <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '4px 0 0', fontWeight: 700 }}>{admin.email}</p>
+            </div>
+          </div>
           <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            className="ad-btn ad-btn-primary"
-            whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
-            whileTap={{ scale: 0.92 }}
-            style={{ padding: '13px 26px', borderRadius: 24, fontSize: 13, fontWeight: 700 }}
+            style={{ background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 14, fontSize: 13, fontWeight: 900, cursor: 'pointer' }}
           >
             Logout
           </motion.button>
         </div>
-      </motion.header>
+      </motion.div>
 
-      <main style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '40px clamp(20px,3vw,50px)', display: 'flex', flexDirection: 'column', gap: '50px' }}>
-
-        {/* STATS */}
-        <motion.div
-          className="ad-stats-grid"
-          initial="hidden"
-          animate={visible ? "show" : "hidden"}
-          variants={container}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}
-        >
-          <motion.div variants={item}>
-            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#1f2937' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={requests.length} label="Total Requests" color="#1f2937" delay={0} />
-          </motion.div>
-          <motion.div variants={item}>
-            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EA580C' }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>} value={pendingRequests} label="Pending" color="#EA580C" delay={0.1} />
-          </motion.div>
-          <motion.div variants={item}>
-            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#22C55E' }}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>} value={confirmedRequests} label="Confirmed" color="#22C55E" delay={0.2} />
-          </motion.div>
-          <motion.div variants={item}>
-            <StatCard icon={<svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: '#EF4444' }}><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>} value={didntShowUpRequests} label="Didn't Show Up" color="#EF4444" delay={0.3} />
-          </motion.div>
-        </motion.div>
-
+      {/* MAIN */}
+      <main style={{ maxWidth: 1360, margin: '0 auto', padding: '32px 24px' }}>
+        
         {/* TABS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}
         >
-          {tabs.map((t, idx) => {
-            let count = requests.length
-            if (t === 'pending') count = pendingRequests
-            if (t === 'confirmed') count = confirmedRequests
-            if (t === 'no_show') count = didntShowUpRequests
-            
-            const tabLabels = {
-              'all': `All (${count})`,
-              'pending': `Pending (${count})`,
-              'confirmed': `Confirmed (${count})`,
-              'no_show': `Didn't Show (${count})`,
-              'donors': 'Donors',
-              'hospitals': 'Hospitals',
-              'settings': 'Settings'
-            }
-            
-            return (
-              <motion.button
-                key={t}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setTab(t)}
-                className={`ad-btn ad-tab-btn ${tab === t ? 'active' : ''}`}
-                style={{
-                  padding: '11px 20px',
-                  borderRadius: 16,
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                {tabLabels[t]}
-              </motion.button>
-            )
-          })}
+          {[
+            { id: 'hospitals', label: '🏥 Hospitals Need Supply' },
+            { id: 'bcc-hamra', label: '🩸 BCC Hamra Donors' },
+            { id: 'donors', label: '👥 Registered Donors' },
+            { id: 'admins', label: '🔑 Admins' },
+            { id: 'settings', label: '⚙️ Settings' }
+          ].map((t) => (
+            <motion.button
+              key={t.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveTab(t.id)}
+              style={{
+                padding: '10px 18px',
+                borderRadius: 14,
+                fontSize: 13,
+                fontWeight: 900,
+                background: activeTab === t.id ? 'linear-gradient(135deg,#dc2626,#ff6b6b)' : 'rgba(255,255,255,.7)',
+                color: activeTab === t.id ? '#fff' : '#dc2626',
+                border: activeTab === t.id ? 'none' : '2px solid rgba(211,47,47,.2)',
+                cursor: 'pointer'
+              }}
+            >
+              {t.label}
+            </motion.button>
+          ))}
         </motion.div>
 
         {loading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep" style={{ borderRadius:'28px', padding:'60px', textAlign:'center' }}>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} style={{ width:60, height:60, margin:'0 auto', border:'3px solid rgba(220,38,38,.15)', borderTopColor:'#dc2626', borderRadius:'50%' }} />
-            <p style={{ marginTop:20, fontSize:14, fontWeight:600, color:'rgba(56,1,1,.6)' }}>Loading dashboard</p>
-          </motion.div>
+          <div style={{ textAlign: 'center', padding: '48px' }}>
+            <div style={{ width: 40, height: 40, border: '4px solid rgba(211,47,47,.2)', borderTopColor: '#dc2626', borderRadius: '50%', margin: '0 auto', animation: 'spin 1s linear infinite' }} />
+          </div>
         )}
 
-        {!loading && (
-          <AnimatePresence mode="wait">
-            <motion.div key={tab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
-                <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 28px 0', fontFamily:"'Fraunces',serif" }}>
-                  {tab === 'all' ? 'All Hospital Blood Requests' : tab === 'pending' ? 'Pending Requests' : tab === 'confirmed' ? 'Confirmed Requests' : 'Didn\'t Show Up'}
-                </h2>
-                {filteredRequests.length === 0 ? (
-                  <div style={{ textAlign:'center', padding:'60px 20px' }}>
-                    <p style={{ fontSize:48, margin:0, opacity: 0.3 }}>-</p>
-                    <p style={{ color:'rgba(56,1,1,.4)', fontSize:14, marginTop:16, fontWeight: 600 }}>No requests in this category</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {filteredRequests.map((request, idx) => (
-                      <motion.div
-                        key={request.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="ad-glass ad-card-hover"
-                        style={{
-                          borderRadius: 18,
-                          padding: 20,
-                          border: '1px solid rgba(180,180,180,.2)',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          flexWrap: 'wrap',
-                          gap: 16
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 280 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 10px 0' }}>
-                            {request.hospital_name || 'Unknown Hospital'}
-                          </p>
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: '#dc2626' }}>{request.blood_type}</span>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '6px 12px', borderRadius: 9, background: 'rgba(234,88,12,.12)', color: '#EA580C', textTransform: 'uppercase', letterSpacing: '.1em' }}>
-                              {request.urgency?.toUpperCase() || 'URGENT'}
-                            </span>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '6px 12px', borderRadius: 9, background: request.status === 'pending' ? 'rgba(234,88,12,.12)' : 'rgba(34,197,94,.12)', color: request.status === 'pending' ? '#EA580C' : '#22c55e', textTransform: 'uppercase', letterSpacing: '.1em' }}>
-                              {request.status?.toUpperCase() || 'PENDING'}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: 13, color: '#6b7280', margin: '8px 0 4px', fontWeight: 600 }}>
-                            {request.quantity_needed} units needed
-                          </p>
-                          <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
-                            {new Date(request.created_at).toLocaleDateString('en-GB')}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          {request.status === 'pending' && (
-                            <>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleConfirmed(request.id)}
-                                className="ad-btn ad-btn-primary"
-                                style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12, background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
-                              >
-                                Confirmed
-                              </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleDidntShowUp(request.id)}
-                                className="ad-btn ad-btn-secondary"
-                                style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12, color: '#ef4444' }}
-                              >
-                                Didn't Show
-                              </motion.button>
-                            </>
-                          )}
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => deleteRequest(request.id)}
-                            className="ad-btn ad-btn-secondary"
-                            style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12 }}
-                          >
-                            Delete
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
-        )}
-
-        {/* SUPPLY BLOOD SECTION */}
-        {awaitingDonations.length > 0 && (
+        {!loading && activeTab === 'hospitals' && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="ad-glass-deep"
-            style={{
-              borderRadius: 28,
-              padding: 'clamp(28px,3.5vw,44px)',
-              border: '2px solid rgba(220,38,38,.2)',
-            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ background: 'rgba(255,235,238,.5)', borderRadius: 28, padding: 32, border: '2px solid #ef4444' }}
           >
-            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#dc2626', margin:'0 0 16px 0', fontFamily:"'Fraunces',serif" }}>
-              BCC Hamra Supply Bank ({awaitingDonations.length})
-            </h2>
-            <p style={{ fontSize: 13, color: 'rgba(56,1,1,.6)', margin: '0 0 24px 0', fontWeight: 500, lineHeight: 1.6 }}>
-              When donors don't show up, blood is supplied from BCC Hamra's bank to hospitals across Lebanon.
-            </p>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#ef4444', margin: '0 0 20px 0' }}>🏥 Hospitals Needing Blood Supply</h2>
+            <p style={{ fontSize: 13, color: 'rgba(211,47,47,.65)', margin: '0 0 20px 0', fontWeight: 600 }}>Hospitals where donors didn't show up - supply blood from BCC Hamra bank</p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {awaitingDonations.map((donation) => (
-                <motion.div
-                  key={donation.id}
-                  initial={{ opacity: 0, x: -15 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="ad-glass ad-card-hover"
-                  style={{
-                    borderRadius: 18,
-                    padding: 18,
-                    border: '1px solid rgba(220,38,38,.2)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 16,
-                    flexWrap: 'wrap'
-                  }}
-                >
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} Blood
-                    </p>
-                    <p style={{ fontSize: 12, color: 'rgba(56,1,1,.6)', margin: '0', fontWeight: 600 }}>
-                      Hospital: {donation.patient_email} · {new Date(donation.created_at).toLocaleDateString('en-GB')}
-                    </p>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSupplyBlood(donation.id)}
-                    disabled={confirmingId === donation.id}
-                    className="ad-btn ad-btn-primary"
-                    style={{
-                      padding: '9px 18px',
-                      borderRadius: 12,
-                      fontWeight: 700,
-                      fontSize: 12,
-                      opacity: confirmingId === donation.id ? 0.7 : 1,
-                      cursor: confirmingId === donation.id ? 'not-allowed' : 'pointer',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {confirmingId === donation.id ? 'Supplying...' : 'Supply Blood'}
-                  </motion.button>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {confirmedDonations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="ad-glass-deep"
-            style={{
-              borderRadius: 28,
-              padding: 'clamp(28px,3.5vw,44px)',
-              border: '2px solid rgba(34,197,94,.2)',
-            }}
-          >
-            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#22c55e', margin:'0 0 20px 0', fontFamily:"'Fraunces',serif" }}>
-              Confirmed Donor Donations
-            </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {confirmedDonations.map((donation) => (
-                <motion.div
-                  key={donation.id}
-                  initial={{ opacity: 0, x: -15 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="ad-glass ad-card-hover"
-                  style={{
-                    borderRadius: 18,
-                    padding: 18,
-                    border: '1px solid rgba(34,197,94,.2)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 16,
-                    flexWrap: 'wrap'
-                  }}
-                >
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', margin: '0 0 6px 0' }}>
-                      {donation.blood_type} Blood
-                    </p>
-                    <p style={{ fontSize: 12, color: 'rgba(56,1,1,.6)', margin: '0', fontWeight: 600 }}>
-                      {donation.donor_name || 'Anonymous Donor'} · {new Date(donation.created_at).toLocaleDateString('en-GB')}
-                    </p>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.1)', borderRadius: 12 }}>
-                    Ready
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* DONORS TAB */}
-        {tab === 'donors' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
-            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Donor Management</h2>
-            {donors.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'60px 20px' }}>
-                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)', fontWeight: 600 }}>No donors found</p>
+            {noShowDonations.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: 'rgba(211,47,47,.4)', margin: 0 }}>No hospitals needing supply.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '600px', overflowY: 'auto' }}>
-                {donors.map((donor) => (
-                  <motion.div
-                    key={donor.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="ad-glass ad-card-hover"
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                {noShowDonations.map((request) => (
+                  <div
+                    key={request.id}
                     style={{
-                      borderRadius: 16,
+                      background: 'rgba(254,226,226,.5)',
+                      borderRadius: 18,
                       padding: 18,
-                      border: '1px solid rgba(180,180,180,.2)',
+                      border: '2px solid rgba(220,38,38,.3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8
+                    }}
+                  >
+                    <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: 0 }}>🩸 {request.blood_type}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: 0, fontWeight: 700 }}>
+                      📋 {request.quantity_needed} units needed
+                    </p>
+                    <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: 0, fontWeight: 700 }}>
+                      🏥 Hospital ID: {request.hospital_id}
+                    </p>
+                    <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: 0, fontWeight: 600 }}>
+                      📅 {new Date(request.created_at).toLocaleDateString('en-GB')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {!loading && activeTab === 'bcc-hamra' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))', borderRadius: 28, padding: 32, border: '2px solid #dc2626' }}
+          >
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>🩸 BCC Hamra Center - Donors Awaiting Confirmation</h2>
+            <p style={{ fontSize: 13, color: 'rgba(211,47,47,.65)', margin: '0 0 20px 0', fontWeight: 600 }}>Donors who chose to donate at BCC Hamra center</p>
+            
+            {bccDonations.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: 'rgba(211,47,47,.4)', margin: 0 }}>No donors awaiting confirmation.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {bccDonations.map((donation) => (
+                  <div
+                    key={donation.id}
+                    style={{
+                      background: 'rgba(254,226,226,.5)',
+                      borderRadius: 18,
+                      padding: 18,
+                      border: '2px solid rgba(220,38,38,.3)',
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 16,
-                      flexWrap: 'wrap'
+                      alignItems: 'center'
                     }}
                   >
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 6px 0' }}>
-                        {donor.full_name}
+                      <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
+                        {donation.blood_type} • {donation.donor_name || 'Anonymous'}
                       </p>
-                      <p style={{ fontSize: 11, color: 'rgba(56,1,1,.6)', margin: '0 0 4px 0', fontWeight: 500 }}>
-                        {donor.email}
+                      <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0 0 4px 0', fontWeight: 700 }}>
+                        🏥 {donation.hospital_name || 'BCC Hamra Center'}
                       </p>
-                      <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
-                        {donor.blood_type} · {donor.governorate}
+                      <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: 0, fontWeight: 700 }}>
+                        📅 {new Date(donation.created_at).toLocaleDateString('en-GB')}
                       </p>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDeleteDonor(donor.id)}
-                      className="ad-btn ad-btn-secondary"
-                      style={{ padding: '9px 18px', borderRadius: 12, fontWeight: 700, fontSize: 12 }}
+                      onClick={() => handleConfirmBccDonation(donation.id)}
+                      disabled={confirmingId === donation.id}
+                      style={{
+                        background: confirmingId === donation.id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '9px 18px',
+                        borderRadius: 10,
+                        fontWeight: 900,
+                        fontSize: 12,
+                        cursor: confirmingId === donation.id ? 'not-allowed' : 'pointer',
+                        whiteSpace: 'nowrap',
+                        opacity: confirmingId === donation.id ? 0.7 : 1
+                      }}
                     >
-                      Delete
+                      {confirmingId === donation.id ? '⏳ Confirming...' : '✅ Confirm'}
                     </motion.button>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
           </motion.div>
         )}
 
-        {/* HOSPITALS TAB */}
-        {tab === 'hospitals' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
-            <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Hospital Partners</h2>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-              <motion.button
-                whileHover={{ scale: 1.06 }}
-                onClick={() => navigate('/hospital-partners')}
-                className="ad-btn ad-btn-primary"
-                style={{ padding: '12px 24px', borderRadius: 16, fontWeight: 700, fontSize: 13 }}
-              >
-                View Hospital Partner
-              </motion.button>
-            </div>
-            {hospitals.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'60px 20px' }}>
-                <p style={{ fontSize:14, color:'rgba(56,1,1,.4)', fontWeight: 600 }}>No hospital partners</p>
+        {!loading && activeTab === 'donors' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ background: 'rgba(255,255,255,.7)', borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}
+          >
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>👥 Registered Donors ({donors.length})</h2>
+            
+            {donors.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: 'rgba(211,47,47,.4)', margin: 0 }}>No donors registered yet.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-                {hospitals.map((hospital) => (
-                  <motion.div
-                    key={hospital.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="ad-glass ad-card-hover"
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+                {donors.map((donor) => (
+                  <div
+                    key={donor.id}
                     style={{
-                      borderRadius: 16,
-                      padding: 18,
-                      border: '1px solid rgba(180,180,180,.2)',
+                      background: 'rgba(255,255,255,.5)',
+                      borderRadius: 18,
+                      padding: 20,
+                      border: '2px solid rgba(211,47,47,.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10
                     }}
                   >
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#380101', margin: '0 0 10px 0' }}>
-                      {hospital.name}
-                    </p>
-                    <p style={{ fontSize: 11, color: 'rgba(56,1,1,.6)', margin: '0 0 6px 0', fontWeight: 500 }}>
-                      {hospital.address}
-                    </p>
-                    <p style={{ fontSize: 11, color: 'rgba(56,1,1,.5)', margin: 0, fontWeight: 500 }}>
-                      {hospital.email}
-                    </p>
-                  </motion.div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 14 }}>
+                        {donor.first_name?.charAt(0) || 'D'}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: 0 }}>
+                          {donor.first_name} {donor.last_name}
+                        </p>
+                        <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '2px 0 0', fontWeight: 700 }}>
+                          {donor.email}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ borderTop: '1px solid rgba(211,47,47,.1)', paddingTop: 10 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(211,47,47,.65)', margin: '0 0 6px 0' }}>
+                        🩸 Blood Type: <span style={{ color: '#dc2626', fontWeight: 900 }}>{donor.blood_type}</span>
+                      </p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(211,47,47,.65)', margin: '0 0 6px 0' }}>
+                        📍 Governorate: {donor.governorate}
+                      </p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(211,47,47,.65)', margin: '0 0 12px 0' }}>
+                        📞 {donor.phone}
+                      </p>
+                    </div>
+
+
+                  </div>
                 ))}
               </div>
             )}
           </motion.div>
         )}
 
-        {/* SETTINGS TAB */}
-        {tab === 'settings' && !loading && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            {/* Change Password */}
-            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
-              <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Change Password</h2>
-              {passwordMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    background: passwordMessage.startsWith('Password') ? 'rgba(34,197,94,.08)' : 'rgba(220,38,38,.08)',
-                    border: `1.5px solid ${passwordMessage.startsWith('Password') ? 'rgba(34,197,94,.3)' : 'rgba(220,38,38,.3)'}`,
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 24,
-                    textAlign: 'center',
-                    color: passwordMessage.startsWith('Password') ? '#22c55e' : '#dc2626',
-                    fontWeight: 600,
-                    fontSize: 13
-                  }}
-                >
-                  {passwordMessage}
-                </motion.div>
-              )}
-              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Current Password</label>
-                  <input
-                    type="password"
-                    value={passwordForm.old_password}
-                    onChange={e => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>New Password</label>
-                  <input
-                    type="password"
-                    value={passwordForm.new_password}
-                    onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Confirm Password</label>
-                  <input
-                    type="password"
-                    value={passwordForm.confirm_password}
-                    onChange={e => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
-                    required
-                  />
-                </div>
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.02, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
-                  whileTap={{ scale: 0.98 }}
-                  className="ad-btn ad-btn-primary"
-                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 700, marginTop: 6 }}
-                >
-                  Update Password
-                </motion.button>
-              </form>
-            </motion.div>
-
-            {/* Add Admin */}
-            <motion.div className="ad-glass-deep ad-card-hover" style={{ borderRadius:'28px', padding: 'clamp(28px,3.5vw,44px)', border: '1px solid rgba(91,115,151,.12)' }}>
-              <h2 style={{ fontSize: 'clamp(18px,2.2vw,24px)', fontWeight:900, color:'#380101', margin:'0 0 24px 0', fontFamily:"'Fraunces',serif" }}>Add New Admin</h2>
+        {!loading && activeTab === 'admins' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}
+          >
+            {/* Add Admin Form */}
+            <div style={{ background: 'rgba(255,255,255,.7)', borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>➕ Add New Admin</h3>
+              
               {adminMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    background: adminMessage.startsWith('Admin') ? 'rgba(34,197,94,.08)' : 'rgba(220,38,38,.08)',
-                    border: `1.5px solid ${adminMessage.startsWith('Admin') ? 'rgba(34,197,94,.3)' : 'rgba(220,38,38,.3)'}`,
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 24,
-                    textAlign: 'center',
-                    color: adminMessage.startsWith('Admin') ? '#22c55e' : '#dc2626',
-                    fontWeight: 600,
-                    fontSize: 13
-                  }}
-                >
+                <div style={{
+                  background: adminMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
+                  border: `2px solid ${adminMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
+                  padding: 14,
+                  borderRadius: 14,
+                  marginBottom: 20,
+                  textAlign: 'center',
+                  color: adminMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
+                  fontWeight: 700,
+                  fontSize: 13
+                }}>
                   {adminMessage}
-                </motion.div>
+                </div>
               )}
-              <form onSubmit={handleAddAdmin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Email</label>
+                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>Email</label>
                   <input
                     type="email"
+                    placeholder="admin@bloodconnect.com"
                     value={newAdminForm.email}
-                    onChange={e => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
-                    required
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(211,47,47,.15)', background: 'rgba(255,255,255,.5)', color: '#dc2626' }}
                   />
+                  <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '6px 0 0', fontWeight: 600 }}>Must end with @bloodconnect.com</p>
                 </div>
+                
                 <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10, display: 'block' }}>Password</label>
+                  <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>Password</label>
                   <input
                     type="password"
+                    placeholder="Min 6 characters"
                     value={newAdminForm.password}
-                    onChange={e => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(180,180,180,.2)', background: 'rgba(255,255,255,.5)', color: '#380101', transition: 'all .3s' }}
-                    required
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(211,47,47,.15)', background: 'rgba(255,255,255,.5)', color: '#dc2626' }}
                   />
                 </div>
+                
                 <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.02, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="ad-btn ad-btn-primary"
-                  style={{ padding: 14, borderRadius: 16, fontSize: 14, fontWeight: 700, marginTop: 6 }}
+                  onClick={handleAddAdmin}
+                  style={{
+                    background: 'linear-gradient(135deg,#dc2626,#ff6b6b)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: 14,
+                    borderRadius: 16,
+                    fontSize: 14,
+                    fontWeight: 900,
+                    cursor: 'pointer'
+                  }}
                 >
-                  Add Admin
+                  Create Admin
                 </motion.button>
-              </form>
-            </motion.div>
+              </div>
+            </div>
+            
+            {/* Admins List */}
+            <div style={{ background: 'rgba(255,255,255,.7)', borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>🔑 Current Admins ({admins.length})</h3>
+              
+              {admins.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'rgba(211,47,47,.4)', fontSize: 13 }}>No admins yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {admins.map((a) => (
+                    <div
+                      key={a.id}
+                      style={{
+                        borderRadius: 14,
+                        padding: 14,
+                        background: 'rgba(255,235,238,.4)',
+                        border: '2px solid rgba(211,47,47,.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12
+                      }}
+                    >
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#dc2626' }} />
+                      <span style={{ fontSize: 12, fontWeight: 900, color: '#dc2626', flex: 1 }}>{a.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
+        {!loading && activeTab === 'settings' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ background: 'rgba(255,255,255,.7)', borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)', maxWidth: 500 }}
+          >
+            <h3 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: '0 0 20px 0' }}>🔐 Change Password</h3>
+            
+            {passwordMessage && (
+              <div style={{
+                background: passwordMessage.startsWith('✅') ? 'rgba(34,197,94,.15)' : 'rgba(255,235,238,.8)',
+                border: `2px solid ${passwordMessage.startsWith('✅') ? '#22c55e' : 'rgba(211,47,47,.4)'}`,
+                padding: 14,
+                borderRadius: 14,
+                marginBottom: 20,
+                textAlign: 'center',
+                color: passwordMessage.startsWith('✅') ? '#22c55e' : '#dc2626',
+                fontWeight: 700,
+                fontSize: 13
+              }}>
+                {passwordMessage}
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>Current Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.old_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(211,47,47,.15)', background: 'rgba(255,255,255,.5)', color: '#dc2626' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(211,47,47,.15)', background: 'rgba(255,255,255,.5)', color: '#dc2626' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.5)', textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: 8, display: 'block' }}>Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 14, fontSize: 13, fontWeight: 700, border: '2px solid rgba(211,47,47,.15)', background: 'rgba(255,255,255,.5)', color: '#dc2626' }}
+                />
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleChangePassword}
+                style={{
+                  background: 'linear-gradient(135deg,#dc2626,#ff6b6b)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: 14,
+                  borderRadius: 16,
+                  fontSize: 14,
+                  fontWeight: 900,
+                  cursor: 'pointer'
+                }}
+              >
+                Update Password
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
       </main>
 
-      {/* Footer */}
-      <motion.footer
-        className="ad-glass"
-        style={{
-          marginTop: 'clamp(60px,8vw,120px)',
-          borderTop: '1px solid rgba(180,180,180,.15)',
-          background: 'rgba(255,255,255,.3)',
-        }}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(44px,5vw,72px) clamp(16px,3.5vw,44px)', textAlign: 'center' }}>
-          <p style={{ color: 'rgba(56,1,1,.5)', fontSize: 'clamp(9px,.9vw,11px)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.15em', margin: 0 }}>
-            © 2026 BloodConnect Admin Panel · Dana Ghannam & Lynn Anani · Lebanon
-          </p>
-        </div>
-      </motion.footer>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

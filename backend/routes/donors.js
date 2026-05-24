@@ -5,14 +5,14 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 router.post('/register', (req, res) => {
-  const { full_name, email, password, phone, blood_type, date_of_birth, gender, address } = req.body
+  const { full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate } = req.body
   const today = new Date()
   const dob = new Date(date_of_birth)
   let age = today.getFullYear() - dob.getFullYear()
   if (age < 18) return res.status(400).json({ message: 'You must be at least 18 years old to donate' })
   const hashedPassword = bcrypt.hashSync(password, 10)
-  const sql = `INSERT INTO donors (full_name, email, password, phone, blood_type, date_of_birth, gender, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  db.query(sql, [full_name, email, hashedPassword, phone, blood_type, date_of_birth, gender, address], (err, result) => {
+  const sql = `INSERT INTO donors (full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  db.query(sql, [full_name, email, hashedPassword, phone, blood_type, date_of_birth, gender, address, governorate], (err, result) => {
     if (err) return res.status(500).json({ message: 'Registration failed', error: err.message })
     res.status(201).json({ message: 'Donor registered successfully', id: result.insertId })
   })
@@ -43,8 +43,12 @@ router.post('/login', (req, res) => {
         donor: {
           id: donor.id,
           full_name: donor.full_name,
+          first_name: donor.first_name,
+          last_name: donor.last_name,
           email: donor.email,
           blood_type: donor.blood_type,
+          governorate: donor.governorate,
+          phone: donor.phone,
           is_eligible: false  // always false at login — screening required
         }
       })

@@ -78,8 +78,11 @@ router.put('/change-password', async (req, res) => {
 });
 
 router.get('/donors', (req, res) => {
-  db.query('SELECT id, full_name, email, blood_type, is_eligible, created_at FROM donors ORDER BY created_at DESC', (err, results) => {
-    if (err) return res.status(500).json({ message: err.message });
+  db.query('SELECT * FROM donors ORDER BY created_at DESC', (err, results) => {
+    if (err) {
+      console.error('[admin.js] Donors query error:', err);
+      return res.status(500).json({ message: err.message });
+    }
     res.json(results);
   });
 });
@@ -101,23 +104,6 @@ router.get('/requests', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ message: err.message });
     res.json(results);
-  });
-});
-
-router.delete('/donors/:id', (req, res) => {
-  const id = req.params.id;
-  // Delete related records first
-  db.query('DELETE FROM notifications WHERE donor_id = ?', [id], () => {
-    db.query('DELETE FROM donation_history WHERE donor_id = ?', [id], () => {
-      db.query('DELETE FROM health_screenings WHERE donor_id = ?', [id], () => {
-        db.query('DELETE FROM password_resets WHERE email = (SELECT email FROM donors WHERE id = ?)', [id], () => {
-          db.query('DELETE FROM donors WHERE id = ?', [id], (err) => {
-            if (err) return res.status(500).json({ message: err.message });
-            res.json({ message: 'Donor deleted' });
-          });
-        });
-      });
-    });
   });
 });
 
@@ -173,4 +159,18 @@ router.put('/hospitals/:id', (req, res) => {
     }
   );
 });
+
+// Temp fix endpoint: Update donor governorate
+router.put('/fix-donor-governorate/:donorId', (req, res) => {
+  const { governorate, first_name, last_name } = req.body;
+  db.query(
+    'UPDATE donors SET governorate = ?, first_name = ?, last_name = ? WHERE id = ?',
+    [governorate, first_name, last_name, req.params.donorId],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: 'Donor updated successfully', affectedRows: result.affectedRows });
+    }
+  );
+});
+
 module.exports = router;

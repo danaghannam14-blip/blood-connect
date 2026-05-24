@@ -31,7 +31,7 @@ const STYLES = `
     overflow-x:hidden;
     position:relative;
     color:#380101;
-    zoom: 0.82;
+    zoom: 0.9;
     display: flex;
   }
 

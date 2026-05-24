@@ -30,6 +30,7 @@ function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/impact" element={<Impact />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<Login />} />
         <Route path="/donor/register" element={<DonorRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />

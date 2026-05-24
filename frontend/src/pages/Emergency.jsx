@@ -44,7 +44,8 @@ const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { overflow-x: hidden; }
+  html, body { overflow-x: hidden; }
+  body { background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); background-attachment:fixed; min-height:100vh; margin:0; padding:0; }
 
   @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
   @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
@@ -53,14 +54,12 @@ const STYLES = `
 
   .em-root {
     min-height:100vh;
-    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
-    background-size:400% 400%;
-    animation:gradient-shift 15s ease infinite;
+    background:transparent;
     font-family:'Plus Jakarta Sans',sans-serif;
     overflow-x:hidden;
     position:relative;
     color:#380101;
-    zoom: 0.85;
+    zoom: 0.75;
   }
 
   .em-glass {
@@ -231,18 +230,20 @@ const STYLES = `
   }
 
   @media (max-width:1024px) {
-    .em-root { zoom: 0.88; }
+    .em-root { zoom: 0.78; }
     .em-results-grid { grid-template-columns:1fr !important; }
     .em-header-grid { grid-template-columns:1fr !important; gap: clamp(8px,1.5vw,14px) !important; }
-    .em-landing-grid { grid-template-columns:1fr !important; gap: clamp(20px,3vw,28px) !important; }
+    .em-landing-grid { grid-template-columns:1fr !important; gap: clamp(16px,2.5vw,24px) !important; }
   }
 
   @media (max-width:768px) {
-    .em-root { zoom: 0.75; }
+    .em-root { zoom: 0.70; }
+    .em-landing-grid { grid-template-columns:1fr !important; gap: clamp(14px,2vw,20px) !important; }
   }
 
   @media (max-width:480px) {
     .em-root { zoom: 0.65; }
+    .em-landing-grid { grid-template-columns:1fr !important; gap: clamp(12px,1.5vw,16px) !important; }
   }
 `
 
@@ -321,7 +322,7 @@ function AnimatedBackgroundOrbs() {
   )
 }
 
-function HospitalCard({ h, index, compatibleTypes }) {
+function HospitalCard({ h, index }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -18 }}
@@ -463,13 +464,13 @@ function Emergency() {
     }
   }
 
-  useEffect(() => {
-    if (!bloodTypeSelected) return
+  const handleSearchHospitals = () => {
     setLoadingHospitals(true)
     fetch(`${API}/api/hospitals/with-stock`)
       .then((r) => r.json())
       .then((d) => {
         setHospitals(Array.isArray(d) ? d : [])
+        setBloodTypeSelected(true)
         setLoadingHospitals(false)
       })
       .catch(() => setLoadingHospitals(false))
@@ -481,7 +482,7 @@ function Emergency() {
         setUserLocation(la && ln ? [parseFloat(la), parseFloat(ln)] : null)
       }
     )
-  }, [bloodTypeSelected])
+  }
 
   useEffect(() => {
     if (!hospitals.length) return
@@ -506,8 +507,7 @@ function Emergency() {
     }
   }
 
-  const compatibleTypes = patientBloodType ? compatibleBloodForPatient[patientBloodType] : []
-  const filteredHospitals = sortedHospitals.filter((h) => h.blood_stock && compatibleTypes.some((bt) => (h.blood_stock[bt] ?? 0) > 0))
+  const filteredHospitals = sortedHospitals
 
   // ═══════════════════════════════════════════════════════════════════════════════════
   // LANDING PAGE - SELECT BLOOD TYPE
@@ -517,9 +517,9 @@ function Emergency() {
       <div className="em-root">
         <AnimatedBackgroundOrbs />
 
-        <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,5vw,80px)', alignItems: 'center', padding: 'clamp(24px,3vw,56px) clamp(16px,3.5vw,44px)' }} className="em-landing-grid">
+        <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(24px,4vw,56px)', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(16px,3vw,32px)' }} className="em-landing-grid">
           {/* LEFT COLUMN: HERO MESSAGING */}
-          <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : -40 }} transition={{ duration: 0.8, type: 'spring', stiffness: 100 }} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(20px,2.5vw,32px)' }}>
+          <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : -40 }} transition={{ duration: 0.8, type: 'spring', stiffness: 100 }} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px,2vw,28px)' }}>
             <div>
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 180 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px,2vw,24px)', padding: '8px 18px', borderRadius: 9999, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)' }}>
                 <span style={{ position: 'relative', display: 'inline-flex', width: 10, height: 10 }}>
@@ -538,11 +538,11 @@ function Emergency() {
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 10 }} transition={{ delay: 0.2, duration: 0.6 }} style={{ fontSize: 'clamp(13px,1.3vw,16px)', color: 'rgba(56,1,1,.7)', fontWeight: 600, margin: 'clamp(12px,1.5vw,18px) 0 0', lineHeight: 1.65 }}>
-                Select the patient's blood type to find compatible hospitals and notify donors instantly across Lebanon.
+                Select the patient's blood type to notify donors instantly across Lebanon.
               </motion.p>
             </div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0.9 }} transition={{ delay: 0.25, duration: 0.5 }} className="em-glass" style={{ borderRadius: 'clamp(24px,3vw,32px)', padding: 'clamp(24px,3vw,32px)', border: '1.5px solid rgba(180,180,180,.2)', position: 'relative', overflow: 'hidden' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0.9 }} transition={{ delay: 0.25, duration: 0.5 }} className="em-glass" style={{ borderRadius: 'clamp(22px,3vw,28px)', padding: 'clamp(20px,2.5vw,28px)', border: '1.5px solid rgba(180,180,180,.2)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, background: 'rgba(220,38,38,.1)', borderRadius: '50%', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
               <div style={{ position: 'relative', zIndex: 1 }}>
@@ -557,7 +557,7 @@ function Emergency() {
                       Blood Type
                     </p>
                     <p style={{ fontSize: 'clamp(13px,1.3vw,16px)', fontWeight: 900, color: '#dc2626', margin: '2px 0 0' }}>
-                      Required
+                      Select
                     </p>
                   </div>
                 </div>
@@ -578,27 +578,55 @@ function Emergency() {
                   ))}
                 </div>
 
-                {patientBloodType && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(180,180,180,.2)' }}>
-                    <p style={{ fontSize: 'clamp(9px,0.9vw,10px)', fontWeight: 700, color: 'rgba(56,1,1,.5)', textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 10px' }}>
-                      Receives from these types
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                      {compatibleBloodForPatient[patientBloodType].map((bt) => (
-                        <span key={bt} style={{ background: 'rgba(153,27,27,.08)', color: '#dc2626', fontSize: 'clamp(11px,1.1vw,13px)', fontWeight: 700, padding: 'clamp(5px,0.6vw,8px) clamp(12px,1.3vw,16px)', borderRadius: 10, border: '1.5px solid rgba(220,38,38,.2)' }}>
-                          {bt}
-                        </span>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: patientBloodType ? 1 : 0, height: patientBloodType ? 'auto' : 0 }} exit={{ opacity: 0, height: 0 }} style={{ marginTop: 18, paddingTop: 18, borderTop: patientBloodType ? '1px solid rgba(180,180,180,.2)' : 'none' }}>
+                  {patientBloodType && (
+                    <>
+                      <p style={{ fontSize: 'clamp(9px,0.9vw,10px)', fontWeight: 700, color: 'rgba(56,1,1,.5)', textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 10px' }}>
+                        Receives from these types
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                        {compatibleBloodForPatient[patientBloodType].map((bt) => (
+                          <span key={bt} style={{ background: 'rgba(153,27,27,.08)', color: '#dc2626', fontSize: 'clamp(11px,1.1vw,13px)', fontWeight: 700, padding: 'clamp(5px,0.6vw,8px) clamp(12px,1.3vw,16px)', borderRadius: 10, border: '1.5px solid rgba(220,38,38,.2)' }}>
+                            {bt}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </motion.div>
               </div>
             </motion.div>
+
+            <motion.button
+              onClick={handleSearchHospitals}
+              disabled={loadingHospitals}
+              className="em-btn em-btn-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(14px,1.4vw,16px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', opacity: loadingHospitals ? 0.7 : 1 }}
+            >
+              {loadingHospitals ? (
+                <>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,.3)', borderTopColor: '#faf7f7', borderRadius: '50%' }} />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: '#faf7f7' }}>
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                  </svg>
+                  Search Hospitals
+                </>
+              )}
+            </motion.button>
           </motion.div>
 
           {/* RIGHT COLUMN: ACTION CARD */}
           <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 40 }} transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}>
-            <div className="em-glass-deep" style={{ borderRadius: 'clamp(28px,4vw,44px)', padding: 'clamp(36px,4.5vw,52px)', border: '1.5px solid rgba(180,180,180,.15)', position: 'relative', overflow: 'hidden' }}>
+            <div className="em-glass-deep" style={{ borderRadius: 'clamp(24px,3vw,32px)', padding: 'clamp(24px,3vw,32px)', border: '1.5px solid rgba(180,180,180,.15)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,transparent,#dc2626,transparent)' }} />
               <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, background: 'rgba(220,38,38,.08)', borderRadius: '50%', filter: 'blur(70px)', pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', bottom: -40, left: -40, width: 160, height: 160, background: 'rgba(220,38,38,.06)', borderRadius: '50%', filter: 'blur(50px)', pointerEvents: 'none' }} />
@@ -615,21 +643,21 @@ function Emergency() {
                   </div>
                 </motion.div>
 
-                <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,3.5vw,36px)' }}>
+                <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,3.5vw,36px)' , marginTop: 'clamp(90px,10vw,85px)'}}>
                   <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 900, color: '#dc2626', margin: '0 0 10px', lineHeight: 1.1 }}>
-                    Find Hospitals
+                    Alert Donors
                   </h2>
                   <p style={{ fontSize: 'clamp(12px,1.2vw,14px)', color: 'rgba(56,1,1,.6)', fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
-                    Locate hospitals with your blood type in stock and get instant directions
+                    Notify nearby donors of your emergency blood needs instantly
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(14px,1.8vw,18px)', marginBottom: 'clamp(24px,3vw,32px)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.2vw,14px)', marginBottom: 'clamp(16px,2vw,22px)' }}>
                   <div>
                     <label style={{ fontSize: 'clamp(9px,0.9vw,10px)', fontWeight: 700, color: 'rgba(56,1,1,.5)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 'clamp(8px,1vw,10px)', display: 'block' }}>
                       Patient Email
                     </label>
-                    <input type="email" placeholder="Optional - for follow-up" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} className="em-input" />
+                    <input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} className="em-input" />
                   </div>
 
                   <div>
@@ -637,7 +665,7 @@ function Emergency() {
                       Governorate
                     </label>
                     <select value={patientGovernorate} onChange={(e) => setPatientGovernorate(e.target.value)} className="em-input" style={{ appearance: 'none', cursor: 'pointer' }}>
-                      <option value="">Auto-detect your location</option>
+                      <option value=""></option>
                       {GOVERNORATES.map((gov) => (
                         <option key={gov} value={gov}>
                           {gov}
@@ -657,44 +685,28 @@ function Emergency() {
                   )}
                 </AnimatePresence>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(12px,1.5vw,14px)' }}>
-                  <motion.button
-                    onClick={() => setBloodTypeSelected(true)}
-                    disabled={!patientBloodType}
-                    className="em-btn em-btn-primary"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(13px,1.3vw,15px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: !patientBloodType ? 0.5 : 1 }}
-                  >
-                    <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: '#faf7f7' }}>
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                    </svg>
-                    Search Hospitals
-                  </motion.button>
-
-                  <motion.button
-                    onClick={handleCreateEmergency}
-                    disabled={isCreatingRequest || !patientBloodType}
-                    className="em-btn em-btn-primary"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(13px,1.3vw,15px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg,#22c55e,#4ade80)', opacity: isCreatingRequest || !patientBloodType ? 0.5 : 1 }}
-                  >
-                    {isCreatingRequest ? (
-                      <>
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.3)', borderTopColor: '#faf7f7', borderRadius: '50%' }} />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: '#faf7f7' }}>
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                        </svg>
-                        Alert Donors
-                      </>
-                    )}
-                  </motion.button>
-                </div>
+                <motion.button
+                  onClick={handleCreateEmergency}
+                  disabled={isCreatingRequest || !patientBloodType}
+                  className="em-btn"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(13px,1.3vw,15px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', opacity: !patientBloodType || isCreatingRequest ? 0.5 : 1, background: 'linear-gradient(135deg,#22c55e 0%,#16a34a 50%,#15803d 100%)', color: '#faf7f7', boxShadow: '0 10px 30px rgba(34,197,94,.35)', border: '1px solid rgba(255,255,255,.15)' }}
+                >
+                  {isCreatingRequest ? (
+                    <>
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.3)', borderTopColor: '#faf7f7', borderRadius: '50%' }} />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: '#faf7f7' }}>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                      </svg>
+                      Alert Donors Now
+                    </>
+                  )}
+                </motion.button>
 
                 <p style={{ textAlign: 'center', fontSize: 'clamp(11px,1vw,12px)', color: 'rgba(56,1,1,.5)', fontWeight: 600, margin: 'clamp(16px,2vw,22px) 0 0', lineHeight: 1.5 }}>
                   Notify nearby donors of your emergency needs. Optional follow-up info recommended.
@@ -786,104 +798,76 @@ function Emergency() {
         </motion.div>
 
         {/* Content Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'clamp(280px,35%,400px) 1fr', gap: 'clamp(12px,2vw,16px)', alignItems: 'start', minHeight: 'calc(100vh - 200px)' }} className="em-results-grid">
-          {/* Left: Hospital List */}
-          <motion.div initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1, duration: 0.5 }}>
-            <div className="em-glass" style={{ display: 'flex', gap: 'clamp(6px,1vw,8px)', padding: 'clamp(6px,1vw,8px)', borderRadius: 'clamp(14px,1.5vw,16px)', border: '1.5px solid rgba(180,180,180,.2)', marginBottom: 'clamp(12px,1.5vw,14px)' }}>
-              <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap ? 'active' : 'inactive'}`}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'clamp(12px,2vw,16px)', alignItems: 'start' }} className="em-results-grid">
+          {/* Hospital List - Vertical Scroll */}
+          <motion.div initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }}>
+            <div style={{ display: 'flex', gap: 'clamp(6px,1vw,8px)', marginBottom: 'clamp(12px,1.5vw,14px)' }}>
+              <button onClick={() => setShowMap(false)} className={`em-toggle-btn ${!showMap ? 'active' : 'inactive'}`} style={{ flex: 1 }}>
                 List
               </button>
-              <button onClick={() => setShowMap(true)} className={`em-toggle-btn ${showMap ? 'active' : 'inactive'}`}>
+              <button onClick={() => setShowMap(true)} className={`em-toggle-btn ${showMap ? 'active' : 'inactive'}`} style={{ flex: 1 }}>
                 Map
               </button>
             </div>
 
-            <div style={{ maxHeight: 'calc(100vh - 280px)', overflowY: 'auto', paddingRight: 'clamp(4px,0.5vw,6px)' }}>
-              {loadingHospitals ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(32px,5vw,48px) 0', gap: 'clamp(12px,1.5vw,16px)' }}>
-                  <div style={{ width: 'clamp(40px,5vw,48px)', height: 'clamp(40px,5vw,48px)', border: '3px solid rgba(220,38,38,.15)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'rotate 1s linear infinite' }} />
-                  <p style={{ color: 'rgba(56,1,1,.6)', fontWeight: 700, margin: 0, fontSize: 'clamp(11px,1vw,12px)' }}>
-                    Finding hospitals...
-                  </p>
-                </div>
-              ) : filteredHospitals.length === 0 ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="em-glass" style={{ borderRadius: 'clamp(16px,2vw,20px)', padding: 'clamp(20px,2.5vw,28px)', textAlign: 'center', border: '1.5px solid rgba(180,180,180,.2)' }}>
-                  <p style={{ fontWeight: 900, color: '#dc2626', fontSize: 'clamp(12px,1.2vw,14px)', margin: 0 }}>
-                    No hospitals found
-                  </p>
-                  <p style={{ fontSize: 'clamp(10px,0.9vw,11px)', color: 'rgba(56,1,1,.6)', fontWeight: 600, margin: 'clamp(6px,1vw,10px) 0 0', lineHeight: 1.5 }}>
-                    Try another location
-                  </p>
-                </motion.div>
-              ) : (
-                filteredHospitals.map((h, i) => <HospitalCard key={h.id} h={h} index={i} compatibleTypes={compatibleTypes} />)
-              )}
-            </div>
-          </motion.div>
-
-          {/* Right: Map/Info */}
-          <motion.div initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.5 }}>
-            <AnimatePresence mode="wait">
-              {!showMap ? (
-                <motion.div key="info" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ position: 'sticky', top: 'clamp(16px,2vw,20px)' }}>
-                  <div className="em-glass-deep" style={{ borderRadius: 'clamp(20px,2.5vw,28px)', border: '1.5px solid rgba(180,180,180,.15)', overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,#991b1b,transparent)' }} />
-                    <div style={{ padding: 'clamp(16px,2vw,24px)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(10px,1.5vw,12px)' }}>
-                      {[
-                        { label: 'Response', val: '8.4 min' },
-                        { label: 'Centers', val: '142+' },
-                        { label: 'Types', val: compatibleTypes.length },
-                        { label: 'Status', val: 'Live' },
-                      ].map(({ label, val }) => (
-                        <div key={label} className="em-glass em-card-hover" style={{ borderRadius: 'clamp(12px,1.5vw,14px)', padding: 'clamp(12px,1.5vw,14px)', border: '1.5px solid rgba(180,180,180,.2)' }}>
-                          <p style={{ fontSize: 'clamp(8px,0.8vw,9px)', fontWeight: 700, color: 'rgba(56,1,1,.4)', margin: 0, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                            {label}
-                          </p>
-                          <p style={{ fontSize: 'clamp(14px,1.8vw,16px)', fontWeight: 900, color: '#dc2626', margin: 'clamp(4px,0.5vw,6px) 0 0' }}>
-                            {val}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+            {!showMap ? (
+              <div style={{ maxHeight: 'calc(100vh - 280px)', overflowY: 'auto', paddingRight: 'clamp(4px,0.5vw,6px)' }}>
+                {loadingHospitals ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(32px,5vw,48px) 0', gap: 'clamp(12px,1.5vw,16px)' }}>
+                    <div style={{ width: 'clamp(40px,5vw,48px)', height: 'clamp(40px,5vw,48px)', border: '3px solid rgba(220,38,38,.15)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'rotate 1s linear infinite' }} />
+                    <p style={{ color: 'rgba(56,1,1,.6)', fontWeight: 700, margin: 0, fontSize: 'clamp(11px,1vw,12px)' }}>
+                      Finding hospitals...
+                    </p>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div key="map" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ borderRadius: 'clamp(20px,2.5vw,28px)', overflow: 'hidden', border: '1.5px solid rgba(180,180,180,.15)', boxShadow: '0 16px 48px rgba(0,0,0,.08)', height: 'clamp(400px,50vh,600px)', position: 'sticky', top: 'clamp(16px,2vw,20px)' }}>
-                  {userLocation && (
-                    <MapContainer center={userLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
-                      <RecenterMap center={mapCenter || userLocation} />
-                      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker position={userLocation}>
-                        <Popup>Your Location</Popup>
-                      </Marker>
-                      {filteredHospitals
-                        .filter((h) => h.latitude && h.longitude)
-                        .map((h) => (
-                          <Marker key={h.id} position={[parseFloat(h.latitude), parseFloat(h.longitude)]} icon={hospitalIcon}>
-                            <Popup>
-                              <div style={{ minWidth: 160 }}>
-                                <p style={{ fontWeight: 'bold', color: '#dc2626', marginBottom: 'clamp(2px,0.5vw,4px)', fontSize: 'clamp(11px,1vw,12px)' }}>
-                                  {h.name}
-                                </p>
-                                <p style={{ fontSize: 'clamp(9px,0.8vw,10px)', color: '#6b7280', marginBottom: 'clamp(6px,1vw,8px)' }}>
-                                  {h.address}
-                                </p>
-                                <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 'clamp(10px,0.9vw,11px)', fontWeight: 'bold', textDecoration: 'none' }}>
-                                  Directions
-                                </a>
-                              </div>
-                            </Popup>
-                          </Marker>
-                        ))}
-                    </MapContainer>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                ) : filteredHospitals.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="em-glass" style={{ borderRadius: 'clamp(16px,2vw,20px)', padding: 'clamp(20px,2.5vw,28px)', textAlign: 'center', border: '1.5px solid rgba(180,180,180,.2)' }}>
+                    <p style={{ fontWeight: 900, color: '#dc2626', fontSize: 'clamp(12px,1.2vw,14px)', margin: 0 }}>
+                      No hospitals found
+                    </p>
+                    <p style={{ fontSize: 'clamp(10px,0.9vw,11px)', color: 'rgba(56,1,1,.6)', fontWeight: 600, margin: 'clamp(6px,1vw,10px) 0 0', lineHeight: 1.5 }}>
+                      Try another location
+                    </p>
+                  </motion.div>
+                ) : (
+                  filteredHospitals.map((h, i) => <HospitalCard key={h.id} h={h} index={i} />)
+                )}
+              </div>
+            ) : (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ borderRadius: 'clamp(20px,2.5vw,28px)', overflow: 'hidden', border: '1.5px solid rgba(180,180,180,.15)', boxShadow: '0 16px 48px rgba(0,0,0,.08)', height: 'clamp(400px,60vh,700px)' }}>
+                {userLocation && (
+                  <MapContainer center={userLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
+                    <RecenterMap center={mapCenter || userLocation} />
+                    <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={userLocation}>
+                      <Popup>Your Location</Popup>
+                    </Marker>
+                    {filteredHospitals
+                      .filter((h) => h.latitude && h.longitude)
+                      .map((h) => (
+                        <Marker key={h.id} position={[parseFloat(h.latitude), parseFloat(h.longitude)]} icon={hospitalIcon}>
+                          <Popup>
+                            <div style={{ minWidth: 160 }}>
+                              <p style={{ fontWeight: 'bold', color: '#dc2626', marginBottom: 'clamp(2px,0.5vw,4px)', fontSize: 'clamp(11px,1vw,12px)' }}>
+                                {h.name}
+                              </p>
+                              <p style={{ fontSize: 'clamp(9px,0.8vw,10px)', color: '#6b7280', marginBottom: 'clamp(6px,1vw,8px)' }}>
+                                {h.address}
+                              </p>
+                              <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 'clamp(10px,0.9vw,11px)', fontWeight: 'bold', textDecoration: 'none' }}>
+                                Directions
+                              </a>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                  </MapContainer>
+                )}
+              </motion.div>
+            )}
           </motion.div>
         </div>
+        </div>
       </div>
-    </div>
   )
 }
 

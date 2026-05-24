@@ -46,7 +46,7 @@ router.post('/login', (req, res) => {
 });
 
 router.get('/all', (req, res) => {
-  db.query('SELECT id, name, address, latitude, longitude FROM hospitals', (err, results) => {
+  db.query('SELECT id, name, address, governorate, latitude, longitude FROM hospitals', (err, results) => {
     if (err) return res.status(500).json({ message: 'Failed to get hospitals', error: err.message });
     res.json(results);
   });
