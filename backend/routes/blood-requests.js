@@ -447,6 +447,69 @@ router.get('/donor/:donorId', (req, res) => {
   });
 });
 
+// ✅ GET /api/blood-requests/hospital-requests/:donorId
+// Returns hospital blood requests that match the donor's blood type and governorate
+router.get('/hospital-requests/:donorId', (req, res) => {
+  const donorId = req.params.donorId;
+  console.log(`\n[/hospital-requests/:donorId] 🔍 Fetching hospital requests for donor ${donorId}`);
+  
+  // ✅ First, get donor's blood type and governorate
+  const donorQuery = `
+    SELECT blood_type, governorate FROM donors WHERE id = ?
+  `;
+  
+  db.query(donorQuery, [donorId], (err, donorResults) => {
+    if (err || !donorResults || !donorResults.length) {
+      console.error('[/hospital-requests/:donorId] ❌ Donor not found:', err);
+      return res.json([]);
+    }
+    
+    const donor = donorResults[0];
+    console.log(`[/hospital-requests/:donorId] Donor blood type: ${donor.blood_type}, Governorate: ${donor.governorate}`);
+    
+    // Get compatible blood types for this donor
+    const compatibleBloodTypes = getCompatibleDonors(donor.blood_type);
+    console.log(`[/hospital-requests/:donorId] Compatible blood types: ${compatibleBloodTypes.join(', ')}`);
+    
+    // ✅ Query hospital blood requests that match donor's blood type AND governorate
+    const hospitalRequestsQuery = `
+      SELECT 
+        br.id,
+        br.hospital_id,
+        br.blood_type,
+        br.quantity_needed,
+        br.status,
+        br.urgency,
+        br.created_at,
+        h.name as hospital_name,
+        h.address as hospital_address
+      FROM blood_requests br
+      LEFT JOIN hospitals h ON br.hospital_id = h.id
+      WHERE br.blood_type IN (?)
+      AND br.status IN ('pending', 'supply_coming')
+      AND h.address LIKE CONCAT('%', ?, '%')
+      ORDER BY br.created_at DESC
+      LIMIT 100
+    `;
+    
+    db.query(hospitalRequestsQuery, [compatibleBloodTypes, donor.governorate], (err, results) => {
+      if (err) {
+        console.error('[/hospital-requests/:donorId] ❌ DB Error:', err);
+        return res.json([]);
+      }
+      
+      console.log(`[/hospital-requests/:donorId] ✅ Found ${results?.length || 0} hospital requests`);
+      if (results && results.length > 0) {
+        results.forEach((r, idx) => {
+          console.log(`  [${idx}] ID=${r.id}, hospital=${r.hospital_name}, blood_type=${r.blood_type}, status=${r.status}`);
+        });
+      }
+      
+      res.json(results || []);
+    });
+  });
+});
+
 // POST /api/blood-requests/donor-confirm-donation - Donor chooses center or hospital
 router.post('/donor-confirm-donation', async (req, res) => {
   try {

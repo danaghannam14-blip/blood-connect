@@ -276,19 +276,17 @@ function Dashboard() {
     // Load ALL donations and split them into tabs
     const loadAllDonations = async () => {
       try {
+        // Fetch patient emergency requests
         const res = await axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
-        console.log('[Dashboard] All donations from API:', res.data)
+        console.log('[Dashboard] Patient emergency requests from API:', res.data)
         
-        const allDonations = res.data || []
+        const patientEmergencies = res.data || []
         
-        // Log each donation's hospital_id
-        allDonations.forEach((d, idx) => {
-          console.log(`[Dashboard] Donation ${idx}: ID=${d.id}, hospital_id=${d.hospital_id}, blood_type=${d.blood_type}`)
-        })
+        // Fetch hospital blood requests (from new endpoint)
+        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donorData.id}`)
+        console.log('[Dashboard] Hospital requests from API:', hospitalRes.data)
         
-        // Split into two arrays
-        const patientEmergencies = allDonations.filter(d => !d.hospital_id)
-        const hospitalRequests = allDonations.filter(d => d.hospital_id)
+        const hospitalRequests = hospitalRes.data || []
         
         console.log('[Dashboard] Patient emergencies:', patientEmergencies.length)
         console.log('[Dashboard] Hospital requests:', hospitalRequests.length)
@@ -344,10 +342,13 @@ function Dashboard() {
       // Refresh data immediately
       setTimeout(async () => {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        console.log('[Refresh after confirm] New data:', res.data)
-        const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
-        const hospitalRequests = allRequests.filter(d => d.hospital_id)
+        console.log('[Refresh after confirm] Patient emergencies:', res.data)
+        const patientEmergencies = res.data || []
+        
+        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
+        console.log('[Refresh after confirm] Hospital requests:', hospitalRes.data)
+        const hospitalRequests = hospitalRes.data || []
+        
         setEmergencyRequests(patientEmergencies)
         setHospitalRequests(hospitalRequests)
         setExpandedNotif(null)
@@ -371,10 +372,13 @@ function Dashboard() {
       // Refresh data immediately
       setTimeout(async () => {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        console.log('[Refresh after confirm] New data:', res.data)
-        const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
-        const hospitalRequests = allRequests.filter(d => d.hospital_id)
+        console.log('[Refresh after confirm] Patient emergencies:', res.data)
+        const patientEmergencies = res.data || []
+        
+        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
+        console.log('[Refresh after confirm] Hospital requests:', hospitalRes.data)
+        const hospitalRequests = hospitalRes.data || []
+        
         setEmergencyRequests(patientEmergencies)
         setHospitalRequests(hospitalRequests)
         setShowHospitalSelect(null)
@@ -396,10 +400,13 @@ function Dashboard() {
       // Refresh data immediately
       setTimeout(async () => {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        console.log('[Refresh after decline] New data:', res.data)
-        const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
-        const hospitalRequests = allRequests.filter(d => d.hospital_id)
+        console.log('[Refresh after decline] Patient emergencies:', res.data)
+        const patientEmergencies = res.data || []
+        
+        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
+        console.log('[Refresh after decline] Hospital requests:', hospitalRes.data)
+        const hospitalRequests = hospitalRes.data || []
+        
         setEmergencyRequests(patientEmergencies)
         setHospitalRequests(hospitalRequests)
         setExpandedNotif(null)
