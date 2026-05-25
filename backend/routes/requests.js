@@ -361,27 +361,37 @@ router.put('/:requestId', (req, res) => {
   
   if (!id || !status) return res.status(400).json({ error: 'Invalid ID or status' });
   
-  // Update blood_requests table
-  db.query('UPDATE blood_requests SET status = ? WHERE id = ?', [status, id], (err) => {
-    if (err) {
-      console.error('[PUT error]:', err);
-      return res.status(500).json({ error: err.message });
-    }
+  // ✅ If status is 'ns' (donor didn't show up) or 'ok' (confirmed), DELETE from both tables
+  if (status === 'ok' || status === 'ns') {
+    console.log(`[PUT] Status is '${status}', deleting from blood_requests AND emergency_donations...`);
     
-    // ✅ If status is 'ok' or 'ns', DELETE from emergency_donations (removes from donor dashboard)
-    if (status === 'ok' || status === 'ns') {
-      console.log(`[PUT] Status is '${status}', removing from emergency_donations...`);
+    // Delete from blood_requests first
+    db.query('DELETE FROM blood_requests WHERE id = ?', [id], (err) => {
+      if (err) {
+        console.error('[PUT error deleting from blood_requests]:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      
+      // Then delete from emergency_donations (removes from donor dashboard)
       db.query('DELETE FROM emergency_donations WHERE request_id = ?', [id], (err2) => {
         if (err2) {
           console.error('[PUT error deleting from emergency_donations]:', err2);
-          // Don't fail - blood_requests was already updated
+          // Don't fail - blood_requests was already deleted
         } else {
-          console.log(`[PUT] ✅ Removed from emergency_donations for status '${status}'`);
+          console.log(`[PUT] ✅ Deleted from both blood_requests and emergency_donations for status '${status}'`);
         }
         res.json({ success: true });
       });
-    } else {
-      // For other statuses, just update emergency_donations
+    });
+  } else {
+    // For other statuses (like supply_coming), just update blood_requests
+    db.query('UPDATE blood_requests SET status = ? WHERE id = ?', [status, id], (err) => {
+      if (err) {
+        console.error('[PUT error]:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      
+      // Also update emergency_donations with the new status
       db.query('UPDATE emergency_donations SET status = ? WHERE request_id = ?', [status, id], (err2) => {
         if (err2) {
           console.error('[PUT error updating emergency_donations]:', err2);
@@ -389,8 +399,8 @@ router.put('/:requestId', (req, res) => {
         }
         res.json({ success: true });
       });
-    }
-  });
+    });
+  }
 });
 
 console.log('[requests.js] ✅ Routes registered');
