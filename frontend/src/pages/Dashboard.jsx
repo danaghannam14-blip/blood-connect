@@ -559,6 +559,21 @@ function Dashboard() {
                               Click to confirm or respond
                             </p>
                           )}
+                          {notif.hospital_id && notif.status === 'ok' && (
+                            <div style={{ fontSize: 'clamp(11px,1vw,12px)', color: '#22c55e', margin: 'clamp(8px,1vw,12px) 0 0', fontWeight: 600, background: 'rgba(34,197,94,.1)', padding: 'clamp(8px,1vw,10px) clamp(12px,1.5vw,14px)', borderRadius: 8, textAlign: 'center' }}>
+                              ✅ Confirmed & Ready
+                            </div>
+                          )}
+                          {notif.hospital_id && notif.status === 'ns' && (
+                            <div style={{ fontSize: 'clamp(11px,1vw,12px)', color: '#ef4444', margin: 'clamp(8px,1vw,12px) 0 0', fontWeight: 600, background: 'rgba(239,68,68,.1)', padding: 'clamp(8px,1vw,10px) clamp(12px,1.5vw,14px)', borderRadius: 8, textAlign: 'center' }}>
+                              ❌ Moved to BCC Hamra Supply
+                            </div>
+                          )}
+                          {notif.hospital_id && notif.status === 'supply_coming' && (
+                            <div style={{ fontSize: 'clamp(11px,1vw,12px)', color: '#3b82f6', margin: 'clamp(8px,1vw,12px) 0 0', fontWeight: 600, background: 'rgba(59,130,246,.1)', padding: 'clamp(8px,1vw,10px) clamp(12px,1.5vw,14px)', borderRadius: 8, textAlign: 'center' }}>
+                              ✈️ Coming for Supply from BCC Hamra
+                            </div>
+                          )}
                         </div>
                         <motion.span
                           initial={{ opacity: 0, scale: 0.8 }}

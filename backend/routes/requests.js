@@ -195,6 +195,23 @@ router.post('/create', async (req, res) => {
             LIMIT 50
           `;
           
+          // ✅ FIRST: Create ONE shared emergency_donations record for ALL donors (not per-donor!)
+          const insertEmergencySql = `
+            INSERT INTO emergency_donations 
+            (donor_id, blood_type, patient_email, governorate, status, hospital_id, request_id) 
+            VALUES (NULL, ?, ?, ?, 'pending', ?, ?)
+          `;
+
+          db.query(insertEmergencySql, [blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
+            if (err) {
+              console.error('[POST /create] ❌ Emergency donation insert error:', err);
+            } else {
+              console.log(`[POST /create] ✅ Created emergency donation record for hospital request`);
+              console.log(`[POST /create] Hospital: ${hospital.name}, Governorate: ${normalizedGovernorate}, Request ID: ${requestId}`);
+            }
+          });
+
+          // ✅ THEN: Send emails to matching donors
           db.query(donorQuery, [compatibleBloodTypes, normalizedGovernorate], async (err, donors) => {
             if (!err && donors && donors.length) {
               console.log(`[POST /create] ✅ Found ${donors.length} donors in ${normalizedGovernorate}`);
@@ -239,17 +256,6 @@ router.post('/create', async (req, res) => {
                 
                 if (sent) {
                   emailCount++;
-                  
-                  // ✅ IMPORTANT: Also insert into emergency_donations so it shows on donor dashboard
-                  const insertEmergencySql = `
-                    INSERT INTO emergency_donations 
-                    (donor_id, blood_type, patient_email, governorate, status, hospital_id, request_id) 
-                    VALUES (?, ?, ?, ?, 'pending', ?, ?)
-                  `;
-                  db.query(insertEmergencySql, [donor.id, blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
-                    if (err) console.error('[POST /create] Emergency donation insert error:', err);
-                    else console.log(`[POST /create] ✅ Added to emergency_donations for donor ${donor.id}`);
-                  });
                 }
               }
               
