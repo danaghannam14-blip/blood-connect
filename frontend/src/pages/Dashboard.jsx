@@ -273,76 +273,49 @@ function Dashboard() {
     const donorData = JSON.parse(data)
     setDonor(donorData)
     
-    // Initial load
-    const loadEmergencyRequests = async () => {
+    // Load ALL donations and split them into tabs
+    const loadAllDonations = async () => {
       try {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
-        console.log('[DonorDashboard] ALL blood requests from API:', res.data)
-        const allRequests = res.data || []
+        console.log('[Dashboard] All donations from API:', res.data)
         
-        // Log each request's status
-        allRequests.forEach(req => {
-          console.log(`Request ${req.id}: status="${req.status}", patient_email="${req.patient_email}", hospital_id="${req.hospital_id}"`)
+        const allDonations = res.data || []
+        
+        // Log each donation's hospital_id
+        allDonations.forEach((d, idx) => {
+          console.log(`[Dashboard] Donation ${idx}: ID=${d.id}, hospital_id=${d.hospital_id}, blood_type=${d.blood_type}`)
         })
         
-        const patientEmergencies = allRequests.filter(e => {
-          const matches = e.patient_email && !e.hospital_id && (e.status === 'pending' || e.status === 'awaiting_confirmation')
-          console.log(`Filtering ${e.id}: patient_email=${!!e.patient_email}, !hospital_id=${!e.hospital_id}, status=${e.status} => matches=${matches}`)
-          return matches
-        })
-        const hospitalEmergencies = allRequests.filter(e => 
-          e.hospital_id && 
-          (e.status === 'pending' || e.status === 'awaiting_confirmation')
-        )
-        console.log('[DonorDashboard] Filtered patient emergencies:', patientEmergencies)
+        // Split into two arrays
+        const patientEmergencies = allDonations.filter(d => !d.hospital_id)
+        const hospitalRequests = allDonations.filter(d => d.hospital_id)
+        
+        console.log('[Dashboard] Patient emergencies:', patientEmergencies.length)
+        console.log('[Dashboard] Hospital requests:', hospitalRequests.length)
+        console.log('[Dashboard] Hospital requests array:', hospitalRequests)
+        
         setEmergencyRequests(patientEmergencies)
-        setHospitalRequests(prev => {
-          const merged = [...(prev || []), ...hospitalEmergencies]
-          return merged.filter((item, index, self) => self.findIndex(t => t.id === item.id) === index)
-        })
+        setHospitalRequests(hospitalRequests)
       } catch (err) {
-        console.error('[DonorDashboard] Error fetching emergency requests:', err)
+        console.error('[Dashboard] Error fetching donations:', err)
       } finally {
         setLoadingEmergency(false)
       }
     }
     
-    loadEmergencyRequests()
+    loadAllDonations()
     
-    // Auto-refresh every 2 seconds to catch hospital confirmations
+    // Auto-refresh every 500ms (5x faster for real-time updates)
     const interval = setInterval(() => {
-      console.log('[Auto-polling] Checking for updates...')
-      loadEmergencyRequests()
-    }, 2000)
+      console.log('[Dashboard] Auto-polling...')
+      loadAllDonations()
+    }, 500)
     
     // Cleanup interval on unmount
     return () => clearInterval(interval)
   }, [navigate])
 
-  // Separate effect for hospital notifications
-  useEffect(() => {
-    if (!donor) return
-    
-    const loadHospitalRequests = async () => {
-      try {
-        const res = await axios.get(`${API}/api/donors/notifications/${donor.id}`)
-        setNotifications(res.data || [])
-        const pending = res.data?.filter(n => n.status === 'pending') || []
-        setHospitalRequests(prev => {
-          const merged = [...(prev || []), ...(pending || [])]
-          return merged.filter((item, index, self) => self.findIndex(t => t.id === item.id) === index)
-        })
-      } catch (err) {
-        console.error('[DonorDashboard] Error fetching hospital notifications:', err)
-      }
-    }
-    
-    loadHospitalRequests()
-    
-    // Refresh hospitals every 5 seconds
-    const interval = setInterval(loadHospitalRequests, 5000)
-    return () => clearInterval(interval)
-  }, [donor])
+  // Hospital requests are now loaded in the main effect above
 
   // Separate effect for hospitals list
   useEffect(() => {
@@ -373,12 +346,10 @@ function Dashboard() {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
         console.log('[Refresh after confirm] New data:', res.data)
         const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(e => 
-          e.patient_email && 
-          !e.hospital_id && 
-          (e.status === 'pending' || e.status === 'awaiting_confirmation')
-        )
+        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
+        const hospitalRequests = allRequests.filter(d => d.hospital_id)
         setEmergencyRequests(patientEmergencies)
+        setHospitalRequests(hospitalRequests)
         setExpandedNotif(null)
       }, 500)
     } catch (err) {
@@ -402,12 +373,10 @@ function Dashboard() {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
         console.log('[Refresh after confirm] New data:', res.data)
         const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(e => 
-          e.patient_email && 
-          !e.hospital_id && 
-          (e.status === 'pending' || e.status === 'awaiting_confirmation')
-        )
+        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
+        const hospitalRequests = allRequests.filter(d => d.hospital_id)
         setEmergencyRequests(patientEmergencies)
+        setHospitalRequests(hospitalRequests)
         setShowHospitalSelect(null)
         setExpandedNotif(null)
       }, 500)
@@ -429,12 +398,10 @@ function Dashboard() {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
         console.log('[Refresh after decline] New data:', res.data)
         const allRequests = res.data || []
-        const patientEmergencies = allRequests.filter(e => 
-          e.patient_email && 
-          !e.hospital_id && 
-          (e.status === 'pending' || e.status === 'awaiting_confirmation')
-        )
+        const patientEmergencies = allRequests.filter(d => !d.hospital_id)
+        const hospitalRequests = allRequests.filter(d => d.hospital_id)
         setEmergencyRequests(patientEmergencies)
+        setHospitalRequests(hospitalRequests)
         setExpandedNotif(null)
       }, 500)
     } catch (err) {
@@ -480,40 +447,15 @@ function Dashboard() {
                 Blood Type: {donor.blood_type} • Governorate: {donor.governorate}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 'clamp(8px,1vw,12px)', alignItems: 'center', flexWrap: 'wrap' }}>
-              <motion.button
-                onClick={() => {
-                  setLoadingEmergency(true)
-                  axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-                    .then(res => {
-                      console.log('[Manual Refresh] Data:', res.data)
-                      const allRequests = res.data || []
-                      const patientEmergencies = allRequests.filter(e => 
-                        e.patient_email && 
-                        !e.hospital_id && 
-                        (e.status === 'pending' || e.status === 'awaiting_confirmation')
-                      )
-                      setEmergencyRequests(patientEmergencies)
-                    })
-                    .finally(() => setLoadingEmergency(false))
-                }}
-                className="dd-btn dd-btn-secondary"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.95 }}
-                style={{ padding: 'clamp(10px,1.2vw,14px) clamp(14px,1.8vw,20px)', fontSize: 'clamp(11px,1vw,13px)', fontWeight: 700 }}
-              >
-                🔄 Refresh
-              </motion.button>
-              <motion.button
-                onClick={handleLogout}
-                className="dd-btn dd-btn-primary"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.95 }}
-                style={{ padding: 'clamp(12px,1.5vw,16px) clamp(20px,2.5vw,28px)', fontSize: 'clamp(12px,1.1vw,14px)', fontWeight: 700 }}
-              >
-                Logout
-              </motion.button>
-            </div>
+            <motion.button
+              onClick={handleLogout}
+              className="dd-btn dd-btn-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ padding: 'clamp(12px,1.5vw,16px) clamp(20px,2.5vw,28px)', fontSize: 'clamp(12px,1.1vw,14px)', fontWeight: 700 }}
+            >
+              Logout
+            </motion.button>
           </div>
         </motion.div>
 
@@ -539,19 +481,13 @@ function Dashboard() {
             onClick={() => setActiveTab('emergency')}
             className={`dd-tab-btn ${activeTab === 'emergency' ? 'active' : ''}`}
           >
-            🩸 Emergency Patient Requests ({emergencyRequests.length})
+            Emergency Patient Requests ({emergencyRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('hospitals')}
             className={`dd-tab-btn ${activeTab === 'hospitals' ? 'active' : ''}`}
           >
-            🏥 Hospital Requests ({hospitalRequests.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`dd-tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-          >
-            📊 Your Stats
+            Hospital Requests ({hospitalRequests.length})
           </button>
         </motion.div>
 
@@ -830,94 +766,85 @@ function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Tab Content: Stats */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'stats' && (
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="dd-glass-deep"
+          style={{
+            padding: 'clamp(24px,3vw,36px)',
+            borderRadius: 'clamp(20px,2.5vw,28px)',
+            border: '1px solid rgba(180,180,180,.15)',
+          }}
+        >
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(20px,3vw,32px)', fontWeight: 900, color: '#dc2626', margin: '0 0 clamp(16px,2vw,24px)', lineHeight: 1.1 }}>
+            Your Donation Stats
+          </h2>
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 },
+              },
+            }}
+            initial="hidden"
+            animate="show"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(240px,90vw,280px), 1fr))', gap: 'clamp(14px,2vw,20px)' }}
+          >
             <motion.div
-              key="stats-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="dd-glass-deep"
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+              }}
+              className="dd-glass"
               style={{
-                padding: 'clamp(24px,3vw,36px)',
-                borderRadius: 'clamp(20px,2.5vw,28px)',
-                marginBottom: 'clamp(20px,2.5vw,28px)',
-                border: '1px solid rgba(180,180,180,.15)',
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
+                padding: 'clamp(20px,2.5vw,28px)',
+                borderRadius: 'clamp(16px,2vw,20px)',
+                textAlign: 'center',
+                border: '1px solid rgba(220,38,38,.2)',
               }}
             >
-              <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(20px,3vw,32px)', fontWeight: 900, color: '#dc2626', margin: '0 0 clamp(16px,2vw,24px)', lineHeight: 1.1 }}>
-                Your Donation Stats
-              </h2>
-              <motion.div
-                variants={{
-                  hidden: { opacity: 0 },
-                  show: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 },
-                  },
-                }}
-                initial="hidden"
-                animate="show"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(240px,90vw,280px), 1fr))', gap: 'clamp(14px,2vw,20px)' }}
+              <motion.p
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#dc2626', margin: 0, lineHeight: 1 }}
               >
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 12 },
-                    show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-                  }}
-                  className="dd-glass"
-                  style={{
-                    padding: 'clamp(20px,2.5vw,28px)',
-                    borderRadius: 'clamp(16px,2vw,20px)',
-                    textAlign: 'center',
-                    border: '1px solid rgba(220,38,38,.2)',
-                  }}
-                >
-                  <motion.p
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#dc2626', margin: 0, lineHeight: 1 }}
-                  >
-                    {totalDonations}
-                  </motion.p>
-                  <p style={{ fontSize: 'clamp(10px,0.9vw,12px)', color: 'rgba(56,1,1,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', margin: 'clamp(8px,1vw,12px) 0 0' }}>
-                    Total Donations
-                  </p>
-                </motion.div>
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 12 },
-                    show: { opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.1 } },
-                  }}
-                  className="dd-glass"
-                  style={{
-                    padding: 'clamp(20px,2.5vw,28px)',
-                    borderRadius: 'clamp(16px,2vw,20px)',
-                    textAlign: 'center',
-                    border: '1px solid rgba(34,197,94,.2)',
-                  }}
-                >
-                  <motion.p
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 }}
-                    style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#22c55e', margin: 0, lineHeight: 1 }}
-                  >
-                    {totalDonations * 3}
-                  </motion.p>
-                  <p style={{ fontSize: 'clamp(10px,0.9vw,12px)', color: 'rgba(56,1,1,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', margin: 'clamp(8px,1vw,12px) 0 0' }}>
-                    Lives Saved
-                  </p>
-                </motion.div>
-              </motion.div>
+                {totalDonations}
+              </motion.p>
+              <p style={{ fontSize: 'clamp(10px,0.9vw,12px)', color: 'rgba(56,1,1,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', margin: 'clamp(8px,1vw,12px) 0 0' }}>
+                Total Donations
+              </p>
             </motion.div>
-          )}
-        </AnimatePresence>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.1 } },
+              }}
+              className="dd-glass"
+              style={{
+                padding: 'clamp(20px,2.5vw,28px)',
+                borderRadius: 'clamp(16px,2vw,20px)',
+                textAlign: 'center',
+                border: '1px solid rgba(34,197,94,.2)',
+              }}
+            >
+              <motion.p
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#22c55e', margin: 0, lineHeight: 1 }}
+              >
+                {totalDonations * 3}
+              </motion.p>
+              <p style={{ fontSize: 'clamp(10px,0.9vw,12px)', color: 'rgba(56,1,1,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', margin: 'clamp(8px,1vw,12px) 0 0' }}>
+                Lives Saved
+              </p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </motion.div>
     </div>
   )

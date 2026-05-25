@@ -12,7 +12,7 @@ function Admin() {
   
   // ✅ STATE
   const [admin, setAdmin] = useState(null)
-  const [activeTab, setActiveTab] = useState('donations')
+  const [activeTab, setActiveTab] = useState('hospitals')
   const [loading, setLoading] = useState(true)
   
   // Donors
@@ -27,6 +27,7 @@ function Admin() {
   const [bccDonations, setBccDonations] = useState([])
   const [noShowDonations, setNoShowDonations] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
+  const [confirmingNoShowId, setConfirmingNoShowId] = useState(null)
   
   // Password change
   const [passwordForm, setPasswordForm] = useState({ old_password: '', new_password: '', confirm_password: '' })
@@ -173,6 +174,31 @@ function Admin() {
     }
   }
 
+  // ✅ CONFIRM NO-SHOW DONATION (Supply coming from BCC Hamra)
+  const handleConfirmNoShowSupply = async (requestId) => {
+    setConfirmingNoShowId(requestId)
+    try {
+      const request = noShowDonations.find(r => r.id === requestId)
+      
+      if (!request) {
+        alert('❌ Request not found')
+        setConfirmingNoShowId(null)
+        return
+      }
+      
+      // Update the blood request status to 'supply_coming' so hospital sees the message
+      await axios.put(`${API}/api/requests/${requestId}`, { status: 'supply_coming' })
+      
+      alert('✅ Supply confirmed! Hospital notified that blood is coming from BCC Hamra.')
+      loadData()
+    } catch (err) {
+      console.error('Confirm error:', err)
+      alert(`❌ Error: ${err.response?.data?.error || err.message}`)
+    } finally {
+      setConfirmingNoShowId(null)
+    }
+  }
+
   // ✅ LOGOUT
   const handleLogout = () => {
     localStorage.removeItem('adminData')
@@ -289,11 +315,31 @@ function Admin() {
                       📋 {request.quantity_needed} units needed
                     </p>
                     <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: 0, fontWeight: 700 }}>
-                      🏥 Hospital ID: {request.hospital_id}
+                      🏥 {request.hospital_name || `Hospital ID: ${request.hospital_id}`}
                     </p>
                     <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: 0, fontWeight: 600 }}>
                       📅 {new Date(request.created_at).toLocaleDateString('en-GB')}
                     </p>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleConfirmNoShowSupply(request.id)}
+                      disabled={confirmingNoShowId === request.id}
+                      style={{
+                        marginTop: 8,
+                        padding: '10px 16px',
+                        background: confirmingNoShowId === request.id ? '#ccc' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 10,
+                        fontSize: 12,
+                        fontWeight: 900,
+                        cursor: confirmingNoShowId === request.id ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {confirmingNoShowId === request.id ? '⏳ Confirming...' : '✅ Confirmed'}
+                    </motion.button>
                   </div>
                 ))}
               </div>

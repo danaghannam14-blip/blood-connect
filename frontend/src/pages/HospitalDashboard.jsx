@@ -36,6 +36,7 @@ function HospitalDashboard() {
   const [activeTab, setActiveTab] = useState('post')
   const [visible, setVisible] = useState(false)
   const [confirmingId, setConfirmingId] = useState(null)
+  const [confirmingSupplyId, setConfirmingSupplyId] = useState(null)
 
   // Emergency donations split
   const [awaitingDonations, setAwaitingDonations] = useState([])
@@ -174,7 +175,7 @@ function HospitalDashboard() {
     }
   }
 
-  // ✅ CONFIRM DONATION
+  // ✅ CONFIRM DONATION - Now also DELETES from donor dashboard
   const handleConfirmDonation = async (donationId) => {
     setConfirmingId(donationId)
     try {
@@ -201,13 +202,43 @@ function HospitalDashboard() {
         patientEmail: donation.patient_email
       })
       console.log('Confirm response:', response.data)
-      alert('✅ Donation ok! Patient notified.')
+      
+      // ✅ No need to delete - hospital-confirm already updates status to 'ok'
+      // The donor query filters out status != 'pending'/'awaiting_confirmation'
+      // So it will disappear from donor dashboard automatically
+      
+      alert('✅ Donation confirmed! Removed from donor dashboard.')
       loadData()
     } catch (err) {
       console.error('Confirm error:', err)
       alert(`❌ Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingId(null)
+    }
+  }
+
+  // ✅ CONFIRM SUPPLY RECEIVED - Removes request from hospital dashboard
+  const handleConfirmSupplyReceived = async (requestId) => {
+    setConfirmingSupplyId(requestId)
+    try {
+      const request = requests.find(r => r.id === requestId)
+      
+      if (!request) {
+        alert('❌ Request not found')
+        setConfirmingSupplyId(null)
+        return
+      }
+      
+      // Delete the request completely
+      await axios.delete(`${API}/api/requests/${requestId}`)
+      
+      alert('✅ Supply received and confirmed! Request removed.')
+      loadData()
+    } catch (err) {
+      console.error('Error confirming supply:', err)
+      alert(`❌ Error: ${err.response?.data?.error || err.message}`)
+    } finally {
+      setConfirmingSupplyId(null)
     }
   }
 
@@ -523,6 +554,68 @@ function HospitalDashboard() {
                           <div style={{ padding: '12px', background: 'rgba(34,197,94,.1)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#22c55e', fontSize: 13 }}>
                             ✅ Confirmed & Ready
                           </div>
+                        </div>
+                      )
+                    }
+                    
+                    if (r.status === 'supply_coming') {
+                      return (
+                        <div
+                          key={r.id}
+                          style={{
+                            borderRadius: 18,
+                            padding: 18,
+                            border: '2px solid #3b82f6',
+                            background: 'rgba(219,234,254,.4)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 12
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                              <span style={{ fontSize: 20, fontWeight: 900, color: '#3b82f6' }}>{r.blood_type}</span>
+                              <span style={{
+                                fontSize: 9,
+                                fontWeight: 900,
+                                padding: '4px 10px',
+                                borderRadius: 8,
+                                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                                color: '#fff',
+                                textTransform: 'uppercase',
+                                letterSpacing: '.1em'
+                              }}>
+                                ✈️ COMING
+                              </span>
+                            </div>
+                            <p style={{ fontSize: 12, color: '#3b82f6', margin: '0 0 6px 0', fontWeight: 700 }}>{r.quantity_needed} units needed</p>
+                            <p style={{ fontSize: 11, color: 'rgba(59,130,246,.65)', margin: 0, fontWeight: 600 }}>
+                              📅 {new Date(r.created_at).toLocaleDateString('en-GB')}
+                            </p>
+                          </div>
+                          <div style={{ padding: '12px', background: 'rgba(59,130,246,.1)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#3b82f6', fontSize: 13 }}>
+                            ✈️ Coming for Supply from BCC Hamra
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleConfirmSupplyReceived(r.id)}
+                            disabled={confirmingSupplyId === r.id}
+                            style={{
+                              marginTop: 8,
+                              padding: '10px 14px',
+                              background: confirmingSupplyId === r.id ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 10,
+                              fontSize: 12,
+                              fontWeight: 900,
+                              cursor: confirmingSupplyId === r.id ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {confirmingSupplyId === r.id ? '⏳ Confirming...' : '✅ Supply Confirmed'}
+                          </motion.button>
                         </div>
                       )
                     }

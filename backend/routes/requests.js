@@ -164,7 +164,8 @@ router.post('/create', async (req, res) => {
         return res.status(500).json({ error: 'Failed to create request' });
       }
 
-      console.log('[POST /create] Request created with ID:', result.insertId);
+      const requestId = result.insertId;  // ✅ Save this so we can link emergency_donations to it
+      console.log('[POST /create] Request created with ID:', requestId);
 
       // Get hospital info - we need ADDRESS to extract governorate (like HospitalPartners.jsx does)
       const hospitalQuery = 'SELECT name, address, id FROM hospitals WHERE id = ?';
@@ -242,10 +243,10 @@ router.post('/create', async (req, res) => {
                   // ✅ IMPORTANT: Also insert into emergency_donations so it shows on donor dashboard
                   const insertEmergencySql = `
                     INSERT INTO emergency_donations 
-                    (donor_id, blood_type, patient_email, governorate, status, hospital_id) 
-                    VALUES (?, ?, ?, ?, 'pending', ?)
+                    (donor_id, blood_type, patient_email, governorate, status, hospital_id, request_id) 
+                    VALUES (?, ?, ?, ?, 'pending', ?, ?)
                   `;
-                  db.query(insertEmergencySql, [donor.id, blood_type, hospital.name, normalizedGovernorate, hospital_id], (err) => {
+                  db.query(insertEmergencySql, [donor.id, blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
                     if (err) console.error('[POST /create] Emergency donation insert error:', err);
                     else console.log(`[POST /create] ✅ Added to emergency_donations for donor ${donor.id}`);
                   });
@@ -326,22 +327,33 @@ router.get('/:requestId', (req, res) => {
   });
 });
 
-// DELETE /api/requests/:requestId
+// DELETE /api/requests/:requestId - Also removes from emergency_donations (donor dashboard)
 router.delete('/:requestId', (req, res) => {
   console.log('[DELETE] params:', req.params);
   const id = parseInt(req.params.requestId);
   if (!id) return res.status(400).json({ error: 'Invalid ID' });
   
+  // ✅ Delete from blood_requests
   db.query('DELETE FROM blood_requests WHERE id = ?', [id], (err) => {
     if (err) {
       console.error('[DELETE error]:', err);
       return res.status(500).json({ error: err.message });
     }
-    res.json({ success: true });
+    
+    // ✅ Also delete from emergency_donations (removes from donor dashboard)
+    db.query('DELETE FROM emergency_donations WHERE request_id = ?', [id], (err2) => {
+      if (err2) {
+        console.error('[DELETE error removing from emergency_donations]:', err2);
+        // Don't fail - blood_requests was already deleted
+      } else {
+        console.log('[DELETE] ✅ Also removed from emergency_donations');
+      }
+      res.json({ success: true });
+    });
   });
 });
 
-// PUT /api/requests/:requestId
+// PUT /api/requests/:requestId - Updates status and removes from emergency_donations when confirmed/deleted
 router.put('/:requestId', (req, res) => {
   console.log('[PUT] params:', req.params, 'body:', req.body);
   const id = parseInt(req.params.requestId);
@@ -349,12 +361,35 @@ router.put('/:requestId', (req, res) => {
   
   if (!id || !status) return res.status(400).json({ error: 'Invalid ID or status' });
   
+  // Update blood_requests table
   db.query('UPDATE blood_requests SET status = ? WHERE id = ?', [status, id], (err) => {
     if (err) {
       console.error('[PUT error]:', err);
       return res.status(500).json({ error: err.message });
     }
-    res.json({ success: true });
+    
+    // ✅ If status is 'ok' or 'ns', DELETE from emergency_donations (removes from donor dashboard)
+    if (status === 'ok' || status === 'ns') {
+      console.log(`[PUT] Status is '${status}', removing from emergency_donations...`);
+      db.query('DELETE FROM emergency_donations WHERE request_id = ?', [id], (err2) => {
+        if (err2) {
+          console.error('[PUT error deleting from emergency_donations]:', err2);
+          // Don't fail - blood_requests was already updated
+        } else {
+          console.log(`[PUT] ✅ Removed from emergency_donations for status '${status}'`);
+        }
+        res.json({ success: true });
+      });
+    } else {
+      // For other statuses, just update emergency_donations
+      db.query('UPDATE emergency_donations SET status = ? WHERE request_id = ?', [status, id], (err2) => {
+        if (err2) {
+          console.error('[PUT error updating emergency_donations]:', err2);
+          // Don't fail - blood_requests was already updated
+        }
+        res.json({ success: true });
+      });
+    }
   });
 });
 
