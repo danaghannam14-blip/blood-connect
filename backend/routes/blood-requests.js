@@ -362,22 +362,24 @@ router.get('/hospital/:hospitalId', (req, res) => {
 });
 
 // ✅ FIXED: GET /api/blood-requests/donor/:donorId - Get emergency requests for this donor
-// NOW INCLUDES hospital_name via JOIN
+// ONLY RETURNS PENDING AND AWAITING_CONFIRMATION - CONFIRMED ARE HIDDEN
 router.get('/donor/:donorId', (req, res) => {
   const query = `
     SELECT ed.*, h.name as hospital_name
     FROM emergency_donations ed
     LEFT JOIN hospitals h ON ed.hospital_id = h.id
     WHERE ed.donor_id = ? 
+    AND ed.status IN ('pending', 'awaiting_confirmation')
     ORDER BY ed.created_at DESC
   `;
   db.query(query, [req.params.donorId], (err, results) => {
     if (err) {
-      console.error('Error fetching donor notifications:', err);
-      return res.json([]);
+      console.error('Error fetching donor notifications:', err)
+      return res.json([])
     }
-    res.json(results || []);
-  });
+    console.log(`[/donor/:donorId] Returning ${results?.length || 0} active donations for donor ${req.params.donorId}`)
+    res.json(results || [])
+  })
 });
 
 // POST /api/blood-requests/donor-confirm-donation - Donor chooses center or hospital
@@ -440,6 +442,8 @@ router.post('/hospital-confirm', async (req, res) => {
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Donation not found' })
       }
+
+      console.log(`[hospital-confirm] ✅ Updated donation ${donationId} to status "confirmed"`)
 
       // ✅ Get hospital name for email
       const hospitalQuery = 'SELECT name FROM hospitals WHERE id = ?'
