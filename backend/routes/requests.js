@@ -195,36 +195,6 @@ router.post('/create', async (req, res) => {
             LIMIT 50
           `;
           
-          // ✅ FIRST: Create ONE shared emergency_donations record for ALL donors (not per-donor!)
-          const insertEmergencySql = `
-            INSERT INTO emergency_donations 
-            (donor_id, blood_type, patient_email, governorate, status, hospital_id, request_id) 
-            VALUES (NULL, ?, ?, ?, 'pending', ?, ?)
-          `;
-
-          // ✅ FIX: Wait for emergency_donations insert BEFORE responding to client
-          db.query(insertEmergencySql, [blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
-            if (err) {
-              console.error('[POST /create] ❌ Emergency donation insert error:', err);
-              res.json({ 
-                success: true,
-                message: 'Blood request created (donor notification may have failed)',
-                requestId: requestId
-              });
-            } else {
-              console.log(`[POST /create] ✅ Created emergency donation record for hospital request`);
-              console.log(`[POST /create] Hospital: ${hospital.name}, Governorate: ${normalizedGovernorate}, Request ID: ${requestId}`);
-              
-              // ✅ NOW send response AFTER emergency_donations is successfully inserted
-              res.json({ 
-                success: true,
-                message: 'Blood request created',
-                requestId: requestId
-              });
-            }
-          });
-
-          // ✅ THEN: Send emails to matching donors (happens in background, doesn't block response)
           db.query(donorQuery, [compatibleBloodTypes, normalizedGovernorate], async (err, donors) => {
             if (!err && donors && donors.length) {
               console.log(`[POST /create] ✅ Found ${donors.length} donors in ${normalizedGovernorate}`);
@@ -269,6 +239,17 @@ router.post('/create', async (req, res) => {
                 
                 if (sent) {
                   emailCount++;
+                  
+                  // ✅ IMPORTANT: Also insert into emergency_donations so it shows on donor dashboard
+                  const insertEmergencySql = `
+                    INSERT INTO emergency_donations 
+                    (donor_id, blood_type, patient_email, governorate, status, hospital_id, request_id) 
+                    VALUES (?, ?, ?, ?, 'pending', ?, ?)
+                  `;
+                  db.query(insertEmergencySql, [donor.id, blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
+                    if (err) console.error('[POST /create] Emergency donation insert error:', err);
+                    else console.log(`[POST /create] ✅ Added to emergency_donations for donor ${donor.id}`);
+                  });
                 }
               }
               
@@ -280,12 +261,13 @@ router.post('/create', async (req, res) => {
           });
         } else {
           console.log('[POST /create] ⚠️ Hospital not found');
-          res.json({ 
-            success: true,
-            message: 'Blood request created (hospital not found)',
-            requestId: requestId
-          });
         }
+      });
+
+      res.json({ 
+        success: true,
+        message: 'Blood request created',
+        requestId: result.insertId
       });
     });
   } catch (error) {

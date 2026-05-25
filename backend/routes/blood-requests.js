@@ -416,16 +416,16 @@ router.get('/hospital-requests/:donorId', (req, res) => {
 // Hospital requests have donor_id=NULL but are shown to all donors
 router.get('/donor/:donorId', (req, res) => {
   const donorId = req.params.donorId;
-  console.log(`\n[/donor/:donorId] 🔍 Fetching for donor ${donorId}`);
+  console.log(`\n[/donor/:donorId] 🔍 Fetching PATIENT emergency requests for donor ${donorId}`);
   
-  // ✅ FIX: Show ALL hospital requests regardless of status
-  // Hospital requests have donor_id = NULL and hospital_id IS NOT NULL
-  // Regular patient emergency requests have donor_id = specific_id
+  // ✅ ONLY return PATIENT emergency requests
+  // Patient requests have: donor_id = specific_id AND hospital_id = NULL or undefined
+  // Hospital requests are NOT in emergency_donations - they're in blood_requests table!
   const query = `
-    SELECT ed.*, h.name as hospital_name
+    SELECT ed.*
     FROM emergency_donations ed
-    LEFT JOIN hospitals h ON ed.hospital_id = h.id
-    WHERE (ed.donor_id = ? OR ed.hospital_id IS NOT NULL)
+    WHERE ed.donor_id = ?
+    AND (ed.hospital_id IS NULL OR ed.hospital_id = 0)
     ORDER BY ed.created_at DESC
   `;
   
@@ -437,76 +437,13 @@ router.get('/donor/:donorId', (req, res) => {
       console.error('[/donor/:donorId] ❌ DB Error:', err);
       return res.json([]);
     }
-    console.log(`[/donor/:donorId] ✅ Found ${results?.length || 0} records`);
+    console.log(`[/donor/:donorId] ✅ Found ${results?.length || 0} PATIENT emergency requests`);
     if (results && results.length > 0) {
       results.forEach((r, idx) => {
-        console.log(`  [${idx}] ID=${r.id}, donor_id=${r.donor_id}, hospital_id=${r.hospital_id}, blood_type=${r.blood_type}, status=${r.status}`);
+        console.log(`  [${idx}] ID=${r.id}, donor_id=${r.donor_id}, blood_type=${r.blood_type}, status=${r.status}`);
       });
     }
     res.json(results || []);
-  });
-});
-
-// ✅ GET /api/blood-requests/hospital-requests/:donorId
-// Returns hospital blood requests that match the donor's blood type and governorate
-router.get('/hospital-requests/:donorId', (req, res) => {
-  const donorId = req.params.donorId;
-  console.log(`\n[/hospital-requests/:donorId] 🔍 Fetching hospital requests for donor ${donorId}`);
-  
-  // ✅ First, get donor's blood type and governorate
-  const donorQuery = `
-    SELECT blood_type, governorate FROM donors WHERE id = ?
-  `;
-  
-  db.query(donorQuery, [donorId], (err, donorResults) => {
-    if (err || !donorResults || !donorResults.length) {
-      console.error('[/hospital-requests/:donorId] ❌ Donor not found:', err);
-      return res.json([]);
-    }
-    
-    const donor = donorResults[0];
-    console.log(`[/hospital-requests/:donorId] Donor blood type: ${donor.blood_type}, Governorate: ${donor.governorate}`);
-    
-    // Get compatible blood types for this donor
-    const compatibleBloodTypes = getCompatibleDonors(donor.blood_type);
-    console.log(`[/hospital-requests/:donorId] Compatible blood types: ${compatibleBloodTypes.join(', ')}`);
-    
-    // ✅ Query hospital blood requests that match donor's blood type AND governorate
-    const hospitalRequestsQuery = `
-      SELECT 
-        br.id,
-        br.hospital_id,
-        br.blood_type,
-        br.quantity_needed,
-        br.status,
-        br.urgency,
-        br.created_at,
-        h.name as hospital_name,
-        h.address as hospital_address
-      FROM blood_requests br
-      LEFT JOIN hospitals h ON br.hospital_id = h.id
-      WHERE br.blood_type IN (?)
-      AND br.status IN ('pending', 'supply_coming')
-      AND h.address LIKE CONCAT('%', ?, '%')
-      ORDER BY br.created_at DESC
-      LIMIT 100
-    `;
-    
-    db.query(hospitalRequestsQuery, [compatibleBloodTypes, donor.governorate], (err, results) => {
-      if (err) {
-        console.error('[/hospital-requests/:donorId] ❌ DB Error:', err);
-        return res.json([]);
-      }
-      
-      console.log(`[/hospital-requests/:donorId] ✅ Found ${results?.length || 0} hospital requests`);
-      if (results && results.length > 0) {
-        results.forEach((r, idx) => {
-          console.log(`  [${idx}] ID=${r.id}, hospital=${r.hospital_name}, blood_type=${r.blood_type}, status=${r.status}`);
-        });
-      }
-      
-      res.json(results || []);
-    });
   });
 });
 
