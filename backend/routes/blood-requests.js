@@ -418,12 +418,14 @@ router.get('/donor/:donorId', (req, res) => {
   const donorId = req.params.donorId;
   console.log(`\n[/donor/:donorId] 🔍 Fetching for donor ${donorId}`);
   
+  // ✅ FIX: Show ALL hospital requests regardless of status
+  // Hospital requests have donor_id = NULL and hospital_id IS NOT NULL
+  // Regular patient emergency requests have donor_id = specific_id
   const query = `
     SELECT ed.*, h.name as hospital_name
     FROM emergency_donations ed
     LEFT JOIN hospitals h ON ed.hospital_id = h.id
     WHERE (ed.donor_id = ? OR ed.hospital_id IS NOT NULL)
-    AND ed.status IN ('pending', 'awaiting_confirmation')
     ORDER BY ed.created_at DESC
   `;
   

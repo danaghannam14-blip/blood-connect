@@ -202,16 +202,29 @@ router.post('/create', async (req, res) => {
             VALUES (NULL, ?, ?, ?, 'pending', ?, ?)
           `;
 
+          // ✅ FIX: Wait for emergency_donations insert BEFORE responding to client
           db.query(insertEmergencySql, [blood_type, hospital.name, normalizedGovernorate, hospital_id, requestId], (err) => {
             if (err) {
               console.error('[POST /create] ❌ Emergency donation insert error:', err);
+              res.json({ 
+                success: true,
+                message: 'Blood request created (donor notification may have failed)',
+                requestId: requestId
+              });
             } else {
               console.log(`[POST /create] ✅ Created emergency donation record for hospital request`);
               console.log(`[POST /create] Hospital: ${hospital.name}, Governorate: ${normalizedGovernorate}, Request ID: ${requestId}`);
+              
+              // ✅ NOW send response AFTER emergency_donations is successfully inserted
+              res.json({ 
+                success: true,
+                message: 'Blood request created',
+                requestId: requestId
+              });
             }
           });
 
-          // ✅ THEN: Send emails to matching donors
+          // ✅ THEN: Send emails to matching donors (happens in background, doesn't block response)
           db.query(donorQuery, [compatibleBloodTypes, normalizedGovernorate], async (err, donors) => {
             if (!err && donors && donors.length) {
               console.log(`[POST /create] ✅ Found ${donors.length} donors in ${normalizedGovernorate}`);
@@ -267,13 +280,12 @@ router.post('/create', async (req, res) => {
           });
         } else {
           console.log('[POST /create] ⚠️ Hospital not found');
+          res.json({ 
+            success: true,
+            message: 'Blood request created (hospital not found)',
+            requestId: requestId
+          });
         }
-      });
-
-      res.json({ 
-        success: true,
-        message: 'Blood request created',
-        requestId: result.insertId
       });
     });
   } catch (error) {
