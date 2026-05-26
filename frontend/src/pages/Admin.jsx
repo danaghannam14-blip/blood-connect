@@ -412,24 +412,64 @@ function Admin() {
       const bccData = bccRes.data || []
       setBccDonations(bccData.filter(d => d.status === 'awaiting_confirmation'))
       
-      // ✅ FIXED: Load ALL requests with status 'ns' from ALL governorates/hospitals
-      // This endpoint should return all blood requests from all hospitals
-      const noShowRes = await axios.get(`${API}/api/requests`)
-      console.log('[Admin] All requests loaded:', noShowRes.data)
-      
-      // Filter to get only the ones with status 'ns' (Didn't Show Up)
-      const noShowData = noShowRes.data
-        ?.filter(r => r.status === 'ns')
-        ?.map(r => ({
-          ...r,
-          blood_type: r.blood_type || 'Unknown',
-          quantity_needed: r.quantity_needed || r.units_needed || 0,
-          hospital_name: r.hospital_name || `Hospital ID: ${r.hospital_id}`,
-          created_at: r.created_at || new Date().toISOString()
-        })) || []
-      
-      console.log('[Admin] No-show requests filtered:', noShowData)
-      setNoShowDonations(noShowData)
+      // ✅ Load ALL requests - try multiple approaches
+      let noShowData = []
+      try {
+        // First try: Get all requests directly
+        const noShowRes = await axios.get(`${API}/api/requests`)
+        console.log('[Admin] Direct /api/requests response:', noShowRes.data)
+        
+        if (noShowRes.data && Array.isArray(noShowRes.data)) {
+          // Filter ONLY for status 'ns' (Didn't Show Up)
+          const allRequests = noShowRes.data
+          console.log('[Admin] Total requests from API:', allRequests.length)
+          console.log('[Admin] Requests by status:', allRequests.reduce((acc, r) => {
+            acc[r.status] = (acc[r.status] || 0) + 1
+            return acc
+          }, {}))
+          
+          noShowData = allRequests
+            .filter(r => r.status === 'ns')
+            .map(r => {
+              console.log('[Admin] Mapping request with status ns:', { id: r.id, blood_type: r.blood_type, hospital_name: r.hospital_name, hospital_id: r.hospital_id })
+              return {
+                ...r,
+                blood_type: r.blood_type || 'Unknown',
+                quantity_needed: r.quantity_needed || r.units_needed || 0,
+                hospital_name: r.hospital_name || r.hospital?.name || `Hospital ID: ${r.hospital_id}`,
+                created_at: r.created_at || new Date().toISOString()
+              }
+            })
+        }
+        
+        console.log('[Admin] Filtered no-show requests:', noShowData)
+        setNoShowDonations(noShowData)
+      } catch (noShowErr) {
+        console.error('[Admin] Error loading no-show requests:', noShowErr)
+        console.error('[Admin] Error details:', noShowErr.response?.data)
+        
+        // Fallback: try to build from blood_requests endpoint
+        try {
+          const fallbackRes = await axios.get(`${API}/api/blood-requests`)
+          console.log('[Admin] Fallback /api/blood-requests response:', fallbackRes.data)
+          
+          if (fallbackRes.data && Array.isArray(fallbackRes.data)) {
+            noShowData = fallbackRes.data
+              .filter(r => r.status === 'ns')
+              .map(r => ({
+                ...r,
+                blood_type: r.blood_type || 'Unknown',
+                quantity_needed: r.quantity_needed || r.units_needed || 0,
+                hospital_name: r.hospital_name || `Hospital ID: ${r.hospital_id}`,
+                created_at: r.created_at || new Date().toISOString()
+              }))
+          }
+          setNoShowDonations(noShowData)
+        } catch (fallbackErr) {
+          console.error('[Admin] Fallback also failed:', fallbackErr)
+          setNoShowDonations([])
+        }
+      }
     } catch (err) {
       console.error('Error loading data:', err)
     } finally {
@@ -530,12 +570,13 @@ function Admin() {
     }
   }
 
-  const handleConfirmNoShowSupply = async (requestId) => {
+  // ✅ NEW: Confirm hospital supply - updates request to 'supply_coming'
+  const handleConfirmHospitalSupply = async (requestId) => {
     setConfirmingNoShowId(requestId)
     try {
       // ✅ Update the request status to 'supply_coming'
       await axios.put(`${API}/api/requests/${requestId}`, { status: 'supply_coming' })
-      alert('✅ Supply confirmed! Hospital notified that blood is coming from BCC Hamra.')
+      alert('✅ Supply confirmed! Hospital will see "Coming for Supply from BCC Hamra" on their dashboard.')
       
       // ✅ Remove from local state immediately
       setNoShowDonations(noShowDonations.filter(r => r.id !== requestId))
@@ -692,12 +733,17 @@ function Admin() {
               Hospitals where donors didn't show up - supply blood from BCC Hamra bank (all governorates)
             </p>
             
+            {/* DEBUG: Show what we're loading */}
+            <div style={{ marginBottom: 'clamp(12px, 2vw, 16px)', padding: 'clamp(8px, 1.5vw, 12px)', background: 'rgba(100,100,100,.1)', borderRadius: 10, fontSize: '11px', color: 'rgba(45,45,45,.6)', fontWeight: 600 }}>
+              📊 Status: <strong>{loading ? 'Loading...' : `${noShowDonations.length} hospitals needing supply`}</strong>
+            </div>
+            
             {noShowDonations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 'clamp(32px, 5vw, 48px) 24px' }}>
                 <p className="admin-card-text">✅ No hospitals needing supply at this time.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 'clamp(12px, 2vw, 16px)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'clamp(12px, 2vw, 16px)' }}>
                 {noShowDonations.map((request) => (
                   <motion.div
                     key={request.id}
@@ -715,7 +761,7 @@ function Admin() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.96 }}
-                      onClick={() => handleConfirmNoShowSupply(request.id)}
+                      onClick={() => handleConfirmHospitalSupply(request.id)}
                       disabled={confirmingNoShowId === request.id}
                       className="admin-btn admin-btn-success"
                       style={{ marginTop: 'clamp(6px, 1vw, 12px)', opacity: confirmingNoShowId === request.id ? 0.6 : 1, pointerEvents: confirmingNoShowId === request.id ? 'none' : 'auto' }}
