@@ -135,19 +135,19 @@ function HospitalDashboard() {
   const handleConfirmReceived = async (requestId) => {
     try {
       await axios.put(`${API}/api/requests/${requestId}`, { status: 'ok' })
-      alert('✅ Request ok! Donor will see this on their dashboard.')
+      alert('✅ Request confirmed! Donor will see this on their dashboard.')
       loadData()
     } catch (err) {
       alert(`❌ Error: ${err.message}`)
     }
   }
 
-  // ✅ DONOR DIDN'T SHOW UP (changes status to 'ns' - keeps it visible)
+  // ✅ DONOR DIDN'T SHOW UP (changes status to 'ns' - request STAYS VISIBLE)
   const handleDidntShowUp = async (requestId) => {
-    if (!window.confirm('Mark as "didn\'t show up"? This will notify admin that blood is needed from BCC Hamra.')) return
+    if (!window.confirm('Mark as "didn\'t show up"? Admin will provide blood from BCC Hamra.')) return
     try {
       await axios.put(`${API}/api/requests/${requestId}`, { status: 'ns' })
-      alert('✅ Request marked as "didn\'t show up". Admin will provide blood from BCC Hamra.')
+      alert('✅ Marked as "didn\'t show up". Admin notified!')
       loadData()
     } catch (err) {
       alert(`❌ Error: ${err.message}`)
@@ -159,15 +159,12 @@ function HospitalDashboard() {
     if (!window.confirm('Delete this request? This will remove it from donor dashboards too.')) return
     
     try {
-      // Delete from blood_requests
       await axios.delete(`${API}/api/requests/${requestId}`)
       console.log('[HospitalDashboard] Request deleted:', requestId)
       
-      // Immediately remove from local state
       setRequests(requests.filter(r => r.id !== requestId))
       alert('✅ Request deleted from all dashboards!')
       
-      // Refresh data
       loadData()
     } catch (err) {
       console.error('[HospitalDashboard] Delete error:', err)
@@ -227,10 +224,6 @@ function HospitalDashboard() {
         patientEmail: donation.patient_email
       })
       console.log('Confirm response:', response.data)
-      
-      // ✅ No need to delete - hospital-confirm already updates status to 'ok'
-      // The donor query filters out status != 'pending'/'awaiting_confirmation'
-      // So it will disappear from donor dashboard automatically
       
       alert('✅ Donation confirmed! Removed from donor dashboard.')
       loadData()
@@ -563,19 +556,22 @@ function HospitalDashboard() {
                       )
                     }
                     
-                    // ✅ NEW: Status 'supply_coming' - Admin confirmed supply is coming
+                    // ✅ Status 'supply_coming' - Admin confirmed supply is coming (BLUE)
                     if (r.status === 'supply_coming') {
                       return (
-                        <div
+                        <motion.div
                           key={r.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
                           style={{
                             borderRadius: 18,
                             padding: 18,
-                            border: '2px solid #3b82f6',
-                            background: 'rgba(219,234,254,.4)',
+                            border: '3px solid #3b82f6',
+                            background: 'linear-gradient(135deg, rgba(219,234,254,.6), rgba(191,219,254,.3))',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 12
+                            gap: 12,
+                            boxShadow: '0 8px 24px rgba(59,130,246,.15)'
                           }}
                         >
                           <div>
@@ -589,7 +585,8 @@ function HospitalDashboard() {
                                 background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                                 color: '#fff',
                                 textTransform: 'uppercase',
-                                letterSpacing: '.1em'
+                                letterSpacing: '.1em',
+                                animation: 'pulse 2s ease-in-out infinite'
                               }}>
                                 ✈️ COMING
                               </span>
@@ -599,34 +596,34 @@ function HospitalDashboard() {
                               📅 {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
-                          <div style={{ padding: '12px', background: 'rgba(59,130,246,.1)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#3b82f6', fontSize: 13 }}>
-                            ✈️ Coming for Supply from BCC Hamra
+                          <div style={{ padding: '12px', background: 'rgba(59,130,246,.15)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#3b82f6', fontSize: 13 }}>
+                            ✈️ Supply coming from BCC Hamra
                           </div>
                           <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handleConfirmSupplyReceived(r.id)}
                             disabled={confirmingSupplyId === r.id}
                             style={{
                               marginTop: 8,
-                              padding: '10px 14px',
-                              background: confirmingSupplyId === r.id ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                              padding: '11px 16px',
+                              background: confirmingSupplyId === r.id ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 10,
                               fontSize: 12,
                               fontWeight: 900,
                               cursor: confirmingSupplyId === r.id ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.2s'
+                              transition: 'all 0.3s ease'
                             }}
                           >
-                            {confirmingSupplyId === r.id ? '⏳ Confirming...' : '✅ Supply Confirmed'}
+                            {confirmingSupplyId === r.id ? '⏳ Confirming Received...' : '✅ Supply Confirmed & Received'}
                           </motion.button>
-                        </div>
+                        </motion.div>
                       )
                     }
                     
-                    // Default pending state
+                    // Default pending state (includes 'ns' - didn't show up)
                     return (
                       <div
                         key={r.id}
@@ -653,7 +650,7 @@ function HospitalDashboard() {
                               textTransform: 'uppercase',
                               letterSpacing: '.1em'
                             }}>
-                              {URGENCY_CONFIG[r.urgency]?.label}
+                              {r.status === 'ns' ? '⏳ NO-SHOW' : URGENCY_CONFIG[r.urgency]?.label}
                             </span>
                           </div>
                           <p style={{ fontSize: 12, color: '#333', margin: '0 0 6px 0', fontWeight: 700 }}>{r.quantity_needed} units needed</p>
@@ -1036,6 +1033,10 @@ function HospitalDashboard() {
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
         }
       `}</style>
     </div>
