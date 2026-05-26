@@ -18,6 +18,7 @@ const ADMIN_STYLES = `
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
   .admin-root {
     min-height:100vh;
@@ -561,7 +562,7 @@ function Admin() {
         patientEmail: donation.patient_email
       })
       
-      alert('Donation confirmed! Patient and donor notified.')
+      alert('✅ Donation confirmed! Patient and donor notified.')
       loadData()
     } catch (err) {
       alert(`Error: ${err.response?.data?.error || err.message}`)
@@ -570,17 +571,24 @@ function Admin() {
     }
   }
 
-  // ✅ NEW: Confirm hospital supply - updates request to 'supply_coming'
+  // ✅ IMPROVED: Confirm hospital supply - updates request to 'supply_coming' with better feedback
   const handleConfirmHospitalSupply = async (requestId) => {
     setConfirmingNoShowId(requestId)
     try {
+      const request = noShowDonations.find(r => r.id === requestId)
+      
+      if (!request) {
+        alert('❌ Request not found')
+        setConfirmingNoShowId(null)
+        return
+      }
+      
       // ✅ Update the request status to 'supply_coming'
       await axios.put(`${API}/api/requests/${requestId}`, { status: 'supply_coming' })
-      alert('✅ Supply confirmed! Hospital will see "Coming for Supply from BCC Hamra" on their dashboard.')
+      alert(`✅ Supply confirmed for ${request.hospital_name}!\n🩸 ${request.blood_type} - ${request.quantity_needed} units\n\nHospital will see "✈️ Coming for Supply from BCC Hamra" on their dashboard.`)
       
       // ✅ Remove from local state immediately
       setNoShowDonations(noShowDonations.filter(r => r.id !== requestId))
-      loadData()
     } catch (err) {
       alert(`Error: ${err.response?.data?.error || err.message}`)
     } finally {
@@ -733,40 +741,71 @@ function Admin() {
               Hospitals where donors didn't show up - supply blood from BCC Hamra bank (all governorates)
             </p>
             
-            {/* DEBUG: Show what we're loading */}
-            <div style={{ marginBottom: 'clamp(12px, 2vw, 16px)', padding: 'clamp(8px, 1.5vw, 12px)', background: 'rgba(100,100,100,.1)', borderRadius: 10, fontSize: '11px', color: 'rgba(45,45,45,.6)', fontWeight: 600 }}>
-              📊 Status: <strong>{loading ? 'Loading...' : `${noShowDonations.length} hospitals needing supply`}</strong>
+            {/* INFO BOX */}
+            <div style={{ marginBottom: 'clamp(16px, 2vw, 24px)', padding: 'clamp(12px, 1.5vw, 16px)', background: 'linear-gradient(135deg, rgba(59,130,246,.1), rgba(191,219,254,.1))', border: '2px solid rgba(59,130,246,.2)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20 }}>ℹ️</span>
+              <span style={{ fontSize: 'clamp(11px, 1.1vw, 12px)', fontWeight: 600, color: 'rgba(45,45,45,.7)' }}>
+                <strong>Status Check:</strong> {loading ? 'Loading...' : `${noShowDonations.length} hospital${noShowDonations.length !== 1 ? 's' : ''} needing supply`}
+              </span>
             </div>
             
             {noShowDonations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 'clamp(32px, 5vw, 48px) 24px' }}>
-                <p className="admin-card-text">✅ No hospitals needing supply at this time.</p>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+                <p className="admin-card-text" style={{ fontWeight: 700 }}>No hospitals needing supply at this time.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'clamp(12px, 2vw, 16px)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'clamp(14px, 2.5vw, 18px)' }}>
                 {noShowDonations.map((request) => (
                   <motion.div
                     key={request.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="admin-card"
-                    style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.5vw, 12px)' }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 'clamp(10px, 1.5vw, 14px)',
+                      borderLeft: '4px solid #dc2626',
+                      borderColor: '#dc2626'
+                    }}
                   >
-                    <p style={{ fontSize: 'clamp(13px, 1.4vw, 15px)', fontWeight: 900, color: '#dc2626', margin: 0 }}>🩸 {request.blood_type}</p>
-                    <p className="admin-card-text">📋 {request.quantity_needed} units needed</p>
-                    <p className="admin-card-text">🏥 {request.hospital_name}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 'clamp(16px, 2vw, 20px)' }}>🩸</span>
+                      <p style={{ fontSize: 'clamp(14px, 1.5vw, 16px)', fontWeight: 900, color: '#dc2626', margin: 0 }}>
+                        {request.blood_type}
+                      </p>
+                    </div>
+                    
+                    <p className="admin-card-text" style={{ fontWeight: 700, color: '#dc2626' }}>
+                      📋 {request.quantity_needed} unit{request.quantity_needed !== 1 ? 's' : ''} needed
+                    </p>
+                    
+                    <div style={{ padding: '10px', background: 'rgba(220,38,38,.08)', borderRadius: 8, borderLeft: '3px solid #dc2626' }}>
+                      <p className="admin-card-text" style={{ fontWeight: 900, color: 'rgba(45,45,45,.8)', margin: 0 }}>
+                        🏥 {request.hospital_name}
+                      </p>
+                    </div>
+                    
                     <p style={{ fontSize: 'clamp(10px, 1vw, 11px)', color: 'rgba(45,45,45,.5)', margin: 0, fontWeight: 600 }}>
                       📅 {new Date(request.created_at).toLocaleDateString('en-GB')}
                     </p>
+                    
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => handleConfirmHospitalSupply(request.id)}
                       disabled={confirmingNoShowId === request.id}
                       className="admin-btn admin-btn-success"
-                      style={{ marginTop: 'clamp(6px, 1vw, 12px)', opacity: confirmingNoShowId === request.id ? 0.6 : 1, pointerEvents: confirmingNoShowId === request.id ? 'none' : 'auto' }}
+                      style={{
+                        marginTop: 'clamp(8px, 1.2vw, 12px)',
+                        width: '100%',
+                        opacity: confirmingNoShowId === request.id ? 0.6 : 1,
+                        pointerEvents: confirmingNoShowId === request.id ? 'none' : 'auto',
+                        animation: confirmingNoShowId === request.id ? 'none' : 'pulse 2s ease-in-out infinite'
+                      }}
                     >
-                      {confirmingNoShowId === request.id ? '⏳ Confirming...' : '✅ Confirm Supply'}
+                      {confirmingNoShowId === request.id ? '⏳ Confirming Supply...' : '✅ Confirm Supply'}
                     </motion.button>
                   </motion.div>
                 ))}
