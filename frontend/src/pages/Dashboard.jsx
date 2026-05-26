@@ -429,13 +429,7 @@ function Dashboard() {
       alert('Center donation confirmed!')
       setTimeout(async () => {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        const patientEmergencies = res.data || []
-        
-        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
-        const hospitalRequestsList = hospitalRes.data || []
-        
-        setEmergencyRequests(patientEmergencies)
-        setHospitalRequests(hospitalRequestsList)
+        setEmergencyRequests(res.data || [])
         setExpandedNotif(null)
       }, 500)
     } catch (err) {
@@ -445,27 +439,36 @@ function Dashboard() {
     }
   }
 
+  // ✅ FIXED: Keep request visible in Emergency Donations until hospital confirms
+  // Do NOT reload hospitalRequests - they're completely separate
   const handleDonateAtHospital = async (notificationId, hospitalId) => {
     setConfirmingId(notificationId)
     try {
+      console.log('Donor choosing hospital:', hospitalId, 'for request:', notificationId)
+      
       await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'hospital',
         hospital_id: hospitalId
       })
-      alert('Hospital donation confirmed!')
+      alert('Hospital selected! Waiting for hospital to confirm your donation.')
+      
+      // ✅ Close modal but KEEP request in Emergency Donations
+      setHospitalModalOpen(null)
+      setExpandedNotif(null)
+      
+      // Small refresh to update status if backend changes it
       setTimeout(async () => {
-        const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        const patientEmergencies = res.data || []
-        
-        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
-        const hospitalRequestsList = hospitalRes.data || []
-        
-        setEmergencyRequests(patientEmergencies)
-        setHospitalRequests(hospitalRequestsList)
-        setHospitalModalOpen(null)
-        setExpandedNotif(null)
-      }, 500)
+        try {
+          const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
+          const patientEmergencies = res.data || []
+          setEmergencyRequests(patientEmergencies)
+          // ❌ DO NOT reload hospitalRequests!
+          // They are completely separate and only updated when hospitals POST new requests
+        } catch (err) {
+          console.error('Error refreshing emergency requests:', err)
+        }
+      }, 300)
     } catch (err) {
       alert('Error: ' + (err.response?.data?.error || err.message))
     } finally {
@@ -481,13 +484,7 @@ function Dashboard() {
       alert('Request marked as declined.')
       setTimeout(async () => {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-        const patientEmergencies = res.data || []
-        
-        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
-        const hospitalRequestsList = hospitalRes.data || []
-        
-        setEmergencyRequests(patientEmergencies)
-        setHospitalRequests(hospitalRequestsList)
+        setEmergencyRequests(res.data || [])
         setExpandedNotif(null)
       }, 500)
     } catch (err) {
