@@ -22,13 +22,14 @@ const UNIFIED_STYLES = `
 
   .dd-root {
     min-height:100vh;
-    background:linear-gradient(135deg,#f5f1ed 0%,#ede8e2 25%,#e8dfd5 50%,#f0ebe5 75%,#f5f1ed 100%);
+    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
     background-size:400% 400%;
     animation:gradient-shift 15s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
     overflow-x:hidden;
     position:relative;
     color:#3d3d3d;
+    zoom: 1;
   }
 
   .dd-float-orb {
@@ -193,18 +194,6 @@ const UNIFIED_STYLES = `
     color:#c92a2a;
   }
 
-  @media (max-width:1200px) {
-    .dd-root { zoom: 0.88; }
-  }
-
-  @media (max-width:1024px) {
-    .dd-root { zoom: 0.85; }
-  }
-
-  @media (max-width:768px) {
-    .dd-root { zoom: 0.75; }
-  }
-
   .dd-modal-overlay {
     position:fixed;
     inset:0;
@@ -276,8 +265,27 @@ const UNIFIED_STYLES = `
     transform:translateX(4px);
   }
 
+  @media (max-width:1200px) {
+    .dd-root { zoom: 0.95; }
+  }
+
+  @media (max-width:1024px) {
+    .dd-root { zoom: 0.9; }
+  }
+
+  @media (max-width:768px) {
+    .dd-root { zoom: 1; }
+    .dd-tab-btn { padding: 10px 16px; font-size: 12px; }
+  }
+
+  @media (max-width:600px) {
+    .dd-root { zoom: 1; }
+    .dd-modal-content { width: 95vw; padding: 24px; }
+    .dd-btn { font-size: 12px; padding: 10px 12px; }
+  }
+
   @media (max-width:480px) {
-    .dd-root { zoom: 0.65; }
+    .dd-root { zoom: 1; }
   }
 `
 
@@ -290,11 +298,20 @@ if (typeof document !== 'undefined' && !document.getElementById('dd-styles-unifi
 
 function AnimatedBackgroundOrbs() {
   const orbs = [
-    { size: 'min(400px,35vw)', color: 'rgba(220,38,38,.06)', top: '-10%', left: '-8%', duration: 12 },
-    { size: 'min(350px,30vw)', color: 'rgba(155,155,155,.04)', top: '25%', right: '-10%', duration: 15 },
-    { size: 'min(380px,32vw)', color: 'rgba(220,38,38,.05)', bottom: '-15%', left: '10%', duration: 18 },
-    { size: 'min(320px,28vw)', color: 'rgba(155,155,155,.03)', bottom: '10%', right: '-8%', duration: 14 },
+    { size: 'min(200px,20vw)', color: 'rgba(220,38,38,.08)', top: '-5%', left: '-3%', duration: 8 },
+    { size: 'min(180px,18vw)', color: 'rgba(180,180,180,.06)', top: '20%', right: '-8%', duration: 11 },
+    { size: 'min(190px,19vw)', color: 'rgba(220,38,38,.07)', bottom: '-10%', left: '5%', duration: 13 },
+    { size: 'min(160px,16vw)', color: 'rgba(180,180,180,.05)', bottom: '15%', right: '-5%', duration: 9 },
   ]
+
+  const dots = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 1.5,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
+  }))
 
   return (
     <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
@@ -311,8 +328,35 @@ function AnimatedBackgroundOrbs() {
             left: orb.left,
             bottom: orb.bottom,
           }}
-          animate={{ y: [0, -60, 0], x: [0, 50, 0], scale: [1, 1.2, 1] }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
           transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {dots.map((dot) => (
+        <motion.div
+          key={`dot-${dot.id}`}
+          style={{
+            position: 'fixed',
+            width: dot.size,
+            height: dot.size,
+            borderRadius: '50%',
+            background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+            left: `${dot.startX}%`,
+            top: `${dot.startY}%`,
+            boxShadow: `0 0 ${dot.size * 2}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+          }}
+          animate={{
+            y: [0, -200 - Math.random() * 100],
+            x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+            opacity: [0, 0.7, 0],
+          }}
+          transition={{
+            duration: dot.duration,
+            delay: dot.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
       ))}
     </motion.div>
@@ -341,11 +385,9 @@ function Dashboard() {
     
     const loadAllDonations = async () => {
       try {
-        // ✅ Fetch patient emergency requests ONLY (donor_id = specific_id AND hospital_id = NULL)
         const res = await axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
         const patientEmergencies = res.data || []
         
-        // ✅ Fetch hospital requests (separate endpoint)
         const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donorData.id}`)
         const hospitalRequestsList = hospitalRes.data || []
         
@@ -465,7 +507,7 @@ function Dashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: visible ? 1 : 0 }}
         transition={{ duration: 0.8 }}
-        style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '48px clamp(20px,4vw,56px)' }}
+        style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: 'clamp(24px, 4vw, 48px)' }}
       >
         {/* Header Section */}
         <motion.div
@@ -473,27 +515,28 @@ function Dashboard() {
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -30 }}
           transition={{ duration: 0.8, delay: 0.1 }}
           style={{
-            marginBottom: '64px',
+            marginBottom: 'clamp(32px, 6vw, 64px)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            gap: '40px',
+            gap: 'clamp(20px, 3vw, 40px)',
+            flexWrap: 'wrap',
           }}
         >
-          <div>
+          <div style={{ flex: 1, minWidth: '250px' }}>
             <p style={{
-              fontSize: '11px',
+              fontSize: 'clamp(9px, 1.2vw, 11px)',
               fontWeight: 700,
               color: '#dc2626',
               textTransform: 'uppercase',
               letterSpacing: '2px',
-              margin: '0 0 16px 0',
+              margin: '0 0 12px 0',
             }}>
               Welcome
             </p>
             <h1 style={{
               fontFamily: "'Fraunces',serif",
-              fontSize: 'clamp(42px,6vw,64px)',
+              fontSize: 'clamp(28px, 5vw, 64px)',
               fontWeight: 900,
               color: '#6e2016',
               margin: '0 0 8px 0',
@@ -501,13 +544,13 @@ function Dashboard() {
             }}>
               {donor.full_name}
             </h1>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginTop: '16px' }}>
+            <div style={{ display: 'flex', gap: 'clamp(16px, 3vw, 24px)', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap' }}>
               <div>
-                <p style={{ fontSize: '11px', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
+                <p style={{ fontSize: 'clamp(9px, 1vw, 11px)', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
                   Blood Type
                 </p>
                 <p style={{
-                  fontSize: '24px',
+                  fontSize: 'clamp(18px, 3vw, 24px)',
                   fontWeight: 900,
                   color: '#dc2626',
                   margin: 0,
@@ -516,13 +559,13 @@ function Dashboard() {
                   {donor.blood_type}
                 </p>
               </div>
-              <div style={{ width: '1px', height: '40px', background: 'rgba(220,38,38,.2)' }} />
+              <div style={{ width: '1px', height: '30px', background: 'rgba(220,38,38,.2)' }} />
               <div>
-                <p style={{ fontSize: '11px', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
+                <p style={{ fontSize: 'clamp(9px, 1vw, 11px)', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
                   Location
                 </p>
                 <p style={{
-                  fontSize: '16px',
+                  fontSize: 'clamp(13px, 2vw, 16px)',
                   fontWeight: 700,
                   color: '#2d2d2d',
                   margin: 0,
@@ -541,9 +584,9 @@ function Dashboard() {
               background: 'linear-gradient(135deg,#dc2626,#b91c1c)',
               color: '#ffffff',
               border: 'none',
-              padding: '10px 20px',
+              padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)',
               borderRadius: '8px',
-              fontSize: '12px',
+              fontSize: 'clamp(10px, 1.2vw, 12px)',
               fontWeight: 900,
               cursor: 'pointer',
               textTransform: 'uppercase',
@@ -565,26 +608,27 @@ function Dashboard() {
           transition={{ duration: 0.8, delay: 0.15 }}
           className="dd-glass-deep"
           style={{
-            padding: '0 32px',
+            padding: '0 clamp(16px, 3vw, 32px)',
             borderRadius: '16px',
             marginBottom: '2px',
             display: 'flex',
             borderBottomLeftRadius: 0,
             borderBottomRightRadius: 0,
-            marginTop: '32px',
+            marginTop: '24px',
+            overflowX: 'auto',
           }}
         >
           <button
             onClick={() => setActiveTab('emergency')}
             className={`dd-tab-btn ${activeTab === 'emergency' ? 'active' : ''}`}
           >
-            Emergency Requests ({emergencyRequests.length})
+            Emergency ({emergencyRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('hospitals')}
             className={`dd-tab-btn ${activeTab === 'hospitals' ? 'active' : ''}`}
           >
-            Hospital Requests ({hospitalRequests.length})
+            Hospital ({hospitalRequests.length})
           </button>
         </motion.div>
 
@@ -599,7 +643,7 @@ function Dashboard() {
               transition={{ duration: 0.4 }}
               className="dd-glass"
               style={{
-                padding: '40px',
+                padding: 'clamp(20px, 4vw, 40px)',
                 borderRadius: '16px',
                 borderTopLeftRadius: 0,
                 borderTopRightRadius: 0,
@@ -611,10 +655,10 @@ function Dashboard() {
                 transition={{ delay: 0.1 }}
                 style={{
                   fontFamily: "'Fraunces',serif",
-                  fontSize: 'clamp(24px,3.5vw,36px)',
+                  fontSize: 'clamp(18px, 3.5vw, 36px)',
                   fontWeight: 900,
                   color: '#6e2016',
-                  margin: '0 0 32px 0',
+                  margin: '0 0 24px 0',
                   lineHeight: 1.1,
                 }}
               >
@@ -627,7 +671,7 @@ function Dashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
                   style={{
-                    padding: '60px 40px',
+                    padding: 'clamp(30px, 6vw, 60px) clamp(20px, 4vw, 40px)',
                     textAlign: 'center',
                     background: 'rgba(220,38,38,.02)',
                     borderRadius: '12px',
@@ -635,7 +679,7 @@ function Dashboard() {
                   }}
                 >
                   <p style={{
-                    fontSize: '16px',
+                    fontSize: 'clamp(13px, 2vw, 16px)',
                     color: 'rgba(45,45,45,.6)',
                     fontWeight: 500,
                     margin: 0,
@@ -645,7 +689,7 @@ function Dashboard() {
                   </p>
                 </motion.div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {emergencyRequests.map((notif, idx) => (
                     <motion.div
                       key={notif.id}
@@ -655,19 +699,19 @@ function Dashboard() {
                       className="dd-glass dd-card-hover"
                       onClick={() => notif.status === 'pending' && setExpandedNotif(expandedNotif === notif.id ? null : notif.id)}
                       style={{
-                        padding: '24px 28px',
+                        padding: 'clamp(16px, 3vw, 24px) clamp(16px, 3vw, 28px)',
                         borderRadius: '12px',
                         cursor: notif.status === 'pending' ? 'pointer' : 'default',
                         border: `1px solid ${notif.status === 'pending' ? 'rgba(220,38,38,.15)' : 'rgba(200,200,200,.15)'}`,
                       }}
                       whileHover={notif.status === 'pending' ? { y: -2 } : {}}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'clamp(12px, 3vw, 24px)', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'clamp(8px, 2vw, 16px)', marginBottom: '8px', flexWrap: 'wrap' }}>
                             <p
                               style={{
-                                fontSize: '18px',
+                                fontSize: 'clamp(16px, 2.5vw, 18px)',
                                 fontWeight: 800,
                                 color: '#dc2626',
                                 margin: 0,
@@ -677,7 +721,7 @@ function Dashboard() {
                               {notif.blood_type}
                             </p>
                             <p style={{
-                              fontSize: '12px',
+                              fontSize: 'clamp(10px, 1.2vw, 12px)',
                               color: 'rgba(45,45,45,.5)',
                               fontWeight: 600,
                               margin: 0,
@@ -688,7 +732,7 @@ function Dashboard() {
                             </p>
                           </div>
                           <p style={{
-                            fontSize: '14px',
+                            fontSize: 'clamp(12px, 1.5vw, 14px)',
                             color: 'rgba(45,45,45,.7)',
                             margin: '8px 0 0 0',
                             fontWeight: 500,
@@ -697,7 +741,7 @@ function Dashboard() {
                           </p>
                           {notif.status === 'pending' && expandedNotif !== notif.id && (
                             <p
-                              style={{ fontSize: 'clamp(10px,0.95vw,11px)', color: '#dc2626', margin: 'clamp(6px,0.8vw,10px) 0 0 0', fontWeight: 600 }}
+                              style={{ fontSize: 'clamp(9px, 1vw, 11px)', color: '#dc2626', margin: 'clamp(6px, 1vw, 10px) 0 0 0', fontWeight: 600 }}
                             >
                               ↓ Click to respond
                             </p>
@@ -706,9 +750,9 @@ function Dashboard() {
 
                         <div
                           style={{
-                            padding: '8px 16px',
+                            padding: '6px 12px',
                             borderRadius: '8px',
-                            fontSize: '11px',
+                            fontSize: 'clamp(9px, 1.1vw, 11px)',
                             fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
@@ -734,12 +778,12 @@ function Dashboard() {
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                             style={{
-                              marginTop: '24px',
-                              paddingTop: '24px',
+                              marginTop: '16px',
+                              paddingTop: '16px',
                               borderTop: '1px solid rgba(200,200,200,.2)',
                             }}
                           >
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch', flexWrap: 'wrap' }}>
                               {donor?.governorate === 'Beirut' && (
                                 <motion.button
                                   onClick={() => handleDonateAtCenter(notif.id)}
@@ -750,6 +794,8 @@ function Dashboard() {
                                   style={{
                                     opacity: confirmingId === notif.id ? 0.6 : 1,
                                     pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                    fontSize: 'clamp(11px, 1.2vw, 13px)',
+                                    padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                   }}
                                 >
                                   {confirmingId === notif.id ? 'Confirming...' : 'Hamra Center'}
@@ -767,6 +813,8 @@ function Dashboard() {
                                 style={{
                                   opacity: confirmingId === notif.id ? 0.6 : 1,
                                   pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                  fontSize: 'clamp(11px, 1.2vw, 13px)',
+                                  padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                 }}
                               >
                                 Hospital
@@ -781,6 +829,8 @@ function Dashboard() {
                                 style={{
                                   opacity: confirmingId === notif.id ? 0.6 : 1,
                                   pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                  fontSize: 'clamp(11px, 1.2vw, 13px)',
+                                  padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                 }}
                               >
                                 Decline
@@ -808,7 +858,7 @@ function Dashboard() {
               transition={{ duration: 0.4 }}
               className="dd-glass"
               style={{
-                padding: '40px',
+                padding: 'clamp(20px, 4vw, 40px)',
                 borderRadius: '16px',
                 borderTopLeftRadius: 0,
                 borderTopRightRadius: 0,
@@ -820,10 +870,10 @@ function Dashboard() {
                 transition={{ delay: 0.1 }}
                 style={{
                   fontFamily: "'Fraunces',serif",
-                  fontSize: 'clamp(24px,3.5vw,36px)',
+                  fontSize: 'clamp(18px, 3.5vw, 36px)',
                   fontWeight: 900,
                   color: '#6e2016',
-                  margin: '0 0 32px 0',
+                  margin: '0 0 24px 0',
                   lineHeight: 1.1,
                 }}
               >
@@ -835,7 +885,7 @@ function Dashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
                   style={{
-                    padding: '60px 40px',
+                    padding: 'clamp(30px, 6vw, 60px) clamp(20px, 4vw, 40px)',
                     textAlign: 'center',
                     background: 'rgba(220,38,38,.02)',
                     borderRadius: '12px',
@@ -843,7 +893,7 @@ function Dashboard() {
                   }}
                 >
                   <p style={{
-                    fontSize: '16px',
+                    fontSize: 'clamp(13px, 2vw, 16px)',
                     color: '#6e2016',
                     fontWeight: 500,
                     margin: 0,
@@ -856,8 +906,8 @@ function Dashboard() {
                 <motion.div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '24px',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(200px, 40vw, 280px), 1fr))',
+                    gap: 'clamp(16px, 3vw, 24px)',
                   }}
                 >
                   {hospitalRequests.map((item, idx) => (
@@ -868,14 +918,14 @@ function Dashboard() {
                       transition={{ duration: 0.5, delay: idx * 0.08 }}
                       className="dd-glass-deep dd-card-hover"
                       style={{
-                        padding: '32px',
+                        padding: 'clamp(20px, 4vw, 32px)',
                         borderRadius: '14px',
                         textAlign: 'center',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        minHeight: '220px',
+                        minHeight: '180px',
                         position: 'relative',
                         overflow: 'hidden',
                       }}
@@ -893,10 +943,10 @@ function Dashboard() {
                       <p
                         style={{
                           fontFamily: "'Fraunces',serif",
-                          fontSize: 'clamp(18px,2.5vw,24px)',
+                          fontSize: 'clamp(14px, 2.5vw, 24px)',
                           fontWeight: 900,
                           color: '#6e2016',
-                          margin: '0 0 16px 0',
+                          margin: '0 0 12px 0',
                           lineHeight: 1.2,
                           position: 'relative',
                           zIndex: 1,
@@ -910,7 +960,7 @@ function Dashboard() {
                           width: '60%',
                           height: '2px',
                           background: 'linear-gradient(90deg, transparent, #dc2626, transparent)',
-                          marginBottom: '16px',
+                          marginBottom: '12px',
                           position: 'relative',
                           zIndex: 1,
                         }}
@@ -920,12 +970,13 @@ function Dashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: '6px',
                         position: 'relative',
                         zIndex: 1,
+                        flexWrap: 'wrap',
                       }}>
                         <p style={{
-                          fontSize: '11px',
+                          fontSize: 'clamp(9px, 1.1vw, 11px)',
                           color: 'rgba(45,45,45,.6)',
                           fontWeight: 600,
                           textTransform: 'uppercase',
@@ -936,7 +987,7 @@ function Dashboard() {
                         </p>
                         <p
                           style={{
-                            fontSize: '18px',
+                            fontSize: 'clamp(14px, 2.2vw, 18px)',
                             fontWeight: 800,
                             color: '#dc2626',
                             margin: 0,
@@ -977,10 +1028,10 @@ function Dashboard() {
             >
               <h3 style={{
                 fontFamily: "'Fraunces',serif",
-                fontSize: '24px',
+                fontSize: 'clamp(18px, 3vw, 24px)',
                 fontWeight: 900,
                 color: '#2d2d2d',
-                margin: '0 0 24px 0',
+                margin: '0 0 20px 0',
               }}>
                 Select Hospital
               </h3>
@@ -1024,7 +1075,7 @@ function Dashboard() {
                   style={{
                     textAlign: 'center',
                     color: 'rgba(45,45,45,.5)',
-                    fontSize: '13px',
+                    fontSize: 'clamp(11px, 1.3vw, 13px)',
                     fontWeight: 500,
                     marginTop: '20px',
                   }}

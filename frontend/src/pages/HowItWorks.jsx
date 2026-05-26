@@ -6,22 +6,22 @@ function HowItWorks() {
   const navigate = useNavigate()
 
   const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&family=Cinzel:wght@400;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
     
     @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
     @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
     @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(220,38,38,.3); } 50% { box-shadow: 0 0 40px rgba(220,38,38,.5); } }
-    @keyframes slide-in { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
 
     .hiw-root {
       min-height:100vh;
-      background:linear-gradient(135deg,#f5f1ed 0%,#ede8e2 25%,#e8dfd5 50%,#f0ebe5 75%,#f5f1ed 100%);
+      background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
       background-size:400% 400%;
       animation:gradient-shift 15s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
       overflow-x:hidden;
       position:relative;
-      color:#3d3d3d;
+      color:#380101;
+      zoom: 0.85;
     }
 
     .hiw-orbs {
@@ -39,40 +39,70 @@ function HowItWorks() {
       animation:float-orb 6s ease-in-out infinite;
     }
 
+    .hiw-dots {
+      position:fixed;
+      width:100%;
+      height:100%;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .hiw-dot {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
+    }
+
     .hiw-nav {
       position:sticky;top:0;z-index:50;
-      background:rgba(255,255,255,.85);
-      backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(200,180,160,.2);
-      padding:16px 44px;
+      background:rgba(248,248,248,.85);
+      backdrop-filter:blur(20px) saturate(200%);
+      -webkit-backdrop-filter:blur(20px) saturate(200%);
+      border-bottom:1px solid rgba(180,180,180,.15);
+      box-shadow:0 4px 30px rgba(0,0,0,.08);
+    }
+
+    .hiw-nav-inner {
+      max-width:1360px;margin:0 auto;
       display:flex;justify-content:space-between;align-items:center;
+      padding:14px clamp(16px,3.5vw,44px);
+      gap:clamp(16px,2.5vw,32px);
     }
 
     .hiw-logo {
-      display:flex;flex-direction:column;gap:4px;cursor:pointer;
-      transition:all .3s ease;
+      display:flex;align-items:center;gap:14px;cursor:pointer;
     }
 
-    .hiw-logo:hover {
-      transform:scale(1.05);
+    .hiw-logo-icon {
+      width:50px;height:50px;
+      background:linear-gradient(135deg,#dc2626,#991b1b);
+      border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 12px 32px rgba(220,38,38,.3);
+      position:relative;
+      overflow:hidden;
     }
 
-    .hiw-logo-main {
-      font-size:18px;font-weight:900;color:#c92a2a;
-      font-family:'Fraunces',serif;
-      letter-spacing:1px;
+    .hiw-logo-icon svg {
+      width:28px;height:38px;
     }
 
-    .hiw-logo-sub {
-      font-size:11px;font-weight:700;color:rgba(61,61,61,.6);font-style:italic;
+    .hiw-logo-text {
+      font-size:22px;font-weight:900;color:#dc2626;
       font-family:'Fraunces',serif;
       letter-spacing:0.5px;
     }
 
+    @keyframes logoGlow {
+      0%, 100% { letter-spacing:0.5px; }
+      50% { letter-spacing:1px; }
+    }
+
     .hiw-hero {
-      padding:120px 44px;
+      padding:60px clamp(20px,3vw,44px);
       text-align:center;
-      max-width:1000px;
+      max-width:900px;
       margin:0 auto;
       position:relative;
       z-index:10;
@@ -80,32 +110,30 @@ function HowItWorks() {
 
     .hiw-hero h1 {
       font-family:'Fraunces',serif;
-      font-size:clamp(42px,6vw,72px);
+      font-size:clamp(32px,5vw,56px);
       font-weight:900;
-      color:#8B0000;
-      margin:0 0 20px;
+      color:#6e2016;
+      margin:0 0 16px;
       line-height:1.1;
-      letter-spacing:-1px;
-      text-shadow:3px 3px 6px rgba(0,0,0,.15);
+      letter-spacing:-0.5px;
     }
 
     .hiw-hero-subtitle {
-      font-size:16px;
-      color:#c92a2a;
+      font-size:clamp(9px,1.2vw,11px);
+      color:#dc2626;
       font-weight:900;
       margin:0 0 12px;
       text-transform:uppercase;
       letter-spacing:2px;
-      font-family:'Fraunces',serif;
     }
 
     .hiw-hero p {
-      font-size:18px;
-      color:#2d2d2d;
-      font-weight:600;
-      margin:0 0 40px;
+      font-size:clamp(13px,1.5vw,16px);
+      color:rgba(42,42,42,.65);
+      font-weight:500;
+      margin:0;
       line-height:1.8;
-      max-width:700px;
+      max-width:650px;
       margin-left:auto;
       margin-right:auto;
     }
@@ -113,41 +141,40 @@ function HowItWorks() {
     .hiw-stats {
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-      gap:24px;
+      gap:20px;
       max-width:1000px;
-      margin:60px auto;
-      padding:0 44px;
+      margin:50px auto;
+      padding:0 clamp(20px,3vw,44px);
       position:relative;
       z-index:10;
     }
 
     .hiw-stat-box {
-      background:rgba(255,255,255,.7);
-      backdrop-filter:blur(20px);
-      border:1px solid rgba(200,180,160,.2);
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
       border-radius:16px;
-      padding:24px;
+      padding:clamp(16px,2vw,24px);
       text-align:center;
       transition:all .3s ease;
     }
 
     .hiw-stat-box:hover {
-      transform:translateY(-6px);
-      box-shadow:0 20px 40px rgba(201,42,42,.1);
-      border-color:rgba(201,42,42,.3);
+      transform:translateY(-4px);
+      box-shadow:0 16px 40px rgba(220,38,38,.15);
+      border-color:rgba(220,38,38,.25);
     }
 
     .hiw-stat-number {
-      font-size:clamp(32px,5vw,48px);
+      font-size:clamp(24px,4vw,36px);
       font-weight:900;
-      color:#c92a2a;
-      font-family:'Cinzel',serif;
+      color:#dc2626;
       margin:0 0 8px;
     }
 
     .hiw-stat-label {
-      font-size:13px;
-      color:rgba(61,61,61,.6);
+      font-size:clamp(11px,1.1vw,12px);
+      color:rgba(45,45,45,.6);
       text-transform:uppercase;
       font-weight:700;
       letter-spacing:1px;
@@ -156,48 +183,47 @@ function HowItWorks() {
 
     .hiw-section-title {
       font-family:'Fraunces',serif;
-      font-size:clamp(36px,5vw,52px);
+      font-size:clamp(28px,4vw,42px);
       font-weight:900;
-      color:#8B0000;
-      margin:80px 44px 0;
+      color:#6e2016;
+      margin:50px clamp(20px,3vw,44px) 16px;
       text-align:center;
       position:relative;
       z-index:10;
-      letter-spacing:-0.5px;
-      text-shadow:2px 2px 4px rgba(0,0,0,.1);
+      letter-spacing:-0.3px;
     }
 
     .hiw-section-desc {
       text-align:center;
-      font-size:16px;
+      font-size:clamp(13px,1.3vw,15px);
       color:#3d3d3d;
-      margin:16px 44px 60px;
-      max-width:700px;
+      margin:0 clamp(20px,3vw,44px) 40px;
+      max-width:650px;
       margin-left:auto;
       margin-right:auto;
       position:relative;
       z-index:10;
-      line-height:1.8;
+      line-height:1.7;
       font-weight:600;
     }
 
     .hiw-steps {
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
-      gap:28px;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:20px;
       max-width:1300px;
       margin:0 auto;
-      padding:0 44px 80px;
+      padding:0 clamp(20px,3vw,44px) 60px;
       position:relative;
       z-index:10;
     }
 
     .hiw-step-card {
-      background:rgba(255,255,255,.65);
-      backdrop-filter:blur(20px);
-      border:1px solid rgba(200,180,160,.25);
-      border-radius:20px;
-      padding:40px;
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
+      border-radius:16px;
+      padding:clamp(20px,3vw,32px);
       text-align:center;
       transition:all .4s cubic-bezier(.22,1,.36,1);
       position:relative;
@@ -208,126 +234,92 @@ function HowItWorks() {
       content:'';
       position:absolute;
       top:0;left:0;right:0;bottom:0;
-      background:radial-gradient(circle at top right, rgba(201,42,42,.05), transparent);
+      background:radial-gradient(circle at top right, rgba(220,38,38,.04), transparent);
       pointer-events:none;
     }
 
     .hiw-step-card:hover {
-      transform:translateY(-12px);
-      box-shadow:0 30px 60px rgba(201,42,42,.12);
-      border-color:rgba(201,42,42,.3);
+      transform:translateY(-6px);
+      box-shadow:0 20px 50px rgba(220,38,38,.12);
+      border-color:rgba(220,38,38,.2);
     }
 
     .hiw-step-number {
-      width:70px;height:70px;
-      background:linear-gradient(135deg,#c92a2a 0%,#a01e1e 100%);
+      width:60px;height:60px;
+      background:linear-gradient(135deg,#dc2626,#991b1b);
       color:#ffffff;
       border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      font-size:32px;font-weight:900;
-      margin:0 auto 24px;
+      font-size:clamp(22px,3vw,28px);font-weight:900;
+      margin:0 auto 16px;
       position:relative;
       z-index:1;
-      box-shadow:0 8px 24px rgba(201,42,42,.3);
-      font-family:'Cinzel',serif;
+      box-shadow:0 8px 24px rgba(220,38,38,.3);
       animation:pulse-glow 3s ease-in-out infinite;
     }
 
     .hiw-step-card h3 {
       font-family:'Fraunces',serif;
-      font-size:clamp(20px,2.5vw,28px);
+      font-size:clamp(16px,2.2vw,22px);
       font-weight:900;
-      color:#8B0000;
-      margin:0 0 16px;
+      color:#6e2016;
+      margin:0 0 12px;
       position:relative;
       z-index:1;
       letter-spacing:-0.3px;
-      text-shadow:1px 1px 2px rgba(0,0,0,.08);
     }
 
     .hiw-step-card p {
-      font-size:15px;
+      font-size:clamp(12px,1.3vw,14px);
       color:#2d2d2d;
       margin:0;
-      line-height:1.7;
+      line-height:1.6;
       position:relative;
       z-index:1;
-      font-weight:600;
-    }
-
-    .hiw-timeline {
-      position:relative;
-      max-width:1200px;
-      margin:80px auto;
-      padding:0 44px;
-      z-index:10;
-    }
-
-    .hiw-timeline::before {
-      content:'';
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      width:2px;
-      height:100%;
-      background:linear-gradient(180deg, rgba(201,42,42,.3), transparent);
-    }
-
-    @media (max-width:1024px) {
-      .hiw-timeline::before {
-        display:none;
-      }
-      
-      .hiw-section-title {
-        margin:60px 20px 0;
-      }
-
-      .hiw-section-desc {
-        margin:16px 20px 40px;
-      }
+      font-weight:500;
     }
 
     .hiw-cta {
       text-align:center;
-      padding:100px 44px;
-      background:linear-gradient(135deg, rgba(255,255,255,.8) 0%, rgba(255,255,255,.6) 100%);
-      margin-top:80px;
-      border-top:2px solid rgba(201,42,42,.1);
-      border-bottom:2px solid rgba(201,42,42,.1);
+      padding:clamp(40px,6vw,60px) clamp(20px,3vw,44px);
+      background:rgba(255,255,255,.5);
+      backdrop-filter:blur(20px) saturate(180%);
+      margin:40px clamp(20px,3vw,44px);
+      border:1px solid rgba(180,180,180,.15);
+      border-radius:20px;
       position:relative;
       z-index:10;
     }
 
     .hiw-cta h2 {
       font-family:'Fraunces',serif;
-      font-size:clamp(36px,5vw,56px);
+      font-size:clamp(28px,4vw,42px);
       font-weight:900;
-      color:#8B0000;
-      margin:0 0 16px;
-      letter-spacing:-0.5px;
-      text-shadow:2px 2px 4px rgba(0,0,0,.1);
+      color:#6e2016;
+      margin:0 0 12px;
+      letter-spacing:-0.3px;
     }
 
     .hiw-cta-subtitle {
-      font-size:16px;
+      font-size:clamp(13px,1.3vw,15px);
       color:#3d3d3d;
-      margin:0 0 32px;
+      margin:0 0 24px;
       font-weight:600;
     }
 
     .hiw-cta-btn {
-      background:linear-gradient(135deg,#c92a2a 0%,#a01e1e 100%);
+      background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);
       color:#ffffff;
       border:none;
-      padding:14px 48px;
+      padding:clamp(12px,2vw,15px) clamp(24px,4vw,40px);
       border-radius:10px;
       font-weight:900;
       cursor:pointer;
       transition:all .35s cubic-bezier(.25,1,.5,1);
-      font-size:14px;
+      font-size:clamp(12px,1.2vw,14px);
       text-transform:uppercase;
       letter-spacing:1px;
-      box-shadow:0 10px 30px rgba(201,42,42,.25);
+      box-shadow:0 10px 30px rgba(220,38,38,.25);
       position:relative;
       overflow:hidden;
     }
@@ -341,8 +333,8 @@ function HowItWorks() {
     }
 
     .hiw-cta-btn:hover {
-      transform:translateY(-4px);
-      box-shadow:0 16px 48px rgba(201,42,42,.35);
+      transform:translateY(-2px);
+      box-shadow:0 16px 48px rgba(220,38,38,.35);
     }
 
     .hiw-cta-btn:hover::before {
@@ -350,24 +342,23 @@ function HowItWorks() {
     }
 
     .hiw-footer {
-      background:rgba(255,255,255,.6);
+      background:rgba(255,255,255,.3);
       backdrop-filter:blur(12px);
-      border-top:1px solid rgba(200,180,160,.25);
-      padding:32px 44px;
+      border-top:1px solid rgba(180,180,180,.15);
+      padding:clamp(16px,2vw,32px) clamp(20px,3vw,44px);
       text-align:center;
-      font-size:13px;
-      color:rgba(61,61,61,.6);
+      font-size:clamp(10px,1vw,12px);
+      color:rgba(45,45,45,.55);
       font-weight:600;
       position:relative;
       z-index:10;
     }
 
     @media (max-width:960px) {
-      .hiw-nav { padding:12px 20px; }
-      .hiw-hero { padding:60px 20px; }
-      .hiw-steps { padding:0 20px 60px; gap:20px; }
-      .hiw-cta { padding:60px 20px; }
-      .hiw-footer { padding:20px; }
+      .hiw-nav { padding:12px clamp(12px,2vw,20px); }
+      .hiw-logo-icon { width:40px; height:40px; }
+      .hiw-logo-icon svg { width:22px; height:30px; }
+      .hiw-logo-text { font-size:18px; }
     }
   `
 
@@ -381,33 +372,33 @@ function HowItWorks() {
   const steps = [
     {
       number: '1',
-      title: 'Create Your Profile',
-      description: 'Register with your health information. Quick, secure, and takes just 5 minutes. Your data is protected with medical-grade encryption.'
+      title: 'Create Profile',
+      description: 'Register with your health info. Quick, secure, and protected with medical-grade encryption.'
     },
     {
       number: '2',
       title: 'Get Matched',
-      description: 'Our intelligent system matches you with patients who need your blood type urgently. Real-time notifications keep you in the loop.'
+      description: 'Our system matches you with patients who need your blood type. Real-time notifications.'
     },
     {
       number: '3',
       title: 'Choose Location',
-      description: 'Donate at our BCC Hamra center or any of our 189+ hospital partners across Lebanon. Flexibility that works for you.'
+      description: 'Donate at our Hamra center or 189+ hospital partners across Lebanon.'
     },
     {
       number: '4',
-      title: 'Make Your Donation',
-      description: 'Complete the donation process with our medical professionals. 30-45 minutes to save lives. Professional care guaranteed.'
+      title: 'Make Donation',
+      description: 'Complete the process with our medical professionals. 30-45 minutes to save lives.'
     },
     {
       number: '5',
       title: 'Track Impact',
-      description: 'See your donation in action. Track who your blood helps and the lives you\'ve saved. Real impact, real stories.'
+      description: 'See your donation in action. Track who your blood helps.'
     },
     {
       number: '6',
       title: 'Earn Recognition',
-      description: 'Build your donor profile, earn badges, and become part of Lebanon\'s hero community. Your contribution matters.'
+      description: 'Build your donor profile, earn badges, and become a hero.'
     }
   ]
 
@@ -421,18 +412,28 @@ function HowItWorks() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+      transition: { staggerChildren: 0.08, delayChildren: 0.15 }
     }
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] }
+      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] }
     }
   }
+
+  // Generate animated dots
+  const dots = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 1.5,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
+  }))
 
   return (
     <div className="hiw-root">
@@ -441,65 +442,132 @@ function HowItWorks() {
         <motion.div
           className="hiw-orb"
           style={{
-            width: 'min(400px,35vw)',
-            height: 'min(400px,35vw)',
-            background: 'rgba(220,38,38,.06)',
-            top: '-10%',
-            left: '-8%',
+            width: 'min(200px,20vw)',
+            height: 'min(200px,20vw)',
+            background: 'rgba(220,38,38,.08)',
+            top: '-5%',
+            left: '-3%',
           }}
-          animate={{ y: [0, -60, 0], x: [0, 50, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
           className="hiw-orb"
           style={{
-            width: 'min(350px,30vw)',
-            height: 'min(350px,30vw)',
-            background: 'rgba(155,155,155,.04)',
-            top: '25%',
-            right: '-10%',
+            width: 'min(180px,18vw)',
+            height: 'min(180px,18vw)',
+            background: 'rgba(180,180,180,.06)',
+            top: '20%',
+            right: '-8%',
           }}
-          animate={{ y: [0, -60, 0], x: [0, -50, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
           className="hiw-orb"
           style={{
-            width: 'min(380px,32vw)',
-            height: 'min(380px,32vw)',
-            background: 'rgba(220,38,38,.05)',
-            bottom: '-15%',
-            left: '10%',
+            width: 'min(190px,19vw)',
+            height: 'min(190px,19vw)',
+            background: 'rgba(220,38,38,.07)',
+            bottom: '-10%',
+            left: '5%',
           }}
-          animate={{ y: [0, -60, 0], x: [0, 50, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
+      {/* ANIMATED DOTS */}
+      <div className="hiw-dots">
+        {dots.map((dot) => (
+          <motion.div
+            key={`dot-${dot.id}`}
+            className="hiw-dot"
+            style={{
+              width: dot.size,
+              height: dot.size,
+              background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+              left: `${dot.startX}%`,
+              top: `${dot.startY}%`,
+              boxShadow: `0 0 ${dot.size * 1.5}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+            }}
+            animate={{
+              y: [0, -200 - Math.random() * 100],
+              x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+              opacity: [0, 0.7, 0],
+            }}
+            transition={{
+              duration: dot.duration,
+              delay: dot.delay,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+      </div>
+
       {/* NAV */}
-      <nav className="hiw-nav">
-        <motion.div 
-          className="hiw-logo" 
-          onClick={() => navigate('/')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="hiw-logo-main">BloodConnect</div>
-          <div className="hiw-logo-sub">Save Lives, Every Day</div>
-        </motion.div>
-      </nav>
+      <header className="hiw-nav" style={{ transform: 'translateY(0)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+        <div className="hiw-nav-inner">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+            whileHover={{ x: 3 }}
+          >
+            <motion.div
+              style={{
+                width: 50,
+                height: 50,
+                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+                <defs>
+                  <linearGradient id="navBlood2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood2)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+              </svg>
+            </motion.div>
+            <motion.div 
+              style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }}
+              animate={{ letterSpacing: [0, 1, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              BloodConnect
+            </motion.div>
+          </motion.div>
+        </div>
+      </header>
 
       {/* HERO */}
       <motion.section
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.1 }}
+        transition={{ duration: 0.7, delay: 0.1 }}
         className="hiw-hero"
       >
         <p className="hiw-hero-subtitle">How It Works</p>
         <h1>Your Blood Saves Lives</h1>
         <p>
-          BloodConnect revolutionizes blood donation and distribution in Lebanon. Our smart matching system connects compassionate donors like you with patients in critical need. Together, we're building a more connected, efficient, and life-saving blood banking future.
+          BloodConnect connects compassionate donors with patients in critical need through intelligent matching. Together, we're building a more connected and efficient blood banking system for Lebanon.
         </p>
       </motion.section>
 
@@ -538,7 +606,7 @@ function HowItWorks() {
             key={idx}
             className="hiw-step-card"
             variants={itemVariants}
-            whileHover={{ y: -12 }}
+            whileHover={{ y: -4 }}
           >
             <div className="hiw-step-number">{step.number}</div>
             <h3>{step.title}</h3>
@@ -549,9 +617,9 @@ function HowItWorks() {
 
       {/* CTA SECTION */}
       <motion.section
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.7 }}
         viewport={{ once: true }}
         className="hiw-cta"
       >
@@ -571,7 +639,7 @@ function HowItWorks() {
 
       {/* FOOTER */}
       <footer className="hiw-footer">
-        © 2026 BloodConnect. Smart Donor Matching System. Saving Lives Together. All rights reserved.
+        © 2026 BloodConnect. Smart Donor Matching System. All rights reserved.
       </footer>
     </div>
   )

@@ -142,12 +142,12 @@ function HospitalDashboard() {
     }
   }
 
-  // ✅ DONOR DIDN'T SHOW UP (moves to admin/BCC Hamra center)
+  // ✅ DONOR DIDN'T SHOW UP (changes status to 'ns' - keeps it visible)
   const handleDidntShowUp = async (requestId) => {
-    if (!window.confirm('Mark as "didn\'t show up"? This will move to BCC Hamra center supply blood section.')) return
+    if (!window.confirm('Mark as "didn\'t show up"? This will notify admin that blood is needed from BCC Hamra.')) return
     try {
       await axios.put(`${API}/api/requests/${requestId}`, { status: 'ns' })
-      alert('❌ Request marked as "didn\'t show up". Will appear in BCC Hamra supply blood section.')
+      alert('✅ Request marked as "didn\'t show up". Admin will provide blood from BCC Hamra.')
       loadData()
     } catch (err) {
       alert(`❌ Error: ${err.message}`)
@@ -290,6 +290,7 @@ function HospitalDashboard() {
   const pendingCount = requests.filter(r => r.status === 'pending').length
   const fulfilledCount = requests.filter(r => r.status === 'fulfilled').length
   const awaitingCount = awaitingDonations.length
+  const bccComingCount = requests.filter(r => r.status === 'ns').length
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
@@ -339,6 +340,10 @@ function HospitalDashboard() {
           <div style={{ background: 'rgba(255,255,255,.7)', borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
             <p style={{ fontSize: 28, fontWeight: 900, color: '#22C55E', margin: 0 }}>{fulfilledCount}</p>
             <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Fulfilled</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,.7)', borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
+            <p style={{ fontSize: 28, fontWeight: 900, color: '#f59e0b', margin: 0 }}>{bccComingCount}</p>
+            <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>BCC Coming</p>
           </div>
           <div style={{ background: 'rgba(255,255,255,.7)', borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
             <p style={{ fontSize: 28, fontWeight: 900, color: '#DC2626', margin: 0 }}>{awaitingCount}</p>
@@ -620,6 +625,7 @@ function HospitalDashboard() {
                       )
                     }
                     
+                    // ✅ NEW: Status 'ns' - Didn't Show Up (stays visible with orange color)
                     if (r.status === 'ns') {
                       return (
                         <div
@@ -627,8 +633,8 @@ function HospitalDashboard() {
                           style={{
                             borderRadius: 18,
                             padding: 18,
-                            border: '2px solid #ef4444',
-                            background: 'rgba(254,226,226,.5)',
+                            border: '2px solid #f59e0b',
+                            background: 'rgba(245,158,11,.1)',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 12
@@ -636,28 +642,48 @@ function HospitalDashboard() {
                         >
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                              <span style={{ fontSize: 20, fontWeight: 900, color: '#ef4444' }}>{r.blood_type}</span>
+                              <span style={{ fontSize: 20, fontWeight: 900, color: '#f59e0b' }}>{r.blood_type}</span>
                               <span style={{
                                 fontSize: 9,
                                 fontWeight: 900,
                                 padding: '4px 10px',
                                 borderRadius: 8,
-                                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                                 color: '#fff',
                                 textTransform: 'uppercase',
                                 letterSpacing: '.1em'
                               }}>
-                                ❌ NO SHOW
+                                🏥 BCC COMING
                               </span>
                             </div>
-                            <p style={{ fontSize: 12, color: '#ef4444', margin: '0 0 6px 0', fontWeight: 700 }}>{r.quantity_needed} units needed</p>
-                            <p style={{ fontSize: 11, color: 'rgba(239,68,68,.65)', margin: 0, fontWeight: 600 }}>
+                            <p style={{ fontSize: 12, color: '#f59e0b', margin: '0 0 6px 0', fontWeight: 700 }}>{r.quantity_needed} units needed</p>
+                            <p style={{ fontSize: 11, color: 'rgba(245,158,11,.65)', margin: 0, fontWeight: 600 }}>
                               📅 {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
-                          <div style={{ padding: '12px', background: 'rgba(239,68,68,.1)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#ef4444', fontSize: 13 }}>
-                            ❌ Moved to BCC Hamra Supply
+                          <div style={{ padding: '12px', background: 'rgba(245,158,11,.1)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#f59e0b', fontSize: 13 }}>
+                            🏥 BCC Hamra is coming for supply
                           </div>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleDeleteRequest(r.id)}
+                            disabled={confirmingId === r.id}
+                            style={{
+                              marginTop: 8,
+                              padding: '10px 14px',
+                              background: confirmingId === r.id ? '#ccc' : 'linear-gradient(135deg, #f59e0b, #d97706)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 10,
+                              fontSize: 12,
+                              fontWeight: 900,
+                              cursor: confirmingId === r.id ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {confirmingId === r.id ? '⏳ Confirming...' : '✅ Received & Confirmed'}
+                          </motion.button>
                         </div>
                       )
                     }

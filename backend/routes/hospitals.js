@@ -176,4 +176,20 @@ router.get('/transfusions/:hospital_id', (req, res) => {
     }
   )
 })
+// Get all hospital accounts
+router.get('/accounts', (req, res) => {
+  db.query(
+    'SELECT id, name, email, phone, address, governorate, latitude, longitude FROM hospitals',
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({
+          message: 'Failed to get hospital accounts',
+          error: err.message
+        });
+      }
+
+      res.json(results);
+    }
+  );
+});
 module.exports = router;
