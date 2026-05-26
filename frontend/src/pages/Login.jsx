@@ -275,19 +275,34 @@ function Login() {
       }
     }
 
+    // ✅ FIXED: Hospital login now includes governorate
     if (form.email.endsWith('@hospital.com')) {
       try {
         const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/hospitals/login', {
           email: form.email,
           password: form.password
         })
+        
+        // ✅ Ensure hospital data includes governorate field
+        const hospitalData = {
+          ...res.data.hospital,
+          governorate: res.data.hospital.governorate || ''
+        }
+        
+        console.log('[Hospital Login] ✅ Hospital data with governorate:', {
+          id: hospitalData.id,
+          name: hospitalData.name,
+          governorate: hospitalData.governorate
+        })
+        
         localStorage.setItem('hospitalToken', res.data.token)
-        localStorage.setItem('hospitalData', JSON.stringify(res.data.hospital))
+        localStorage.setItem('hospitalData', JSON.stringify(hospitalData))
         navigate('/hospital/dashboard')
         setIsLoading(false)
         return
-      } catch {
-        setError('Invalid credentials.')
+      } catch (err) {
+        console.error('[Hospital Login] ❌ Error:', err)
+        setError(err.response?.data?.message || 'Invalid credentials.')
         setIsLoading(false)
         return
       }

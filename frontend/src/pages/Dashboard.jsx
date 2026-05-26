@@ -296,6 +296,25 @@ if (typeof document !== 'undefined' && !document.getElementById('dd-styles-unifi
   document.head.appendChild(s)
 }
 
+// ✅ HELPER: Format time "X minutes ago"
+function formatTimeAgo(dateString) {
+  if (!dateString) return 'recently'
+  
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  
+  return date.toLocaleDateString()
+}
+
 function AnimatedBackgroundOrbs() {
   const orbs = [
     { size: 'min(200px,20vw)', color: 'rgba(220,38,38,.08)', top: '-5%', left: '-3%', duration: 8 },
@@ -376,7 +395,9 @@ function Dashboard() {
   const [confirmingId, setConfirmingId] = useState(null)
   const [loadingEmergency, setLoadingEmergency] = useState(true)
   const [expandedNotif, setExpandedNotif] = useState(null)
+  const [manualRefreshLoading, setManualRefreshLoading] = useState(false)
 
+  // ✅ FIXED: Load donations on mount (NO auto-refresh)
   useEffect(() => {
     const data = localStorage.getItem('donorData')
     if (!data) { navigate('/login'); return }
@@ -385,14 +406,16 @@ function Dashboard() {
     
     const loadAllDonations = async () => {
       try {
+        console.log('[Dashboard] Fetching emergency requests for donor:', donorData.id)
         const res = await axios.get(`${API}/api/blood-requests/donor/${donorData.id}`)
-        const patientEmergencies = res.data || []
+        console.log('[Dashboard] Emergency requests received:', res.data)
+        setEmergencyRequests(res.data || [])
         
+        // ✅ FIXED: Call the correct endpoint
+        console.log('[Dashboard] Fetching hospital requests for donor:', donorData.id)
         const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donorData.id}`)
-        const hospitalRequestsList = hospitalRes.data || []
-        
-        setEmergencyRequests(patientEmergencies)
-        setHospitalRequests(hospitalRequestsList)
+        console.log('[Dashboard] Hospital requests received:', hospitalRes.data)
+        setHospitalRequests(hospitalRes.data || [])
       } catch (err) {
         console.error('[Dashboard] Error fetching donations:', err)
       } finally {
@@ -401,8 +424,7 @@ function Dashboard() {
     }
     
     loadAllDonations()
-    const interval = setInterval(() => { loadAllDonations() }, 500)
-    return () => clearInterval(interval)
+    // ✅ NO interval - only manual refresh needed
   }, [navigate])
 
   useEffect(() => {
@@ -412,6 +434,40 @@ function Dashboard() {
   useEffect(() => {
     setTimeout(() => setVisible(true), 100)
   }, [])
+
+  // ✅ Auto-refresh hospital requests every 5 seconds
+  useEffect(() => {
+    if (!donor) return
+    
+    const interval = setInterval(async () => {
+      try {
+        const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
+        setHospitalRequests(hospitalRes.data || [])
+      } catch (err) {
+        console.error('[Dashboard] Auto-refresh error:', err)
+      }
+    }, 5000) // Refresh every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [donor])
+
+  // ✅ NEW: Manual refresh button function
+  const handleManualRefresh = async () => {
+    setManualRefreshLoading(true)
+    try {
+      const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
+      console.log('[Dashboard] Manual refresh - Emergency requests:', res.data)
+      setEmergencyRequests(res.data || [])
+      
+      const hospitalRes = await axios.get(`${API}/api/blood-requests/hospital-requests/${donor.id}`)
+      console.log('[Dashboard] Manual refresh - Hospital requests:', hospitalRes.data)
+      setHospitalRequests(hospitalRes.data || [])
+    } catch (err) {
+      console.error('[Dashboard] Error refreshing:', err)
+    } finally {
+      setManualRefreshLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('donorToken')
@@ -439,8 +495,6 @@ function Dashboard() {
     }
   }
 
-  // ✅ FIXED: Keep request visible in Emergency Donations until hospital confirms
-  // Do NOT reload hospitalRequests - they're completely separate
   const handleDonateAtHospital = async (notificationId, hospitalId) => {
     setConfirmingId(notificationId)
     try {
@@ -453,18 +507,13 @@ function Dashboard() {
       })
       alert('Hospital selected! Waiting for hospital to confirm your donation.')
       
-      // ✅ Close modal but KEEP request in Emergency Donations
       setHospitalModalOpen(null)
       setExpandedNotif(null)
       
-      // Small refresh to update status if backend changes it
       setTimeout(async () => {
         try {
           const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
-          const patientEmergencies = res.data || []
-          setEmergencyRequests(patientEmergencies)
-          // ❌ DO NOT reload hospitalRequests!
-          // They are completely separate and only updated when hospitals POST new requests
+          setEmergencyRequests(res.data || [])
         } catch (err) {
           console.error('Error refreshing emergency requests:', err)
         }
@@ -613,20 +662,73 @@ function Dashboard() {
             borderBottomRightRadius: 0,
             marginTop: '24px',
             overflowX: 'auto',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          <button
-            onClick={() => setActiveTab('emergency')}
-            className={`dd-tab-btn ${activeTab === 'emergency' ? 'active' : ''}`}
-          >
-            Emergency ({emergencyRequests.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('hospitals')}
-            className={`dd-tab-btn ${activeTab === 'hospitals' ? 'active' : ''}`}
-          >
-            Hospital ({hospitalRequests.length})
-          </button>
+          <div style={{ display: 'flex' }}>
+            <button
+              onClick={() => setActiveTab('emergency')}
+              className={`dd-tab-btn ${activeTab === 'emergency' ? 'active' : ''}`}
+            >
+              Emergency ({emergencyRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('hospitals')}
+              className={`dd-tab-btn ${activeTab === 'hospitals' ? 'active' : ''}`}
+            >
+              Hospital ({hospitalRequests.length})
+            </button>
+          </div>
+
+          {/* ✅ NEW: Manual Refresh Button for BOTH tabs */}
+          {(activeTab === 'emergency' || activeTab === 'hospitals') && (
+            <motion.button
+              onClick={handleManualRefresh}
+              disabled={manualRefreshLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
+                borderRadius: '6px',
+                fontSize: 'clamp(10px, 1vw, 11px)',
+                fontWeight: 700,
+                background: 'rgba(220,38,38,.1)',
+                border: '1px solid rgba(220,38,38,.2)',
+                color: '#dc2626',
+                cursor: manualRefreshLoading ? 'not-allowed' : 'pointer',
+                opacity: manualRefreshLoading ? 0.6 : 1,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flexShrink: 0,
+              }}
+            >
+              {manualRefreshLoading ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      border: '2px solid rgba(220,38,38,.3)',
+                      borderTopColor: '#dc2626',
+                      borderRadius: '50%',
+                    }}
+                  />
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <span>🔄</span>
+                  Refresh
+                </>
+              )}
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Tab Content: Emergency Patient Requests */}
@@ -735,6 +837,16 @@ function Dashboard() {
                             fontWeight: 500,
                           }}>
                             Location: {notif.governorate}
+                          </p>
+                          {/* ✅ NEW: Show "time ago" */}
+                          <p style={{
+                            fontSize: 'clamp(10px, 1.1vw, 12px)',
+                            color: 'rgba(45,45,45,.5)',
+                            margin: '6px 0 0 0',
+                            fontWeight: 500,
+                            fontStyle: 'italic',
+                          }}>
+                            Posted {formatTimeAgo(notif.created_at)}
                           </p>
                           {notif.status === 'pending' && expandedNotif !== notif.id && (
                             <p

@@ -27,7 +27,7 @@ function RecenterMap({ center }) {
 }
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-const GOVERNORATES = ['Beirut', 'Mount Lebanon', 'North', 'South', 'Bekaa', 'Nabatieh']
+const GOVERNORATES = ['Beirut', 'Mount Lebanon', 'North Lebanon', 'South Lebanon', 'Beqaa', 'Nabatiyeh', 'Keserwan-Jbeil', 'Akkar', 'Baalbek-Hermel']
 
 const compatibleBloodForPatient = {
   'A+':  ['A+', 'A-', 'O+', 'O-'],
@@ -430,11 +430,17 @@ function Emergency() {
       setRequestMessage('Please select blood type')
       return
     }
+    if (!patientGovernorate) {
+      setRequestMessage('Please select a governorate')
+      return
+    }
 
     setIsCreatingRequest(true)
     setRequestMessage('')
 
     try {
+      console.log('[Emergency] Creating request with:', { patientEmail, blood_type: patientBloodType, governorate: patientGovernorate })
+      
       const response = await fetch(`${API}/api/blood-requests/create-emergency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -448,12 +454,13 @@ function Emergency() {
       const data = await response.json()
 
       if (response.ok) {
-        setRequestMessage(`Request sent to ${data.donorsNotified || 0} donors`)
+        setRequestMessage(`✅ Request sent! ${data.donorsNotified || 0} donors notified.`)
         setTimeout(() => {
           setPatientEmail('')
           setPatientGovernorate('')
+          setPatientBloodType('')
           setRequestMessage('')
-        }, 2000)
+        }, 3000)
       } else {
         setRequestMessage(data.message || 'Failed to create request')
       }
@@ -687,11 +694,11 @@ function Emergency() {
 
                 <motion.button
                   onClick={handleCreateEmergency}
-                  disabled={isCreatingRequest || !patientBloodType}
+                  disabled={isCreatingRequest || !patientBloodType || !patientGovernorate}
                   className="em-btn"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(13px,1.3vw,15px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', opacity: !patientBloodType || isCreatingRequest ? 0.5 : 1, background: 'linear-gradient(135deg,#22c55e 0%,#16a34a 50%,#15803d 100%)', color: '#faf7f7', boxShadow: '0 10px 30px rgba(34,197,94,.35)', border: '1px solid rgba(255,255,255,.15)' }}
+                  style={{ padding: 'clamp(16px,2vw,20px)', fontSize: 'clamp(13px,1.3vw,15px)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', opacity: !patientBloodType || !patientGovernorate || isCreatingRequest ? 0.5 : 1, background: 'linear-gradient(135deg,#22c55e 0%,#16a34a 50%,#15803d 100%)', color: '#faf7f7', boxShadow: '0 10px 30px rgba(34,197,94,.35)', border: '1px solid rgba(255,255,255,.15)' }}
                 >
                   {isCreatingRequest ? (
                     <>

@@ -264,7 +264,9 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const reqRes = await axios.get(`${API}/api/requests/hospital/${hospital.id}`)
+      // ✅ FIXED: Fetch hospital's OWN posted requests from blood_requests table
+      // NOT from old /api/requests/hospital endpoint
+      const reqRes = await axios.get(`${API}/api/blood-requests/hospital-list/${hospital.id}`)
       setRequests(reqRes.data || [])
 
       const stockRes = await axios.get(`${API}/api/hospitals/stock/${hospital.id}`)
@@ -301,9 +303,25 @@ function HospitalDashboard() {
       return
     }
 
+    // ✅ FIXED: Use hospital.governorate instead of hospital.address
+    const hospitalGovernorate = hospital.governorate || ''
+    
+    if (!hospitalGovernorate || hospitalGovernorate.trim() === '') {
+      setMessage('Hospital governorate not found. Please contact administrator.')
+      return
+    }
+
+    console.log('[HospitalDashboard] Posting request with:', {
+      hospital_id: hospital.id,
+      blood_type: form.blood_type,
+      quantity_needed: parseInt(form.quantity_needed),
+      urgency: form.urgency,
+      hospital_governorate: hospitalGovernorate
+    })
+
     setSubmitting(true)
     try {
-      const response = await axios.post(`${API}/api/requests/create`, {
+      const response = await axios.post(`${API}/api/blood-requests/create-hospital`, {
         hospital_id: hospital.id,
         blood_type: form.blood_type,
         quantity_needed: parseInt(form.quantity_needed),
@@ -311,12 +329,12 @@ function HospitalDashboard() {
       })
 
       if (response.data.success) {
-        setMessage('Request posted successfully. Donors notified.')
+        setMessage(`✅ Request posted! ${response.data.donorsNotified || 0} donors notified.`)
         setForm({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
-        setTimeout(() => loadData(), 1000)
+        setTimeout(() => loadData(), 1500)
       }
     } catch (err) {
-      setMessage(`Error: ${err.response?.data?.error || err.message}`)
+      setMessage(`Error: ${err.response?.data?.message || err.message}`)
     } finally {
       setSubmitting(false)
     }
@@ -324,28 +342,14 @@ function HospitalDashboard() {
 
   const handleConfirmReceived = async (requestId) => {
     try {
-<<<<<<< HEAD
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'ok' })
-      alert('✅ Request confirmed! Donor will see this on their dashboard.')
-=======
       await axios.delete(`${API}/api/requests/${requestId}`)
       alert('Request confirmed. Removed from donor dashboard.')
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
       loadData()
     } catch (err) {
       alert(`Error: ${err.message}`)
     }
   }
 
-<<<<<<< HEAD
-  // ✅ DONOR DIDN'T SHOW UP (changes status to 'ns' - request STAYS VISIBLE)
-  const handleDidntShowUp = async (requestId) => {
-    if (!window.confirm('Mark as "didn\'t show up"? Admin will provide blood from BCC Hamra.')) return
-    try {
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'ns' })
-      alert('✅ Marked as "didn\'t show up". Admin notified!')
-      loadData()
-=======
   const handleDidntShowUp = async (requestId) => {
     if (!window.confirm('Mark as not shown? Request removed from donor dashboard and appears in admin Hospital Supply.')) return
     setConfirmingId(requestId)
@@ -355,7 +359,6 @@ function HospitalDashboard() {
       setNoShowIds([...noShowIds, requestId])
       alert('Marked as not shown. Admin will provide supply from BCC Hamra.')
       setTimeout(() => loadData(), 500)
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
     } catch (err) {
       alert(`Error: ${err.message}`)
       setConfirmingId(null)
@@ -367,16 +370,8 @@ function HospitalDashboard() {
     
     try {
       await axios.delete(`${API}/api/requests/${requestId}`)
-<<<<<<< HEAD
-      console.log('[HospitalDashboard] Request deleted:', requestId)
-      
-      setRequests(requests.filter(r => r.id !== requestId))
-      alert('✅ Request deleted from all dashboards!')
-      
-=======
       setRequests(requests.filter(r => r.id !== requestId))
       alert('Request deleted.')
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
       loadData()
     } catch (err) {
       alert(`Error: ${err.response?.data?.error || err.message}`)
@@ -405,8 +400,8 @@ function HospitalDashboard() {
     }
   }
 
-  // ✅ ONLY called when hospital clicks CONFIRM button
-  // This is the ONLY action that removes from both dashboards
+  // ✅ ONLY called when hospital clicks CONFIRM button on emergency donations
+  // This removes from both hospital and donor dashboards
   const handleConfirmDonation = async (donationId) => {
     setConfirmingId(donationId)
     try {
@@ -418,24 +413,16 @@ function HospitalDashboard() {
         return
       }
 
-      console.log('=== HOSPITAL CONFIRMING DONATION ===')
-      console.log('Donation ID:', donationId)
-      console.log('Deleting from blood_requests to remove from all dashboards')
-
-      // Delete from blood_requests removes from:
-      // - Hospital Emergency Donations tab ✅
-      // - Donor Emergency Donations tab ✅  
-      await axios.delete(`${API}/api/requests/${donationId}`)
+      // Call the unified endpoint to confirm donation
+      await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
+        request_id: donationId
+      })
       
-<<<<<<< HEAD
-      alert('✅ Donation confirmed! Removed from donor dashboard.')
-=======
-      alert('Donation confirmed! Removed from all dashboards.')
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
+      alert('✅ Donation confirmed! Removed from all dashboards.')
       loadData()
     } catch (err) {
       console.error('Error confirming donation:', err.response?.data || err.message)
-      alert(`Error: ${err.response?.data?.error || err.message}`)
+      alert(`Error: ${err.response?.data?.message || err.message}`)
     } finally {
       setConfirmingId(null)
     }
@@ -452,7 +439,7 @@ function HospitalDashboard() {
           })
         )
       )
-      setStockMessage('Stock updated successfully.')
+      setStockMessage('✅ Stock updated successfully.')
     } catch (err) {
       setStockMessage(`Error: ${err.message}`)
     }
@@ -467,7 +454,7 @@ function HospitalDashboard() {
     setTransfusionMessage('')
     try {
       const res = await axios.post(`${API}/api/hospitals/transfusion/${hospital.id}`, transfusionForm)
-      setTransfusionMessage(`Recorded. ${res.data.remaining} units remaining.`)
+      setTransfusionMessage(`✅ Recorded. ${res.data.remaining} units remaining.`)
       setTransfusionForm({ blood_type: '', units: 1 })
       loadData()
     } catch (err) {
@@ -603,7 +590,7 @@ function HospitalDashboard() {
               <h2 className="hospital-card-title">Post Blood Request</h2>
 
               {message && (
-                <div className={`hospital-message ${message.includes('successfully') ? 'success' : 'error'}`}>
+                <div className={`hospital-message ${message.includes('✅') || message.includes('successfully') ? 'success' : 'error'}`}>
                   {message}
                 </div>
               )}
@@ -742,10 +729,6 @@ function HospitalDashboard() {
                       )
                     }
                     
-<<<<<<< HEAD
-                    // ✅ Status 'supply_coming' - Admin confirmed supply is coming (BLUE)
-=======
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                     if (r.status === 'supply_coming') {
                       return (
                         <motion.div
@@ -755,21 +738,12 @@ function HospitalDashboard() {
                           style={{
                             borderRadius: 18,
                             padding: 18,
-<<<<<<< HEAD
-                            border: '3px solid #3b82f6',
-                            background: 'linear-gradient(135deg, rgba(219,234,254,.6), rgba(191,219,254,.3))',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 12,
-                            boxShadow: '0 8px 24px rgba(59,130,246,.15)'
-=======
                             border: '1px solid rgba(96,165,250,.3)',
                             background: 'rgba(240,249,255,.6)',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 12,
                             boxShadow: '0 4px 12px rgba(59,130,246,.08)'
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                           }}
                         >
                           <div>
@@ -783,8 +757,7 @@ function HospitalDashboard() {
                                 background: 'rgba(96,165,250,.2)',
                                 color: '#1e40af',
                                 textTransform: 'uppercase',
-                                letterSpacing: '.1em',
-                                animation: 'pulse 2s ease-in-out infinite'
+                                letterSpacing: '.1em'
                               }}>
                                 COMING
                               </span>
@@ -794,13 +767,8 @@ function HospitalDashboard() {
                               {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
-<<<<<<< HEAD
-                          <div style={{ padding: '12px', background: 'rgba(59,130,246,.15)', borderRadius: 10, textAlign: 'center', fontWeight: 900, color: '#3b82f6', fontSize: 13 }}>
-                            ✈️ Supply coming from BCC Hamra
-=======
                           <div style={{ padding: '12px', background: 'rgba(96,165,250,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#1e40af', fontSize: 13 }}>
                             Supply coming from BCC Hamra
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -810,35 +778,16 @@ function HospitalDashboard() {
                             className="hospital-btn hospital-btn-success"
                             style={{
                               marginTop: 8,
-<<<<<<< HEAD
-                              padding: '11px 16px',
-                              background: confirmingSupplyId === r.id ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: 10,
-                              fontSize: 12,
-                              fontWeight: 900,
-                              cursor: confirmingSupplyId === r.id ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.3s ease'
-                            }}
-                          >
-                            {confirmingSupplyId === r.id ? '⏳ Confirming Received...' : '✅ Supply Confirmed & Received'}
-=======
                               width: '100%',
                               opacity: confirmingSupplyId === r.id ? 0.6 : 1
                             }}
                           >
                             {confirmingSupplyId === r.id ? 'Confirming Received...' : 'Supply Confirmed and Received'}
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                           </motion.button>
                         </motion.div>
                       )
                     }
                     
-<<<<<<< HEAD
-                    // Default pending state (includes 'ns' - didn't show up)
-=======
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                     return (
                       <div
                         key={r.id}
@@ -865,11 +814,7 @@ function HospitalDashboard() {
                               textTransform: 'uppercase',
                               letterSpacing: '.1em'
                             }}>
-<<<<<<< HEAD
-                              {r.status === 'ns' ? '⏳ NO-SHOW' : URGENCY_CONFIG[r.urgency]?.label}
-=======
                               {r.status === 'ns' ? 'NOT SHOWN' : URGENCY_CONFIG[r.urgency]?.label}
->>>>>>> 215178dfc2d51bbfb834f0ec4c7eb6fa198a1b3d
                             </span>
                           </div>
                           <p style={{ fontSize: 12, color: '#78350f', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
@@ -1043,7 +988,7 @@ function HospitalDashboard() {
             <h2 className="hospital-card-title">Current Blood Stock</h2>
 
             {stockMessage && (
-              <div className={`hospital-message ${stockMessage.includes('successfully') ? 'success' : 'error'}`}>
+              <div className={`hospital-message ${stockMessage.includes('✅') || stockMessage.includes('successfully') ? 'success' : 'error'}`}>
                 {stockMessage}
               </div>
             )}
@@ -1114,7 +1059,7 @@ function HospitalDashboard() {
             <h2 className="hospital-card-title">Record Blood Usage</h2>
 
             {transfusionMessage && (
-              <div className={`hospital-message ${transfusionMessage.includes('Recorded') ? 'success' : 'error'}`}>
+              <div className={`hospital-message ${transfusionMessage.includes('✅') || transfusionMessage.includes('Recorded') ? 'success' : 'error'}`}>
                 {transfusionMessage}
               </div>
             )}
