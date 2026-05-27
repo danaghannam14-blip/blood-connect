@@ -400,79 +400,45 @@ function Admin() {
   const loadData = async () => {
     setLoading(true)
     try {
+      console.log('[Admin] 📊 Loading all data...')
+      
       // ✅ Load all donors
       const donorsRes = await axios.get(`${API}/api/admin/donors`)
       setDonors(donorsRes.data || [])
+      console.log('[Admin] ✅ Donors loaded:', donorsRes.data?.length)
       
       // ✅ Load all admins
       const adminsRes = await axios.get(`${API}/api/admin/admins`)
       setAdmins(adminsRes.data || [])
+      console.log('[Admin] ✅ Admins loaded:', adminsRes.data?.length)
       
       // ✅ Load BCC donations awaiting confirmation
       const bccRes = await axios.get(`${API}/api/blood-requests/center-donations`)
       const bccData = bccRes.data || []
       setBccDonations(bccData.filter(d => d.status === 'awaiting_confirmation'))
+      console.log('[Admin] ✅ BCC donations loaded:', bccData.length)
       
-      // ✅ Load ALL requests - try multiple approaches
+      // ✅ FIXED: Load hospital supply requests with status 'ns'
+      console.log('[Admin] 🔍 Fetching hospital supply requests from /all-no-show...')
+      const noShowRes = await axios.get(`${API}/api/blood-requests/all-no-show`)
+      console.log('[Admin] Response from /all-no-show:', noShowRes.data)
+      
       let noShowData = []
-      try {
-        // First try: Get all requests directly
-        const noShowRes = await axios.get(`${API}/api/requests`)
-        console.log('[Admin] Direct /api/requests response:', noShowRes.data)
-        
-        if (noShowRes.data && Array.isArray(noShowRes.data)) {
-          // Filter ONLY for status 'ns' (Didn't Show Up)
-          const allRequests = noShowRes.data
-          console.log('[Admin] Total requests from API:', allRequests.length)
-          console.log('[Admin] Requests by status:', allRequests.reduce((acc, r) => {
-            acc[r.status] = (acc[r.status] || 0) + 1
-            return acc
-          }, {}))
-          
-          noShowData = allRequests
-            .filter(r => r.status === 'ns')
-            .map(r => {
-              console.log('[Admin] Mapping request with status ns:', { id: r.id, blood_type: r.blood_type, hospital_name: r.hospital_name, hospital_id: r.hospital_id })
-              return {
-                ...r,
-                blood_type: r.blood_type || 'Unknown',
-                quantity_needed: r.quantity_needed || r.units_needed || 0,
-                hospital_name: r.hospital_name || r.hospital?.name || `Hospital ID: ${r.hospital_id}`,
-                created_at: r.created_at || new Date().toISOString()
-              }
-            })
-        }
-        
-        console.log('[Admin] Filtered no-show requests:', noShowData)
-        setNoShowDonations(noShowData)
-      } catch (noShowErr) {
-        console.error('[Admin] Error loading no-show requests:', noShowErr)
-        console.error('[Admin] Error details:', noShowErr.response?.data)
-        
-        // Fallback: try to build from blood_requests endpoint
-        try {
-          const fallbackRes = await axios.get(`${API}/api/blood-requests`)
-          console.log('[Admin] Fallback /api/blood-requests response:', fallbackRes.data)
-          
-          if (fallbackRes.data && Array.isArray(fallbackRes.data)) {
-            noShowData = fallbackRes.data
-              .filter(r => r.status === 'ns')
-              .map(r => ({
-                ...r,
-                blood_type: r.blood_type || 'Unknown',
-                quantity_needed: r.quantity_needed || r.units_needed || 0,
-                hospital_name: r.hospital_name || `Hospital ID: ${r.hospital_id}`,
-                created_at: r.created_at || new Date().toISOString()
-              }))
-          }
-          setNoShowDonations(noShowData)
-        } catch (fallbackErr) {
-          console.error('[Admin] Fallback also failed:', fallbackErr)
-          setNoShowDonations([])
-        }
+      if (noShowRes.data && Array.isArray(noShowRes.data)) {
+        noShowData = noShowRes.data.map(r => ({
+          ...r,
+          blood_type: r.blood_type || 'Unknown',
+          quantity_needed: r.quantity_needed || 0,
+          hospital_name: r.hospital_name || `Hospital ID: ${r.hospital_id}`,
+          created_at: r.created_at || new Date().toISOString()
+        }))
       }
+      
+      console.log('[Admin] ✅ Hospital supply requests loaded:', noShowData.length)
+      setNoShowDonations(noShowData)
     } catch (err) {
-      console.error('Error loading data:', err)
+      console.error('[Admin] ❌ Error loading data:', err)
+      console.error('[Admin] Error details:', err.response?.data)
     } finally {
       setLoading(false)
     }
@@ -571,7 +537,7 @@ function Admin() {
     }
   }
 
-  // ✅ IMPROVED: Confirm hospital supply - updates request to 'supply_coming' with better feedback
+  // ✅ Confirm hospital supply - updates request to 'supply_coming'
   const handleConfirmHospitalSupply = async (requestId) => {
     setConfirmingNoShowId(requestId)
     try {
@@ -583,13 +549,17 @@ function Admin() {
         return
       }
       
-      // ✅ Update the request status to 'supply_coming'
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'supply_coming' })
+      console.log('[Admin] 🩸 Confirming hospital supply for request:', requestId)
+      
+      // ✅ Update the request status to 'supply_coming' using PUT endpoint
+      await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'supply_coming' })
+      
       alert(`✅ Supply confirmed for ${request.hospital_name}!\n🩸 ${request.blood_type} - ${request.quantity_needed} units\n\nHospital will see "✈️ Coming for Supply from BCC Hamra" on their dashboard.`)
       
-      // ✅ Remove from local state immediately
-      setNoShowDonations(noShowDonations.filter(r => r.id !== requestId))
+      // ✅ Reload data to refresh the list
+      loadData()
     } catch (err) {
+      console.error('[Admin] Error confirming supply:', err)
       alert(`Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingNoShowId(null)
@@ -802,7 +772,6 @@ function Admin() {
                         width: '100%',
                         opacity: confirmingNoShowId === request.id ? 0.6 : 1,
                         pointerEvents: confirmingNoShowId === request.id ? 'none' : 'auto',
-                        animation: confirmingNoShowId === request.id ? 'none' : 'pulse 2s ease-in-out infinite'
                       }}
                     >
                       {confirmingNoShowId === request.id ? '⏳ Confirming Supply...' : '✅ Confirm Supply'}
@@ -1084,3 +1053,4 @@ function Admin() {
 }
 
 export default Admin
+

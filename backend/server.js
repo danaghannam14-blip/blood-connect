@@ -115,7 +115,6 @@ try {
 // ✅ ROUTE REGISTRATION - ONLY IF LOADED
 // ========================================
 
-if (requestsRoute) app.use('/api/requests', requestsRoute);
 if (bloodRequestsRoute) app.use('/api/blood-requests', bloodRequestsRoute);
 if (analyticsRoutes) app.use('/api/analytics', analyticsRoutes);
 if (passwordResetRoutes) app.use('/api/password', passwordResetRoutes);
@@ -151,19 +150,20 @@ app.use((req, res) => {
     message: 'Route not found', 
     path: req.path,
     method: req.method,
-    availableRoutes: [
-      'POST /api/blood-requests/create',
-      'GET /api/blood-requests/hospital/:hospitalId',
-      'GET /api/blood-requests/center-donations',
-      'POST /api/blood-requests/hospital-confirm',
-      'POST /api/blood-requests/admin-confirm',
-      'GET /api/blood-requests/donor/:donorId',
-      'POST /api/blood-requests/donor-confirm-donation',
-      'GET /api/requests/hospital/:hospitalId',
-      'DELETE /api/requests/:requestId',
-      'GET /api/health',
-      'GET /'
-    ]
+   availableRoutes: [
+  'POST /api/blood-requests/create-emergency',
+  'POST /api/blood-requests/create-hospital',
+  'GET /api/blood-requests/hospital/:hospitalId',
+  'GET /api/blood-requests/hospital-list/:hospitalId',
+  'GET /api/blood-requests/hospital-requests/:donorId',
+  'POST /api/blood-requests/hospital-confirm',
+  'POST /api/blood-requests/hospital-no-show',
+  'GET /api/blood-requests/donor/:donorId',
+  'POST /api/blood-requests/donor-confirm-donation',
+  'DELETE /api/blood-requests/:requestId',
+  'GET /api/health',
+  'GET /'
+]
   });
 });
 

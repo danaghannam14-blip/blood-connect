@@ -10,12 +10,9 @@ const normalizeGovernorate = (governorate) => {
   if (!governorate) return '';
   
   const normalizationMap = {
-    // AKKAR
     'akkar': 'Akkar',
     'محافظة عكار': 'Akkar',
     'عكار': 'Akkar',
-    
-    // BAALBEK-HERMEL
     'baalbek': 'Baalbek-Hermel',
     'baalbak': 'Baalbek-Hermel',
     'hermel': 'Baalbek-Hermel',
@@ -23,8 +20,6 @@ const normalizeGovernorate = (governorate) => {
     'بعلبك': 'Baalbek-Hermel',
     'الهرمل': 'Baalbek-Hermel',
     'baalbek-hermel': 'Baalbek-Hermel',
-    
-    // BEIRUT
     'beirut': 'Beirut',
     'beyrouth': 'Beirut',
     'محافظة بيروت': 'Beirut',
@@ -38,8 +33,6 @@ const normalizeGovernorate = (governorate) => {
     'صنايع': 'Beirut',
     'حمراء': 'Beirut',
     'الحمراء': 'Beirut',
-    
-    // BEQAA
     'beqaa': 'Beqaa',
     'bekaa': 'Beqaa',
     'محافظة البقاع': 'Beqaa',
@@ -49,8 +42,6 @@ const normalizeGovernorate = (governorate) => {
     'zahle': 'Beqaa',
     'zahlé': 'Beqaa',
     'زحلة': 'Beqaa',
-    
-    // KESERWAN-JBEIL
     'keserwan': 'Keserwan-Jbeil',
     'jbeil': 'Keserwan-Jbeil',
     'jbail': 'Keserwan-Jbeil',
@@ -60,8 +51,6 @@ const normalizeGovernorate = (governorate) => {
     'jounieh': 'Keserwan-Jbeil',
     'juniyah': 'Keserwan-Jbeil',
     'keserwan-jbeil': 'Keserwan-Jbeil',
-    
-    // MOUNT LEBANON
     'mount lebanon': 'Mount Lebanon',
     'محافظة جبل لبنان': 'Mount Lebanon',
     'جبل لبنان': 'Mount Lebanon',
@@ -69,16 +58,12 @@ const normalizeGovernorate = (governorate) => {
     'aley': 'Mount Lebanon',
     'chouf': 'Mount Lebanon',
     'شوف': 'Mount Lebanon',
-    
-    // NABATIYEH
     'nabatiyeh': 'Nabatiyeh',
     'nabatieh': 'Nabatiyeh',
     'محافظة النبطية': 'Nabatiyeh',
     'النبطية': 'Nabatiyeh',
     'bent jbail': 'Nabatiyeh',
     'bint jbail': 'Nabatiyeh',
-    
-    // NORTH LEBANON
     'north lebanon': 'North Lebanon',
     'محافظة الشمال': 'North Lebanon',
     'الشمال': 'North Lebanon',
@@ -88,8 +73,6 @@ const normalizeGovernorate = (governorate) => {
     'batrun': 'North Lebanon',
     'halba': 'North Lebanon',
     'البترون': 'North Lebanon',
-    
-    // SOUTH LEBANON
     'south lebanon': 'South Lebanon',
     'محافظة الجنوب': 'South Lebanon',
     'الجنوب': 'South Lebanon',
@@ -104,7 +87,7 @@ const normalizeGovernorate = (governorate) => {
   };
   
   const normalized = normalizationMap[governorate.toLowerCase().trim()];
-  return normalized || governorate; // Return original if no match found
+  return normalized || governorate;
 };
 
 // ✅ Send email via Brevo REST API
@@ -153,6 +136,67 @@ const getCompatibleDonors = (bloodType) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
+// ✅ PUT ROUTE - Update blood request status (BEFORE DELETE!)
+// ════════════════════════════════════════════════════════════════════════════
+router.put('/:requestId', (req, res) => {
+  const requestId = req.params.requestId;
+  const { status } = req.body;
+
+  if (!requestId || !status) {
+    return res.status(400).json({ error: 'Request ID and status required' });
+  }
+
+  try {
+    console.log(`[PUT /:requestId] Updating request ${requestId} to status: ${status}`);
+
+    const updateSql = `UPDATE blood_requests SET status = ? WHERE id = ?`;
+
+    db.query(updateSql, [status, requestId], (err, result) => {
+      if (err) {
+        console.error('[PUT /:requestId] ❌ Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      console.log(`[PUT /:requestId] ✅ Request ${requestId} updated to status: ${status}`);
+      res.json({ success: true, message: `Request updated to status: ${status}` });
+    });
+  } catch (error) {
+    console.error('[PUT /:requestId] Error:', error.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// ✅ DELETE ROUTE - MOVED TO TOP (MUST BE BEFORE GET :requestId ROUTES!)
+// ════════════════════════════════════════════════════════════════════════════
+router.delete('/:requestId', (req, res) => {
+  const requestId = req.params.requestId;
+
+  if (!requestId) {
+    return res.status(400).json({ error: 'Request ID required' });
+  }
+
+  try {
+    console.log(`[DELETE /:requestId] Deleting request ${requestId}`);
+
+    const deleteSql = `DELETE FROM blood_requests WHERE id = ?`;
+
+    db.query(deleteSql, [requestId], (err) => {
+      if (err) {
+        console.error('[DELETE /:requestId] ❌ Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      console.log(`[DELETE /:requestId] ✅ Request ${requestId} deleted from all dashboards`);
+      res.json({ success: true, message: 'Request deleted successfully' });
+    });
+  } catch (error) {
+    console.error('[DELETE /:requestId] Error:', error.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // ✅ CASE 1: EMERGENCY REQUEST (Patient posts)
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-emergency', async (req, res) => {
@@ -169,10 +213,6 @@ router.post('/create-emergency', async (req, res) => {
   try {
     console.log('\n[create-emergency] 🆘 Emergency request received:', { patient_email, blood_type, governorate });
 
-    // 1️⃣ INSERT emergency request into database
-    // donor_id = NULL (no specific donor yet)
-    // hospital_id = NULL (no specific hospital)
-    // request_type = 'emergency' (to distinguish from hospital requests)
     const insertSql = `
       INSERT INTO emergency_donations 
       (blood_type, patient_email, governorate, status, donor_id, hospital_id, request_type, created_at)
@@ -188,13 +228,11 @@ router.post('/create-emergency', async (req, res) => {
       const requestId = result.insertId;
       console.log('[create-emergency] ✅ Emergency request created with ID:', requestId);
 
-      // 2️⃣ Find matching donors
       const compatibleBloodTypes = getCompatibleDonors(blood_type);
       let filterGovernorate = governorate ? normalizeGovernorate(governorate) : '';
       
       console.log('[create-emergency] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: filterGovernorate });
 
-      // Build the query with proper placeholders for IN clause
       const placeholders = compatibleBloodTypes.map(() => '?').join(',');
       let donorQuery = `
         SELECT id, email, full_name 
@@ -225,7 +263,6 @@ router.post('/create-emergency', async (req, res) => {
 
         console.log('[create-emergency] ✅ Found', donors?.length || 0, 'matching donors');
 
-        // 3️⃣ SEND EMAILS to all matching donors
         let successCount = 0;
         
         if (donors && donors.length > 0) {
@@ -324,8 +361,7 @@ router.post('/create-hospital', async (req, res) => {
   try {
     console.log('\n[create-hospital] 🏥 Hospital request received:', { hospital_id, blood_type, quantity_needed });
 
-    // 1️⃣ Get hospital info
-    const hospitalQuery = 'SELECT name, address, id FROM hospitals WHERE id = ?';
+    const hospitalQuery = 'SELECT name, governorate, id FROM hospitals WHERE id = ?';
     
     db.query(hospitalQuery, [hospital_id], async (err, hospitalResults) => {
       if (err || !hospitalResults || !hospitalResults.length) {
@@ -334,17 +370,15 @@ router.post('/create-hospital', async (req, res) => {
       }
 
       const hospital = hospitalResults[0];
-      const normalizedGovernorate = normalizeGovernorate(hospital.address || '');
+      const hospitalGovernorate = hospital.governorate || '';
       
-      if (!normalizedGovernorate || normalizedGovernorate === 'Other') {
+      if (!hospitalGovernorate || hospitalGovernorate.trim() === '') {
         console.error('[create-hospital] Hospital has no valid governorate');
         return res.status(400).json({ error: 'Hospital has no valid governorate assigned' });
       }
       
-      console.log('[create-hospital] Hospital:', hospital.name, 'Governorate:', normalizedGovernorate);
+      console.log('[create-hospital] Hospital:', hospital.name, 'Governorate:', hospitalGovernorate);
 
-      // 2️⃣ INSERT into blood_requests table (NOT emergency_donations)
-      // This goes to "Your Posted Requests" tab in hospital dashboard
       const insertSql = `
         INSERT INTO blood_requests 
         (hospital_id, blood_type, quantity_needed, urgency, status, created_at)
@@ -360,9 +394,8 @@ router.post('/create-hospital', async (req, res) => {
         const requestId = result.insertId;
         console.log('[create-hospital] ✅ Hospital request created with ID:', requestId);
 
-        // 3️⃣ Find and email matching donors
         const compatibleBloodTypes = getCompatibleDonors(blood_type);
-        console.log('[create-hospital] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: normalizedGovernorate });
+        console.log('[create-hospital] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: hospitalGovernorate });
         
         const placeholders = compatibleBloodTypes.map(() => '?').join(',');
         const donorQuery = `
@@ -373,7 +406,7 @@ router.post('/create-hospital', async (req, res) => {
           LIMIT 50
         `;
 
-        const hospitalParams = [...compatibleBloodTypes, normalizedGovernorate];
+        const hospitalParams = [...compatibleBloodTypes, hospitalGovernorate];
         db.query(donorQuery, hospitalParams, async (err, donors) => {
           if (err) {
             console.error('[create-hospital] ❌ Donor query error:', err);
@@ -449,13 +482,12 @@ router.post('/create-hospital', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ DONOR DASHBOARD: Get emergency requests (both types)
+// ✅ DONOR DASHBOARD: Get emergency requests
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/donor/:donorId', (req, res) => {
   const donorId = req.params.donorId;
   console.log(`\n[/donor/:donorId] 🔍 Fetching emergency donations for donor ${donorId}`);
   
-  // Get donor's governorate first
   const donorQuery = 'SELECT governorate FROM donors WHERE id = ?';
   db.query(donorQuery, [donorId], (err, donorResults) => {
     if (err || !donorResults?.length) {
@@ -465,8 +497,6 @@ router.get('/donor/:donorId', (req, res) => {
 
     const donorGovernorate = donorResults[0].governorate;
     
-    // Get emergency requests from same governorate
-    // (donor_id matches this donor OR donor_id is NULL and status is pending)
     const query = `
       SELECT ed.*
       FROM emergency_donations ed
@@ -511,7 +541,7 @@ router.get('/hospital/:hospitalId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ DONOR CONFIRMS DONATION (Donor responds)
+// ✅ DONOR CONFIRMS DONATION
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/donor-confirm-donation', async (req, res) => {
   try {
@@ -547,8 +577,7 @@ router.post('/donor-confirm-donation', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ HOSPITAL CONFIRMS DONATION (Hospital confirms donor showed up)
-// Deletes from emergency_donations so it disappears from donor dashboard
+// ✅ HOSPITAL CONFIRMS DONATION
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/hospital-confirm', async (req, res) => {
   const { donationId, hospitalId, bloodType, patientEmail } = req.body;
@@ -560,7 +589,6 @@ router.post('/hospital-confirm', async (req, res) => {
   try {
     console.log(`[hospital-confirm] Hospital confirming donation ${donationId}`);
 
-    // DELETE the request from emergency_donations (removes from donor dashboard)
     const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
 
     db.query(deleteSql, [donationId], async (err) => {
@@ -571,7 +599,6 @@ router.post('/hospital-confirm', async (req, res) => {
 
       console.log(`[hospital-confirm] ✅ Deleted from donor dashboard`);
 
-      // Send confirmation email to patient
       const hospitalQuery = 'SELECT name FROM hospitals WHERE id = ?';
       db.query(hospitalQuery, [hospitalId], async (err, hospitals) => {
         const hospitalName = hospitals && hospitals.length > 0 ? hospitals[0].name : 'Your Hospital';
@@ -627,64 +654,55 @@ router.post('/hospital-confirm', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ HOSPITAL MARKS: DONOR DIDN'T SHOW UP
-// Deletes from emergency_donations so it disappears from donor dashboard
+// ✅ HOSPITAL MARKS: DONOR DIDN'T SHOW UP - ISSUE #1 FINAL FIX
+// ════════════════════════════════════════════════════════════════════════════
+// When hospital clicks "Did Not Show Up" on a request in "Your Posted Requests":
+// 1. Delete ALL emergency_donations responding to this request (hospital_id + blood_type + awaiting_confirmation)
+// 2. Update blood_requests status to 'ns' (appears in admin Hospital Supply)
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/hospital-no-show', async (req, res) => {
-  const { donationId } = req.body;
+  const { requestId, hospitalId, bloodType } = req.body;
 
-  if (!donationId) {
-    return res.status(400).json({ error: 'Donation ID required' });
+  if (!requestId || !hospitalId || !bloodType) {
+    return res.status(400).json({ error: 'Request ID, Hospital ID, and Blood Type required' });
   }
 
   try {
-    console.log(`[hospital-no-show] Marking donation ${donationId} as no-show`);
+    console.log(`[hospital-no-show] Marking request ${requestId} as no-show for hospital ${hospitalId}, blood type ${bloodType}`);
 
-    // DELETE the request from emergency_donations (removes from donor dashboard)
-    const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
+    // ✅ Step 1: Delete ALL emergency_donations responding to this hospital's request
+    // These are donors who responded to this specific request (awaiting_confirmation status)
+    const deleteEmergencySql = `
+      DELETE FROM emergency_donations 
+      WHERE hospital_id = ? AND blood_type = ? AND status = 'awaiting_confirmation'
+    `;
 
-    db.query(deleteSql, [donationId], (err) => {
-      if (err) {
-        console.error('[hospital-no-show] ❌ Database error:', err);
-        return res.status(500).json({ error: 'Failed to update donation' });
+    db.query(deleteEmergencySql, [hospitalId, bloodType], (deleteErr, deleteResult) => {
+      if (deleteErr) {
+        console.error('[hospital-no-show] ❌ Error deleting emergency donations:', deleteErr);
+        return res.status(500).json({ error: 'Failed to delete emergency donations' });
       }
 
-      console.log(`[hospital-no-show] ✅ Marked as no-show and removed from dashboard`);
-      res.json({ success: true, message: '✅ Donor marked as no-show' });
+      console.log(`[hospital-no-show] ✅ Deleted ${deleteResult.affectedRows} emergency donations`);
+
+      // ✅ Step 2: Update blood_requests status to 'ns' (appears in admin HOSPITAL SUPPLY tab)
+      const updateSql = `UPDATE blood_requests SET status = 'ns' WHERE id = ?`;
+      
+      db.query(updateSql, [requestId], (updateErr) => {
+        if (updateErr) {
+          console.error('[hospital-no-show] ❌ Error updating blood_requests:', updateErr);
+          return res.status(500).json({ error: 'Failed to update request status' });
+        }
+
+        console.log(`[hospital-no-show] ✅ Updated blood_request ${requestId} status to 'ns'`);
+        res.json({ 
+          success: true, 
+          message: '✅ Marked as not shown. All responding donors removed. Appears in admin Hospital Supply.' 
+        });
+      });
     });
   } catch (error) {
     console.error('[hospital-no-show] Error:', error.message);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ════════════════════════════════════════════════════════════════════════════
-// ✅ HOSPITAL DECLINES/DELETES DONATION REQUEST
-// Deletes from emergency_donations so it disappears from donor dashboard
-// ════════════════════════════════════════════════════════════════════════════
-router.delete('/:requestId', (req, res) => {
-  const requestId = req.params.requestId;
-
-  if (!requestId) {
-    return res.status(400).json({ error: 'Request ID required' });
-  }
-
-  try {
-    console.log(`[DELETE] Deleting request ${requestId}`);
-
-    const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
-
-    db.query(deleteSql, [requestId], (err) => {
-      if (err) {
-        console.error('[DELETE] ❌ Database error:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      console.log(`[DELETE] ✅ Request deleted from all dashboards`);
-      res.json({ success: true, message: 'Request deleted successfully' });
-    });
-  } catch (error) {
-    console.error('[DELETE] Error:', error.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -723,7 +741,7 @@ router.get('/all-emergency-donations', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ GET HOSPITAL'S POSTED REQUESTS (for Hospital Dashboard "Your Posted Requests")
+// ✅ GET HOSPITAL'S POSTED REQUESTS
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/hospital-list/:hospitalId', (req, res) => {
   const { hospitalId } = req.params;
@@ -753,12 +771,43 @@ router.get('/hospital-list/:hospitalId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ GET HOSPITAL REQUESTS FOR DONOR DASHBOARD (blood type + governorate)
+// ✅ NEW: GET ALL HOSPITAL SUPPLY REQUESTS (status = 'ns')
+// ════════════════════════════════════════════════════════════════════════════
+router.get('/all-no-show', (req, res) => {
+  const sql = `
+    SELECT 
+      br.id,
+      br.hospital_id,
+      br.blood_type,
+      br.quantity_needed,
+      br.urgency,
+      br.status,
+      br.created_at,
+      h.name as hospital_name,
+      h.governorate
+    FROM blood_requests br
+    LEFT JOIN hospitals h ON br.hospital_id = h.id
+    WHERE br.status = 'ns'
+    ORDER BY br.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('[all-no-show] Error:', err);
+      return res.status(500).json({ error: 'Error fetching no-show requests' });
+    }
+    
+    console.log(`[all-no-show] ✅ Found ${results?.length || 0} hospital supply requests`);
+    res.json(results || []);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// ✅ GET HOSPITAL REQUESTS FOR DONOR DASHBOARD
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/hospital-requests/:donorId', (req, res) => {
   const { donorId } = req.params;
 
-  // Get donor's blood type AND governorate
   const donorQuery = 'SELECT blood_type, governorate FROM donors WHERE id = ?';
   
   db.query(donorQuery, [donorId], (err, donorResults) => {
@@ -771,16 +820,15 @@ router.get('/hospital-requests/:donorId', (req, res) => {
     const donorBloodType = donor.blood_type;
     const donorGovernorate = donor.governorate;
     
-    // ✅ Blood type compatibility: What this donor can GIVE to
     const canGiveTo = {
-      'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'], // O- is universal donor
-      'O+': ['O+', 'A+', 'B+', 'AB+'], // O+ can give to positive types
-      'A-': ['A-', 'A+', 'AB-', 'AB+'], // A- can give to A and AB types
-      'A+': ['A+', 'AB+'], // A+ can give to A+ and AB+
-      'B-': ['B-', 'B+', 'AB-', 'AB+'], // B- can give to B and AB types
-      'B+': ['B+', 'AB+'], // B+ can give to B+ and AB+
-      'AB-': ['AB-', 'AB+'], // AB- can give to AB types
-      'AB+': ['AB+'], // AB+ can only give to AB+
+      'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
+      'O+': ['O+', 'A+', 'B+', 'AB+'],
+      'A-': ['A-', 'A+', 'AB-', 'AB+'],
+      'A+': ['A+', 'AB+'],
+      'B-': ['B-', 'B+', 'AB-', 'AB+'],
+      'B+': ['B+', 'AB+'],
+      'AB-': ['AB-', 'AB+'],
+      'AB+': ['AB+'],
     };
 
     const compatibleBloodTypes = canGiveTo[donorBloodType] || [];
@@ -822,6 +870,6 @@ router.get('/hospital-requests/:donorId', (req, res) => {
   });
 });
 
-console.log('[blood-requests.js] ✅ All routes registered - Emergency + Hospital Requests');
+console.log('[blood-requests.js] ✅ All routes registered - hospital-no-show endpoint FIXED for Issue #1');
 
 module.exports = router;

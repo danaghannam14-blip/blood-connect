@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import lebanonMap from '../assets/bcc.png'
 import CompatibilityMatrix from "../components/CompatibilityMatrix"
-
+import bloodConnectVideo from '../BloodConnect.mp4'
 const BLOOD_DATA = {
   'A+':  { canReceive: ['A+','A-','O+','O-'], canDonateTo: ['A+','AB+'], reach: '34%' },
   'A-':  { canReceive: ['A-','O-'], canDonateTo: ['A+','A-','AB+','AB-'], reach: '6%' },
@@ -727,7 +727,7 @@ export default function Home() {
                 gap: 8,
               }}
             >
-              ⚙ How It Works
+               How It Works
             </motion.button>
 
             <motion.button
@@ -748,7 +748,7 @@ export default function Home() {
                 gap: 8,
               }}
             >
-              ❤ Impact
+              Impact
             </motion.button>
           </div>
         </div>
@@ -1261,6 +1261,39 @@ export default function Home() {
         {/* Compatibility Matrix - with proper spacing */}
         <section style={{ marginTop: '150px' }}>
           <CompatibilityMatrix />
+        </section>
+
+        {/* Video Section */}
+        <section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+          <motion.div
+            className="bc-glass-deep bc-card-hover"
+            style={{
+              borderRadius: 28,
+              overflow: 'hidden',
+              border: '1px solid rgba(91,115,151,.12)',
+              position: 'relative',
+              width: '100%',
+            }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
+          >
+            <video
+              width="100%"
+              height="auto"
+              controls
+              style={{
+                display: 'block',
+                width: '100%',
+                height: 'auto',
+                borderRadius: 28,
+              }}
+            >
+<source src={bloodConnectVideo} type="video/mp4" />              Your browser does not support the video tag.
+            </video>
+          </motion.div>
         </section>
 
       </main>

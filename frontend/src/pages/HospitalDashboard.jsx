@@ -1,139 +1,41 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import axios from 'axios'
 
-// ✅ API Auto-Detection (localhost vs production)
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://blood-bank-eqyr.onrender.com'
 
 const MODERN_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { overflow-x: hidden; }
-
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-
-  .hospital-root {
-    min-height:100vh;
-    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
-    background-size:400% 400%;
-    animation:gradient-shift 15s ease infinite;
-    font-family:'Plus Jakarta Sans',sans-serif;
-    overflow-x:hidden;
-    position:relative;
-    color:#380101;
-    zoom: 0.85;
-  }
-
-  .hospital-float-orb {
-    position:absolute;border-radius:50%;filter:blur(80px);
-    pointer-events:none;animation:float-orb 6s ease-in-out infinite;
-  }
-
-  .hospital-glass {
-    background:rgba(255,255,255,.6);backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid rgba(180,180,180,.2);box-shadow:0 8px 32px rgba(0,0,0,.08);
-  }
-
-  .hospital-glass-deep {
-    background:rgba(255,255,255,.65);backdrop-filter:blur(30px) saturate(200%);
-    -webkit-backdrop-filter:blur(30px) saturate(200%);
-    border:1px solid rgba(180,180,180,.25);
-    box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4);
-  }
-
-  .hospital-nav {
-    position:sticky;top:0;z-index:40;
-    background:rgba(248,248,248,.85);backdrop-filter:blur(20px) saturate(200%);
-    -webkit-backdrop-filter:blur(20px) saturate(200%);
-    border-bottom:1px solid rgba(180,180,180,.15);box-shadow:0 4px 30px rgba(0,0,0,.08);
-  }
-
-  .hospital-btn {
-    position:relative;overflow:hidden;cursor:pointer;border:none;outline:none;
-    transition:all .35s cubic-bezier(.25,1,.5,1);
-    font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;border-radius:10px;
-    letter-spacing:.5px;font-size:13px;
-  }
-
-  .hospital-btn::before {
-    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s;
-  }
-
+  .hospital-root { min-height:100vh; background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); background-size:400% 400%; animation:gradient-shift 15s ease infinite; font-family:'Plus Jakarta Sans',sans-serif; overflow-x:hidden; position:relative; color:#380101; zoom: 0.85; }
+  .hospital-float-orb { position:absolute;border-radius:50%;filter:blur(80px); pointer-events:none;animation:float-orb 6s ease-in-out infinite; }
+  .hospital-glass { background:rgba(255,255,255,.6);backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); border:1px solid rgba(180,180,180,.2);box-shadow:0 8px 32px rgba(0,0,0,.08); }
+  .hospital-glass-deep { background:rgba(255,255,255,.65);backdrop-filter:blur(30px) saturate(200%); -webkit-backdrop-filter:blur(30px) saturate(200%); border:1px solid rgba(180,180,180,.25); box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4); }
+  .hospital-nav { position:sticky;top:0;z-index:40; background:rgba(248,248,248,.85);backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-bottom:1px solid rgba(180,180,180,.15);box-shadow:0 4px 30px rgba(0,0,0,.08); }
+  .hospital-btn { position:relative;overflow:hidden;cursor:pointer;border:none;outline:none; transition:all .35s cubic-bezier(.25,1,.5,1); font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;border-radius:10px; letter-spacing:.5px;font-size:13px; }
+  .hospital-btn::before { content:'';position:absolute;top:0;left:-100%;width:100%;height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s; }
   .hospital-btn:hover::before { left:100%; }
-
-  .hospital-btn-primary {
-    background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);
-    color:#ffffff;box-shadow:0 6px 18px rgba(220,38,38,.22);padding:10px 24px;
-  }
-
-  .hospital-btn-primary:hover {
-    transform:translateY(-2px);box-shadow:0 10px 30px rgba(220,38,38,.28);
-  }
-
-  .hospital-btn-success {
-    background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);
-    color:#ffffff;box-shadow:0 6px 18px rgba(34,197,94,.22);padding:9px 18px;
-  }
-
-  .hospital-btn-success:hover {
-    transform:translateY(-2px);box-shadow:0 10px 30px rgba(34,197,94,.28);
-  }
-
-  .hospital-tab-btn {
-    padding:10px 18px;font-size:13px;font-weight:700;border:none;
-    background:transparent;cursor:pointer;color:rgba(61,61,61,.6);
-    transition:all .3s ease;border-bottom:2px solid transparent;
-    letter-spacing:.3px;text-transform:uppercase;
-  }
-
-  .hospital-tab-btn.active {
-    color:#dc2626;border-bottom-color:#dc2626;
-    background:rgba(255,255,255,.5);border-radius:8px;border-bottom:none;
-  }
-
-  .hospital-input {
-    width:100%;padding:10px 16px;
-    border:1px solid rgba(150,150,150,.25);border-radius:10px;
-    font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;
-    background:rgba(255,255,255,.7);color:#dc2626;transition:all .3s ease;
-  }
-
-  .hospital-input:focus {
-    outline:none;border-color:rgba(220,38,38,.4);
-    background:rgba(255,255,255,.95);box-shadow:0 0 0 3px rgba(220,38,38,.1);
-  }
-
-  .hospital-label {
-    font-size:10px;font-weight:900;color:rgba(45,45,45,.6);
-    text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:block;
-  }
-
-  .hospital-card-title {
-    font-family:'Fraunces',serif;font-size:18px;font-weight:900;
-    color:#6e2016;margin:0 0 12px 0;
-  }
-
-  .hospital-message {
-    border-radius:12px;padding:12px 16px;text-align:center;
-    color:#dc2626;font-weight:700;font-size:13px;margin-bottom:20px;
-  }
-
-  .hospital-message.success {
-    background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;
-  }
-
-  .hospital-message.error {
-    background:rgba(255,235,238,.8);border:1px solid rgba(220,38,38,.3);color:#dc2626;
-  }
+  .hospital-btn-primary { background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%); color:#ffffff;box-shadow:0 6px 18px rgba(220,38,38,.22);padding:10px 24px; }
+  .hospital-btn-primary:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(220,38,38,.28); }
+  .hospital-btn-success { background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%); color:#ffffff;box-shadow:0 6px 18px rgba(34,197,94,.22);padding:9px 18px; }
+  .hospital-btn-success:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(34,197,94,.28); }
+  .hospital-tab-btn { padding:10px 18px;font-size:13px;font-weight:700;border:none; background:transparent;cursor:pointer;color:rgba(61,61,61,.6); transition:all .3s ease;border-bottom:2px solid transparent; letter-spacing:.3px;text-transform:uppercase; }
+  .hospital-tab-btn.active { color:#dc2626;border-bottom-color:#dc2626; background:rgba(255,255,255,.5);border-radius:8px;border-bottom:none; }
+  .hospital-input { width:100%;padding:10px 16px; border:1px solid rgba(150,150,150,.25);border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif;font-size:13px; background:rgba(255,255,255,.7);color:#dc2626;transition:all .3s ease; }
+  .hospital-input:focus { outline:none;border-color:rgba(220,38,38,.4); background:rgba(255,255,255,.95);box-shadow:0 0 0 3px rgba(220,38,38,.1); }
+  .hospital-label { font-size:10px;font-weight:900;color:rgba(45,45,45,.6); text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:block; }
+  .hospital-card-title { font-family:'Fraunces',serif;font-size:18px;font-weight:900; color:#6e2016;margin:0 0 12px 0; }
+  .hospital-message { border-radius:12px;padding:12px 16px;text-align:center; color:#dc2626;font-weight:700;font-size:13px;margin-bottom:20px; }
+  .hospital-message.success { background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e; }
+  .hospital-message.error { background:rgba(255,235,238,.8);border:1px solid rgba(220,38,38,.3);color:#dc2626; }
 `
 
 if (typeof document !== 'undefined' && !document.getElementById('hospital-modern-styles')) {
@@ -179,7 +81,6 @@ function AnimatedBackgroundOrbs() {
           transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
-
       {dots.map((dot) => (
         <motion.div
           key={`dot-${dot.id}`}
@@ -219,27 +120,22 @@ const URGENCY_CONFIG = {
 
 function HospitalDashboard() {
   const navigate = useNavigate()
-
   const [hospital, setHospital] = useState(null)
   const [requests, setRequests] = useState([])
   const [bloodStock, setBloodStock] = useState({})
   const [transfusions, setTransfusions] = useState([])
   const [emergencyDonations, setEmergencyDonations] = useState([])
-  
   const [message, setMessage] = useState('')
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
   const [stockMessage, setStockMessage] = useState('')
   const [transfusionMessage, setTransfusionMessage] = useState('')
   const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
-  
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('post')
   const [visible, setVisible] = useState(false)
   const [confirmingId, setConfirmingId] = useState(null)
   const [confirmingSupplyId, setConfirmingSupplyId] = useState(null)
-  const [noShowIds, setNoShowIds] = useState([])
-
   const [awaitingDonations, setAwaitingDonations] = useState([])
   const [okDonations, setConfirmedDonations] = useState([])
 
@@ -264,8 +160,6 @@ function HospitalDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      // ✅ FIXED: Fetch hospital's OWN posted requests from blood_requests table
-      // NOT from old /api/requests/hospital endpoint
       const reqRes = await axios.get(`${API}/api/blood-requests/hospital-list/${hospital.id}`)
       setRequests(reqRes.data || [])
 
@@ -303,21 +197,12 @@ function HospitalDashboard() {
       return
     }
 
-    // ✅ FIXED: Use hospital.governorate instead of hospital.address
     const hospitalGovernorate = hospital.governorate || ''
     
     if (!hospitalGovernorate || hospitalGovernorate.trim() === '') {
       setMessage('Hospital governorate not found. Please contact administrator.')
       return
     }
-
-    console.log('[HospitalDashboard] Posting request with:', {
-      hospital_id: hospital.id,
-      blood_type: form.blood_type,
-      quantity_needed: parseInt(form.quantity_needed),
-      urgency: form.urgency,
-      hospital_governorate: hospitalGovernorate
-    })
 
     setSubmitting(true)
     try {
@@ -342,25 +227,50 @@ function HospitalDashboard() {
 
   const handleConfirmReceived = async (requestId) => {
     try {
-      await axios.delete(`${API}/api/requests/${requestId}`)
-      alert('Request confirmed. Removed from donor dashboard.')
+      await axios.delete(`${API}/api/blood-requests/${requestId}`)
+      alert('✅ Request confirmed. Removed from donor dashboard.')
       loadData()
     } catch (err) {
+      console.error('Error confirming:', err)
       alert(`Error: ${err.message}`)
     }
   }
 
+  // ✅ FIXED: Mark request as 'ns' - delete all responding donations + update blood_requests
   const handleDidntShowUp = async (requestId) => {
-    if (!window.confirm('Mark as not shown? Request removed from donor dashboard and appears in admin Hospital Supply.')) return
+    if (!window.confirm('Mark as not shown? This will remove all responding donors and appear in admin Hospital Supply.')) return
     setConfirmingId(requestId)
     try {
-      await axios.put(`${API}/api/requests/${requestId}`, { status: 'ns' })
+      console.log('[handleDidntShowUp] Marking request as not shown:', requestId)
       
-      setNoShowIds([...noShowIds, requestId])
-      alert('Marked as not shown. Admin will provide supply from BCC Hamra.')
-      setTimeout(() => loadData(), 500)
+      // ✅ Find the request to get blood_type
+      const request = requests.find(r => r.id === requestId)
+      if (!request) {
+        console.error('[handleDidntShowUp] Request not found:', requestId)
+        alert('Request not found')
+        setConfirmingId(null)
+        return
+      }
+      
+      console.log('[handleDidntShowUp] Found request:', request)
+      console.log('[handleDidntShowUp] Hospital ID:', hospital.id, 'Blood Type:', request.blood_type)
+      
+      // ✅ Call endpoint with requestId, hospitalId, and bloodType
+      // Backend will: 
+      // 1. Delete ALL emergency_donations for this hospital_id + blood_type + status='awaiting_confirmation'
+      // 2. Update blood_requests status to 'ns'
+      await axios.post(`${API}/api/blood-requests/hospital-no-show`, { 
+        requestId: requestId,
+        hospitalId: hospital.id,
+        bloodType: request.blood_type
+      })
+      
+      alert('✅ Marked as not shown. All responding donors removed.')
+      loadData()
     } catch (err) {
-      alert(`Error: ${err.message}`)
+      console.error('Error marking no-show:', err)
+      alert(`Error: ${err.response?.data?.error || err.message}`)
+    } finally {
       setConfirmingId(null)
     }
   }
@@ -369,39 +279,33 @@ function HospitalDashboard() {
     if (!window.confirm('Delete this request permanently?')) return
     
     try {
-      await axios.delete(`${API}/api/requests/${requestId}`)
+      await axios.delete(`${API}/api/blood-requests/${requestId}`)
       setRequests(requests.filter(r => r.id !== requestId))
-      alert('Request deleted.')
+      alert('✅ Request deleted.')
       loadData()
     } catch (err) {
+      console.error('Error deleting:', err)
       alert(`Error: ${err.response?.data?.error || err.message}`)
     }
   }
 
-  const handleConfirmSupplyReceived = async (requestId) => {
+  // ✅ NEW: When status = 'supply_coming', hospital clicks this to finalize
+  const handleSupplyConfirmedReceived = async (requestId) => {
     setConfirmingSupplyId(requestId)
     try {
-      const request = requests.find(r => r.id === requestId)
+      console.log('[handleSupplyConfirmedReceived] Deleting request:', requestId)
+      await axios.delete(`${API}/api/blood-requests/${requestId}`)
       
-      if (!request) {
-        alert('Request not found')
-        setConfirmingSupplyId(null)
-        return
-      }
-      
-      await axios.delete(`${API}/api/requests/${requestId}`)
-      
-      alert('Supply confirmed and received.')
+      alert('✅ Supply confirmed and received.')
       loadData()
     } catch (err) {
+      console.error('Error confirming supply:', err)
       alert(`Error: ${err.response?.data?.error || err.message}`)
     } finally {
       setConfirmingSupplyId(null)
     }
   }
 
-  // ✅ ONLY called when hospital clicks CONFIRM button on emergency donations
-  // This removes from both hospital and donor dashboards
   const handleConfirmDonation = async (donationId) => {
     setConfirmingId(donationId)
     try {
@@ -413,7 +317,6 @@ function HospitalDashboard() {
         return
       }
 
-      // Call the unified endpoint to confirm donation
       await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
         request_id: donationId
       })
@@ -729,6 +632,7 @@ function HospitalDashboard() {
                       )
                     }
                     
+                    // ✅ NEW: Show "Supply Coming" status with button
                     if (r.status === 'supply_coming') {
                       return (
                         <motion.div
@@ -768,12 +672,12 @@ function HospitalDashboard() {
                             </p>
                           </div>
                           <div style={{ padding: '12px', background: 'rgba(96,165,250,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#1e40af', fontSize: 13 }}>
-                            Supply coming from BCC Hamra
+                            ✈️ Coming for Supply from BCC Hamra
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleConfirmSupplyReceived(r.id)}
+                            onClick={() => handleSupplyConfirmedReceived(r.id)}
                             disabled={confirmingSupplyId === r.id}
                             className="hospital-btn hospital-btn-success"
                             style={{
@@ -784,6 +688,52 @@ function HospitalDashboard() {
                           >
                             {confirmingSupplyId === r.id ? 'Confirming Received...' : 'Supply Confirmed and Received'}
                           </motion.button>
+                        </motion.div>
+                      )
+                    }
+
+                    // ✅ Request with status 'ns' (not shown) - stays in dashboard waiting
+                    if (r.status === 'ns') {
+                      return (
+                        <motion.div
+                          key={r.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          style={{
+                            borderRadius: 18,
+                            padding: 18,
+                            border: '2px solid rgba(220,88,38,.3)',
+                            background: 'rgba(255,240,230,.7)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 12,
+                            boxShadow: '0 4px 12px rgba(220,88,38,.08)'
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                              <span style={{ fontSize: 20, fontWeight: 900, color: '#c2410c' }}>{r.blood_type}</span>
+                              <span style={{
+                                fontSize: 9,
+                                fontWeight: 900,
+                                padding: '4px 10px',
+                                borderRadius: 8,
+                                background: 'rgba(220,88,38,.2)',
+                                color: '#c2410c',
+                                textTransform: 'uppercase',
+                                letterSpacing: '.1em'
+                              }}>
+                                NOT SHOWN
+                              </span>
+                            </div>
+                            <p style={{ fontSize: 12, color: '#c2410c', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
+                            <p style={{ fontSize: 11, color: 'rgba(194,65,12,.6)', margin: 0, fontWeight: 500 }}>
+                              {new Date(r.created_at).toLocaleDateString('en-GB')}
+                            </p>
+                          </div>
+                          <div style={{ padding: '12px', background: 'rgba(220,88,38,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#c2410c', fontSize: 13 }}>
+                            ⏳ Waiting for admin to confirm supply
+                          </div>
                         </motion.div>
                       )
                     }
@@ -814,7 +764,7 @@ function HospitalDashboard() {
                               textTransform: 'uppercase',
                               letterSpacing: '.1em'
                             }}>
-                              {r.status === 'ns' ? 'NOT SHOWN' : URGENCY_CONFIG[r.urgency]?.label}
+                              {URGENCY_CONFIG[r.urgency]?.label}
                             </span>
                           </div>
                           <p style={{ fontSize: 12, color: '#78350f', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
@@ -836,20 +786,22 @@ function HospitalDashboard() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleDidntShowUp(r.id)}
+                            disabled={confirmingId === r.id}
+                            className="hospital-btn"
                             style={{
                               flex: 1,
                               fontSize: 11,
                               fontWeight: 900,
-                              color: noShowIds.includes(r.id) ? '#fff' : '#a04432',
-                              background: noShowIds.includes(r.id) ? '#a04432' : 'rgba(200,120,100,.12)',
+                              color: '#fff',
+                              background: '#c2410c',
                               padding: '8px 12px',
                               borderRadius: 10,
-                              border: noShowIds.includes(r.id) ? 'none' : '1px solid rgba(160,68,50,.2)',
+                              border: 'none',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease'
+                              opacity: confirmingId === r.id ? 0.6 : 1
                             }}
                           >
-                            {noShowIds.includes(r.id) ? 'No-Show Sent' : 'Did Not Show Up'}
+                            {confirmingId === r.id ? 'Marking...' : 'Did Not Show Up'}
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}

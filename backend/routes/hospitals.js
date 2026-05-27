@@ -20,6 +20,7 @@ router.post('/register', (req, res) => {
   );
 });
 
+// ✅ FIXED: Login now includes governorate field
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
   if (!email.endsWith('@hospital.com')) {
@@ -37,10 +38,24 @@ router.post('/login', (req, res) => {
       process.env.JWT_SECRET || 'bloodbank_secret',
       { expiresIn: '24h' }
     );
+    
+    // ✅ FIXED: Include governorate in response
+    console.log('[Hospital Login] ✅ Hospital data:', {
+      id: hospital.id,
+      name: hospital.name,
+      email: hospital.email,
+      governorate: hospital.governorate
+    });
+    
     res.json({
       message: 'Login successful',
       token,
-      hospital: { id: hospital.id, name: hospital.name, email: hospital.email }
+      hospital: { 
+        id: hospital.id, 
+        name: hospital.name, 
+        email: hospital.email,
+        governorate: hospital.governorate || ''  // ✅ NOW INCLUDED!
+      }
     });
   });
 });
@@ -125,6 +140,7 @@ router.get('/with-stock', (req, res) => {
     res.json(Object.values(hospitalMap));
   });
 });
+
 // Record blood transfusion (decrease stock)
 router.post('/transfusion/:hospital_id', (req, res) => {
   const { blood_type, units, notes } = req.body
@@ -176,6 +192,7 @@ router.get('/transfusions/:hospital_id', (req, res) => {
     }
   )
 })
+
 // Get all hospital accounts
 router.get('/accounts', (req, res) => {
   db.query(
@@ -192,4 +209,5 @@ router.get('/accounts', (req, res) => {
     }
   );
 });
+
 module.exports = router;
