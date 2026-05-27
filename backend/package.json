@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
     "@getbrevo/brevo": "^5.0.4",
