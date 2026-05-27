@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import lebanonMap from '../assets/bcc.png'
 import CompatibilityMatrix from "../components/CompatibilityMatrix"
-import bloodConnectVideo from '../BloodConnect.mp4'
+import video from '../video.mp4'
 const BLOOD_DATA = {
   'A+':  { canReceive: ['A+','A-','O+','O-'], canDonateTo: ['A+','AB+'], reach: '34%' },
   'A-':  { canReceive: ['A-','O-'], canDonateTo: ['A+','A-','AB+','AB-'], reach: '6%' },
@@ -1291,7 +1291,7 @@ export default function Home() {
                 borderRadius: 28,
               }}
             >
-<source src={bloodConnectVideo} type="video/mp4" />              Your browser does not support the video tag.
+<source src={video} type="video/mp4" />              Your browser does not support the video tag.
             </video>
           </motion.div>
         </section>
