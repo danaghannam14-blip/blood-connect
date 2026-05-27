@@ -136,7 +136,7 @@ const getCompatibleDonors = (bloodType) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ PUT ROUTE - Update blood request status (BEFORE DELETE!)
+// ✅ PUT ROUTE - Update blood request status
 // ════════════════════════════════════════════════════════════════════════════
 router.put('/:requestId', (req, res) => {
   const requestId = req.params.requestId;
@@ -167,7 +167,7 @@ router.put('/:requestId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ DELETE ROUTE - MOVED TO TOP (MUST BE BEFORE GET :requestId ROUTES!)
+// ✅ DELETE ROUTE
 // ════════════════════════════════════════════════════════════════════════════
 router.delete('/:requestId', (req, res) => {
   const requestId = req.params.requestId;
@@ -187,7 +187,7 @@ router.delete('/:requestId', (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      console.log(`[DELETE /:requestId] ✅ Request ${requestId} deleted from all dashboards`);
+      console.log(`[DELETE /:requestId] ✅ Request ${requestId} deleted`);
       res.json({ success: true, message: 'Request deleted successfully' });
     });
   } catch (error) {
@@ -197,7 +197,7 @@ router.delete('/:requestId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 1: EMERGENCY REQUEST (Patient posts) - FIXED CASE-INSENSITIVE
+// ✅ CASE 1: EMERGENCY REQUEST - FIXED WITH TRIM() AND COALESCE()
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-emergency', async (req, res) => {
   const { patient_email, blood_type, governorate } = req.body;
@@ -234,21 +234,20 @@ router.post('/create-emergency', async (req, res) => {
       console.log('[create-emergency] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: filterGovernorate });
 
       const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-      // ✅ FIXED: ALWAYS filter by governorate (never search all)
+      // ✅ CORRECT: Single governorate filter with TRIM() and COALESCE()
       const donorQuery = `
         SELECT id, email, full_name 
         FROM donors 
         WHERE blood_type IN (${placeholders})
-        AND LOWER(governorate) = LOWER(?)
         AND LOWER(TRIM(governorate)) = LOWER(?)
-       AND COALESCE(email, '') != ''
+        AND COALESCE(email, '') != ''
         AND is_eligible = 1
         LIMIT 100
       `;
       
       const params = [...compatibleBloodTypes, filterGovernorate];
       
-      console.log('[create-emergency] ✅ Using case-insensitive filter for governorate:', filterGovernorate);
+      console.log('[create-emergency] ✅ Using TRIM() filter for governorate:', filterGovernorate);
       console.log('[create-emergency] Query params:', params);
 
       db.query(donorQuery, params, async (err, donors) => {
@@ -350,7 +349,7 @@ router.post('/create-emergency', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 2: HOSPITAL REQUEST (Hospital posts) - FIXED CASE-INSENSITIVE
+// ✅ CASE 2: HOSPITAL REQUEST - FIXED WITH TRIM()
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-hospital', async (req, res) => {
   const { hospital_id, blood_type, quantity_needed, urgency } = req.body;
@@ -399,17 +398,18 @@ router.post('/create-hospital', async (req, res) => {
         console.log('[create-hospital] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: hospitalGovernorate });
         
         const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-        // ✅ FIXED: Use case-insensitive governorate matching
+        // ✅ CORRECT: Single governorate filter with TRIM()
         const donorQuery = `
           SELECT id, email, full_name FROM donors 
           WHERE blood_type IN (${placeholders})
-          AND LOWER(governorate) = LOWER(?)
+          AND LOWER(TRIM(governorate)) = LOWER(?)
+          AND COALESCE(email, '') != ''
           AND is_eligible = 1
           LIMIT 50
         `;
 
         const hospitalParams = [...compatibleBloodTypes, hospitalGovernorate];
-        console.log('[create-hospital] Using case-insensitive filter for governorate:', hospitalGovernorate);
+        console.log('[create-hospital] Using TRIM() filter for governorate:', hospitalGovernorate);
         
         db.query(donorQuery, hospitalParams, async (err, donors) => {
           if (err) {
@@ -486,7 +486,7 @@ router.post('/create-hospital', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ DEBUG ENDPOINT: See all donors and what governorates are in database
+// ✅ DEBUG ENDPOINT
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/debug/donors-list', (req, res) => {
   const sql = `
@@ -691,11 +691,7 @@ router.post('/hospital-confirm', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ HOSPITAL MARKS: DONOR DIDN'T SHOW UP - ISSUE #1 FINAL FIX
-// ════════════════════════════════════════════════════════════════════════════
-// When hospital clicks "Did Not Show Up" on a request in "Your Posted Requests":
-// 1. Delete ALL emergency_donations responding to this request (hospital_id + blood_type + awaiting_confirmation)
-// 2. Update blood_requests status to 'ns' (appears in admin Hospital Supply)
+// ✅ HOSPITAL MARKS: DONOR DIDN'T SHOW UP
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/hospital-no-show', async (req, res) => {
   const { requestId, hospitalId, bloodType } = req.body;
@@ -707,8 +703,6 @@ router.post('/hospital-no-show', async (req, res) => {
   try {
     console.log(`[hospital-no-show] Marking request ${requestId} as no-show for hospital ${hospitalId}, blood type ${bloodType}`);
 
-    // ✅ Step 1: Delete ALL emergency_donations responding to this hospital's request
-    // These are donors who responded to this specific request (awaiting_confirmation status)
     const deleteEmergencySql = `
       DELETE FROM emergency_donations 
       WHERE hospital_id = ? AND blood_type = ? AND status = 'awaiting_confirmation'
@@ -722,7 +716,6 @@ router.post('/hospital-no-show', async (req, res) => {
 
       console.log(`[hospital-no-show] ✅ Deleted ${deleteResult.affectedRows} emergency donations`);
 
-      // ✅ Step 2: Update blood_requests status to 'ns' (appears in admin HOSPITAL SUPPLY tab)
       const updateSql = `UPDATE blood_requests SET status = 'ns' WHERE id = ?`;
       
       db.query(updateSql, [requestId], (updateErr) => {
@@ -808,7 +801,7 @@ router.get('/hospital-list/:hospitalId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ NEW: GET ALL HOSPITAL SUPPLY REQUESTS (status = 'ns')
+// ✅ GET ALL HOSPITAL SUPPLY REQUESTS (status = 'ns')
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/all-no-show', (req, res) => {
   const sql = `
@@ -876,6 +869,7 @@ router.get('/hospital-requests/:donorId', (req, res) => {
     }
 
     const placeholders = compatibleBloodTypes.map(() => '?').join(',');
+    // ✅ CORRECT: Single governorate filter with TRIM()
     const sql = `
       SELECT 
         br.id,
@@ -890,7 +884,6 @@ router.get('/hospital-requests/:donorId', (req, res) => {
       LEFT JOIN hospitals h ON br.hospital_id = h.id
       WHERE br.blood_type IN (${placeholders})
       AND br.status = 'pending'
-      AND h.governorate = ?
       AND LOWER(TRIM(h.governorate)) = LOWER(?)
       ORDER BY br.created_at DESC
       LIMIT 100
@@ -908,6 +901,6 @@ router.get('/hospital-requests/:donorId', (req, res) => {
   });
 });
 
-console.log('[blood-requests.js] ✅ All routes registered - CASE-INSENSITIVE governorate matching FIXED for Issues #1 & #2');
+console.log('[blood-requests.js] ✅ All routes registered - FIXED with TRIM() and COALESCE()');
 
 module.exports = router;
