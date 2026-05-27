@@ -197,7 +197,7 @@ router.delete('/:requestId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 1: EMERGENCY REQUEST (Patient posts)
+// ✅ CASE 1: EMERGENCY REQUEST (Patient posts) - FIXED CASE-INSENSITIVE
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-emergency', async (req, res) => {
   const { patient_email, blood_type, governorate } = req.body;
@@ -229,26 +229,27 @@ router.post('/create-emergency', async (req, res) => {
       console.log('[create-emergency] ✅ Emergency request created with ID:', requestId);
 
       const compatibleBloodTypes = getCompatibleDonors(blood_type);
-      let filterGovernorate = governorate ? normalizeGovernorate(governorate) : '';
+      let filterGovernorate = governorate ? normalizeGovernorate(governorate) : 'Beirut';
       
       console.log('[create-emergency] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: filterGovernorate });
 
       const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-      let donorQuery = `
+      // ✅ FIXED: ALWAYS filter by governorate (never search all)
+      const donorQuery = `
         SELECT id, email, full_name 
         FROM donors 
         WHERE blood_type IN (${placeholders})
+        AND LOWER(governorate) = LOWER(?)
+        AND LOWER(TRIM(governorate)) = LOWER(?)
+       AND COALESCE(email, '') != ''
         AND is_eligible = 1
+        LIMIT 100
       `;
       
-      let params = [...compatibleBloodTypes];
+      const params = [...compatibleBloodTypes, filterGovernorate];
       
-      if (filterGovernorate && filterGovernorate !== 'Other') {
-        donorQuery += ` AND governorate = ?`;
-        params.push(filterGovernorate);
-      }
-      
-      donorQuery += ` LIMIT 100`;
+      console.log('[create-emergency] ✅ Using case-insensitive filter for governorate:', filterGovernorate);
+      console.log('[create-emergency] Query params:', params);
 
       db.query(donorQuery, params, async (err, donors) => {
         if (err) {
@@ -349,7 +350,7 @@ router.post('/create-emergency', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 2: HOSPITAL REQUEST (Hospital posts)
+// ✅ CASE 2: HOSPITAL REQUEST (Hospital posts) - FIXED CASE-INSENSITIVE
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-hospital', async (req, res) => {
   const { hospital_id, blood_type, quantity_needed, urgency } = req.body;
@@ -398,15 +399,18 @@ router.post('/create-hospital', async (req, res) => {
         console.log('[create-hospital] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: hospitalGovernorate });
         
         const placeholders = compatibleBloodTypes.map(() => '?').join(',');
+        // ✅ FIXED: Use case-insensitive governorate matching
         const donorQuery = `
           SELECT id, email, full_name FROM donors 
           WHERE blood_type IN (${placeholders})
-          AND governorate = ?
+          AND LOWER(governorate) = LOWER(?)
           AND is_eligible = 1
           LIMIT 50
         `;
 
         const hospitalParams = [...compatibleBloodTypes, hospitalGovernorate];
+        console.log('[create-hospital] Using case-insensitive filter for governorate:', hospitalGovernorate);
+        
         db.query(donorQuery, hospitalParams, async (err, donors) => {
           if (err) {
             console.error('[create-hospital] ❌ Donor query error:', err);
@@ -479,6 +483,39 @@ router.post('/create-hospital', async (req, res) => {
     console.error('[create-hospital] ❌ Server error:', error);
     res.status(500).json({ error: 'Server error: ' + error.message });
   }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// ✅ DEBUG ENDPOINT: See all donors and what governorates are in database
+// ════════════════════════════════════════════════════════════════════════════
+router.get('/debug/donors-list', (req, res) => {
+  const sql = `
+    SELECT 
+      id,
+      full_name,
+      email,
+      blood_type,
+      governorate,
+      is_eligible
+    FROM donors
+    LIMIT 100
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('[DEBUG] Error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    console.log(`[DEBUG] Total donors in database: ${results?.length || 0}`);
+    console.log('[DEBUG] Donors:', results);
+
+    res.json({
+      total_donors: results?.length || 0,
+      donors: results || [],
+      message: '✅ See all donors above. Check their governorate values!'
+    });
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -854,6 +891,7 @@ router.get('/hospital-requests/:donorId', (req, res) => {
       WHERE br.blood_type IN (${placeholders})
       AND br.status = 'pending'
       AND h.governorate = ?
+      AND LOWER(TRIM(h.governorate)) = LOWER(?)
       ORDER BY br.created_at DESC
       LIMIT 100
     `;
@@ -870,6 +908,6 @@ router.get('/hospital-requests/:donorId', (req, res) => {
   });
 });
 
-console.log('[blood-requests.js] ✅ All routes registered - hospital-no-show endpoint FIXED for Issue #1');
+console.log('[blood-requests.js] ✅ All routes registered - CASE-INSENSITIVE governorate matching FIXED for Issues #1 & #2');
 
 module.exports = router;

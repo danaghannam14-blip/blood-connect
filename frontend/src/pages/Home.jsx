@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import lebanonMap from '../assets/bcc.png'
-import videoFile from '../assets/video.mp4'
 import CompatibilityMatrix from "../components/CompatibilityMatrix"
 
 const BLOOD_DATA = {
@@ -1292,7 +1291,7 @@ export default function Home() {
                 borderRadius: 28,
               }}
             >
-              <source src={videoFile} type="video/mp4" />
+              <source src="/video.mp4" type="video/mp4" />
             </video>
           </motion.div>
         </section>
