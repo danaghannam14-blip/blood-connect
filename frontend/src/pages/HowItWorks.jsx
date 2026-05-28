@@ -21,7 +21,6 @@ function HowItWorks() {
       overflow-x:hidden;
       position:relative;
       color:#380101;
-      zoom: 0.85;
     }
 
     .hiw-orbs {
@@ -209,13 +208,37 @@ function HowItWorks() {
 
     .hiw-steps {
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
-      gap:20px;
-      max-width:1300px;
+      grid-template-columns:repeat(3, 1fr);
+      gap:clamp(16px, 2vw, 24px);
+      max-width:100%;
       margin:0 auto;
-      padding:0 clamp(20px,3vw,44px) 60px;
+      padding:0 clamp(16px, 2vw, 40px) 60px;
       position:relative;
       z-index:10;
+    }
+
+    @media (max-width:1200px) {
+      .hiw-steps {
+        grid-template-columns:repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width:768px) {
+      .hiw-steps {
+        grid-template-columns:repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width:480px) {
+      .hiw-steps {
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:768px) {
+      .hiw-steps {
+        grid-template-columns:repeat(3, 1fr);
+      }
     }
 
     .hiw-step-card {
@@ -402,12 +425,6 @@ function HowItWorks() {
     }
   ]
 
-  const stats = [
-    { number: '189+', label: 'Hospital Partners' },
-    { number: '50K+', label: 'Active Donors' },
-    { number: '150K+', label: 'Lives Saved' }
-  ]
-
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -570,22 +587,6 @@ function HowItWorks() {
           BloodConnect connects compassionate donors with patients in critical need through intelligent matching. Together, we're building a more connected and efficient blood banking system for Lebanon.
         </p>
       </motion.section>
-
-      {/* STATS */}
-      <motion.div 
-        className="hiw-stats"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-      >
-        {stats.map((stat, idx) => (
-          <motion.div key={idx} className="hiw-stat-box" variants={itemVariants}>
-            <div className="hiw-stat-number">{stat.number}</div>
-            <p className="hiw-stat-label">{stat.label}</p>
-          </motion.div>
-        ))}
-      </motion.div>
 
       {/* STEPS SECTION */}
       <h2 className="hiw-section-title">The Journey</h2>

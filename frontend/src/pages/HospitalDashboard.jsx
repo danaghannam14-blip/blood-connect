@@ -672,7 +672,7 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
                             </p>
                           </div>
                           <div style={{ padding: '12px', background: 'rgba(96,165,250,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#1e40af', fontSize: 13 }}>
-                            ✈️ Coming for Supply from BCC Hamra
+                            Coming for Supply from BCC Hamra
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}

@@ -738,7 +738,7 @@ function Dashboard() {
                 </>
               ) : (
                 <>
-                  <span>🔄</span>
+                  <span></span>
                   Refresh
                 </>
               )}
