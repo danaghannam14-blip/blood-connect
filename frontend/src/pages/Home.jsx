@@ -1263,38 +1263,42 @@ export default function Home() {
           <CompatibilityMatrix />
         </section>
 
-        {/* Video Section */}
-        <section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-          <motion.div
-            className="bc-glass-deep bc-card-hover"
-            style={{
-              borderRadius: 28,
-              overflow: 'hidden',
-              border: '1px solid rgba(91,115,151,.12)',
-              position: 'relative',
-              width: '100%',
-            }}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true }}
-            whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
-          >
-            <video
-              width="100%"
-              height="auto"
-              controls
-              style={{
-                display: 'block',
-                width: '100%',
-                height: 'auto',
-                borderRadius: 28,
-              }}
-            >
-              <source src="/video.mp4" type="video/mp4" />
-            </video>
-          </motion.div>
-        </section>
+       {/* Video Section */}
+<section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+  <motion.div
+    className="bc-glass-deep bc-card-hover"
+    style={{
+      borderRadius: 28,
+      overflow: 'hidden',
+      border: '1px solid rgba(91,115,151,.12)',
+      position: 'relative',
+      width: '100%',
+      aspectRatio: '16 / 9',
+    }}
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.7 }}
+    viewport={{ once: true }}
+    whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
+  >
+    <iframe
+      width="100%"
+      height="100%"
+      src="https://www.youtube.com/embed/MGsZUvVrOtg?vq=hd1440"
+      title="BloodConnect"
+      frameBorder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowFullScreen
+      style={{ 
+        borderRadius: '12px', 
+        display: 'block',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+      }}
+    />
+  </motion.div>
+</section>
 
       </main>
 
