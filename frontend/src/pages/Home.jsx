@@ -196,6 +196,13 @@ const MODERN_STYLES = `
     p { font-size: clamp(12px, 1.2vw, 14px) !important; }
     .bc-btn { font-size: clamp(10px, 0.9vw, 12px) !important; padding: 9px clamp(10px, 1.5vw, 16px) !important; }
     section { margin-top: 24px !important; }
+    
+    /* Hide biometric sync card on mobile - takes too much space */
+    .glow-pulse { display: none !important; }
+    
+    /* Reduce animations on mobile for better performance */
+    .float-orb { animation: none !important; opacity: 0.05 !important; }
+    .bc-float-orb { animation-play-state: paused !important; }
   }
 `
 
@@ -273,13 +280,11 @@ function AnimatedBackgroundOrbs() {
   )
 }
 
-// ✅ ModernBloodDrop DEFINED HERE (BEFORE Home component)
 function ModernBloodDrop() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
 
   useEffect(() => {
-    // Load Three.js from CDN
     const script = document.createElement('script')
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
     script.async = true
@@ -304,7 +309,6 @@ function ModernBloodDrop() {
     const canvas = canvasRef.current
     const container = containerRef.current
 
-    // Scene setup
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0x260105)
 
@@ -321,7 +325,6 @@ function ModernBloodDrop() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
 
-    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
     scene.add(ambientLight)
 
@@ -334,7 +337,6 @@ function ModernBloodDrop() {
     pointLight2.position.set(-5, 3, 5)
     scene.add(pointLight2)
 
-    // Create main blood sphere
     const sphereGeometry = new THREE.SphereGeometry(0.8, 64, 64)
     const sphereMaterial = new THREE.MeshStandardMaterial({
       color: 0xcc0000,
@@ -348,7 +350,6 @@ function ModernBloodDrop() {
     sphere.receiveShadow = true
     scene.add(sphere)
 
-    // Create floating particles
     const particles = []
     const particleGeometry = new THREE.SphereGeometry(0.05, 16, 16)
     const particleMaterial = new THREE.MeshStandardMaterial({
@@ -378,7 +379,6 @@ function ModernBloodDrop() {
       particles.push(particle)
     }
 
-    // Create vein lines
     const lineGroup = new THREE.Group()
     for (let i = 0; i < 6; i++) {
       const points = [
@@ -406,7 +406,6 @@ function ModernBloodDrop() {
     }
     scene.add(lineGroup)
 
-    // Animation loop
     let animationId = null
     const clock = new THREE.Clock()
     let time = 0
@@ -415,15 +414,12 @@ function ModernBloodDrop() {
       animationId = requestAnimationFrame(animate)
       time += clock.getDelta()
 
-      // Rotate sphere
       sphere.rotation.x += 0.001
       sphere.rotation.y += 0.0015
 
-      // Pulse sphere
       const scale = 1 + Math.sin(time * 2) * 0.08
       sphere.scale.set(scale, scale, scale)
 
-      // Animate particles
       particles.forEach((particle) => {
         particle.position.add(particle.userData.velocity)
         particle.userData.life += 0.01
@@ -441,19 +437,16 @@ function ModernBloodDrop() {
         particle.material.opacity = Math.max(0, visibility * 0.6)
       })
 
-      // Rotate vein lines
       lineGroup.rotation.z += 0.003
       lineGroup.children.forEach((line, i) => {
         const pulse = Math.sin(time * 1.5 + i) * 0.3 + 0.6
         line.material.opacity = pulse * 0.6
       })
 
-      // Camera movement
       camera.position.x = Math.sin(time * 0.3) * 0.5
       camera.position.y = Math.cos(time * 0.25) * 0.3
       camera.lookAt(0, 0, 0)
 
-      // Dynamic lighting
       pointLight1.intensity = 1.5 + Math.sin(time * 1.3) * 0.4
 
       renderer.render(scene, camera)
@@ -461,7 +454,6 @@ function ModernBloodDrop() {
 
     animate()
 
-    // Handle resize
     const handleResize = () => {
       const width = container.clientWidth
       const height = container.clientHeight
@@ -500,7 +492,6 @@ function ModernBloodDrop() {
         }}
       />
 
-      {/* HUD Overlay */}
       <div
         style={{
           position: 'absolute',
@@ -527,7 +518,7 @@ function ModernBloodDrop() {
                 textTransform: 'uppercase',
               }}
             >
-              Core Flow Active
+              Emergency Blood Support
             </p>
             <p
               style={{
@@ -537,7 +528,7 @@ function ModernBloodDrop() {
                 margin: '4px 0 0',
               }}
             >
-              Biometric Sync
+               Live Matching
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -563,7 +554,6 @@ function ModernBloodDrop() {
           </div>
         </div>
 
-        {/* Bottom status */}
         <motion.div
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -579,7 +569,6 @@ function ModernBloodDrop() {
         </motion.div>
       </div>
 
-      {/* Vignette */}
       <div
         style={{
           position: 'absolute',
@@ -592,11 +581,19 @@ function ModernBloodDrop() {
   )
 }
 
-// ✅ Home component defined AFTER ModernBloodDrop
 export default function Home() {
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
   const [analytics, setAnalytics] = useState({ donors: 0, emergencies: 0 })
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 480)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -652,125 +649,142 @@ export default function Home() {
   return (
     <div className="bc-root">
       <AnimatedBackgroundOrbs />
+<header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+  <div className="bc-nav-inner">
+    <motion.div
+      initial={{ opacity: 0, x: -30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6 }}
+      style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+      onClick={() => go('/')}
+      whileHover={{ x: 3 }}
+    >
+      <motion.div
+        style={{
+          width: 50,
+          height: 50,
+          background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+          borderRadius: 14,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+        animate={{ rotateY: [0, 360] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+      >
+        <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+          <defs>
+            <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ff6b6b" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+          </defs>
+          <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
+          <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+        </svg>
+      </motion.div>
+      <div>
+        <motion.div 
+          style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+          animate={{ letterSpacing: [0, 1, 0] }} 
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          BloodConnect
+        </motion.div>
+        <motion.div
+          style={{ 
+            fontSize: 'clamp(9px, 1vw, 12px)', 
+            fontWeight: 500, 
+            color: 'rgba(71, 85, 105, 0.7)',
+            margin: '2px 0 0 0',
+            letterSpacing: '0.5px'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          Smart Donor Matching System
+        </motion.div>
+      </div>
+    </motion.div>
 
-      <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
-        <div className="bc-nav-inner">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
-            onClick={() => go('/')}
-            whileHover={{ x: 3 }}
-          >
-            <motion.div
-              style={{
-                width: 50,
-                height: 50,
-                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-                borderRadius: 14,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
-              animate={{ rotateY: [0, 360] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-            >
-              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
-                <defs>
-                  <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#ff6b6b" />
-                    <stop offset="50%" stopColor="#dc2626" />
-                    <stop offset="100%" stopColor="#991b1b" />
-                  </linearGradient>
-                </defs>
-                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
-                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
-              </svg>
-            </motion.div>
-            <div>
-              <motion.div style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }} animate={{ letterSpacing: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity }}>
-                BloodConnect
-              </motion.div>
-            </div>
-          </motion.div>
+    <div style={{ flex: 1 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        onClick={() => go('/emergency')}
+        className="bc-btn bc-btn-primary"
+        whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
+        whileTap={{ scale: 0.92 }}
+        style={{
+          padding: '13px 26px',
+          borderRadius: 24,
+          fontSize: 13,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        <motion.span
+          animate={{ scale: [1, 1.4, 1] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+        >
+          ●
+        </motion.span>
+        Emergency
+      </motion.button>
 
-          <div style={{ flex: 1 }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              onClick={() => go('/emergency')}
-              className="bc-btn bc-btn-primary"
-              whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
-              whileTap={{ scale: 0.92 }}
-              style={{
-                padding: '13px 26px',
-                borderRadius: 24,
-                fontSize: 13,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              <motion.span
-                animate={{ scale: [1, 1.4, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              >
-                ●
-              </motion.span>
-              Emergency
-            </motion.button>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        onClick={() => go('/how-it-works')}
+        className="bc-btn bc-btn-secondary"
+        whileHover={{ scale: 1.06, y: -2 }}
+        whileTap={{ scale: 0.92 }}
+        style={{
+          padding: '13px 24px',
+          borderRadius: 24,
+          fontSize: 13,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+         How It Works
+      </motion.button>
 
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              onClick={() => go('/how-it-works')}
-              className="bc-btn bc-btn-secondary"
-              whileHover={{ scale: 1.06, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              style={{
-                padding: '13px 24px',
-                borderRadius: 24,
-                fontSize: 13,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-               How It Works
-            </motion.button>
-
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              onClick={() => go('/impact')}
-              className="bc-btn bc-btn-secondary"
-              whileHover={{ scale: 1.06, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              style={{
-                padding: '13px 24px',
-                borderRadius: 24,
-                fontSize: 13,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              Donor Guide
-            </motion.button>
-          </div>
-        </div>
-      </header>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        onClick={() => go('/impact')}
+        className="bc-btn bc-btn-secondary"
+        whileHover={{ scale: 1.06, y: -2 }}
+        whileTap={{ scale: 0.92 }}
+        style={{
+          padding: '13px 24px',
+          borderRadius: 24,
+          fontSize: 13,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        Donor Guide
+      </motion.button>
+    </div>
+  </div>
+</header>
 
       <main style={{
         position: 'relative',
@@ -908,218 +922,221 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          {/* Hero Visual */}
-          <motion.div
-            className="bc-hero-visual"
-            style={{
-              position: 'relative',
-              height: 'clamp(360px,32vw,500px)',
-            }}
-            initial={{ opacity: 0, x: 60 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-            viewport={{ once: true }}
-          >
+          {/* Hero Visual - HIDDEN ON MOBILE */}
+          {!isMobile && (
             <motion.div
-              className="bc-glass-deep bc-card-hover"
+              className="bc-hero-visual"
               style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: 32,
-                overflow: 'hidden',
-                border: '1px solid rgba(91,115,151,.12)',
+                position: 'relative',
+                height: 'clamp(360px,32vw,500px)',
               }}
-              whileHover={{ boxShadow: '0 40px 100px rgba(220,38,38,.25)', y: -8 }}
-            >
-              <ModernBloodDrop />
-            </motion.div>
-
-            <motion.div
-              className="bc-glass-deep bc-card-hover glow-pulse"
-              style={{
-                position: 'absolute',
-                top: '-8%',
-                right: '-8%',
-                zIndex: 20,
-                borderRadius: 24,
-                padding: 24,
-                minWidth: 'min(260px,30vw)',
-              }}
-              initial={{ opacity: 0, y: -30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
+              initial={{ opacity: 0, x: 60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
               viewport={{ once: true }}
-              whileHover={{ y: -16, scale: 1.05 }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <motion.div
-                    style={{
-                      width: 50,
-                      height: 50,
-                      background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-                      borderRadius: 12,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                    }}
-                  >
+              <motion.div
+                className="bc-glass-deep bc-card-hover"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 32,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(91,115,151,.12)',
+                }}
+                whileHover={{ boxShadow: '0 40px 100px rgba(220,38,38,.25)', y: -8 }}
+              >
+                <ModernBloodDrop />
+              </motion.div>
+
+              {/* Biometric sync card - HIDDEN ON MOBILE */}
+              <motion.div
+                className="bc-glass-deep bc-card-hover glow-pulse"
+                style={{
+                  position: 'absolute',
+                  top: '-8%',
+                  right: '-8%',
+                  zIndex: 20,
+                  borderRadius: 24,
+                  padding: 24,
+                  minWidth: 'min(260px,30vw)',
+                }}
+                initial={{ opacity: 0, y: -30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -16, scale: 1.05 }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                     <motion.div
                       style={{
-                        width: 10,
-                        height: 10,
-                        background: '#fff',
-                        borderRadius: '50%',
+                        width: 50,
+                        height: 50,
+                        background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                        borderRadius: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         position: 'relative',
-                        zIndex: 3,
+                        overflow: 'hidden',
+                        flexShrink: 0,
                       }}
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ 
-                        duration: 1.2, 
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                      }}
-                    />
-                    
-                    <motion.div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: '50%',
-                        border: '2px solid rgba(255,255,255,.7)',
-                      }}
-                      animate={{ 
-                        scale: [1, 1.6],
-                        opacity: [1, 0]
-                      }}
-                      transition={{ 
-                        duration: 1.2, 
-                        repeat: Infinity,
-                        ease: 'easeOut'
-                      }}
-                    />
-                    
-                    <motion.div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: '50%',
-                        border: '1.5px solid rgba(255,255,255,.4)',
-                      }}
-                      animate={{ 
-                        scale: [1, 2],
-                        opacity: [0.8, 0]
-                      }}
-                      transition={{ 
-                        duration: 1.2, 
-                        repeat: Infinity,
-                        ease: 'easeOut',
-                        delay: 0.2
-                      }}
-                    />
-                  </motion.div>
-                  
-                  <div>
-                    <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 4 }}>SYSTEM STATUS</p>
-                    <motion.p 
-                      style={{ fontSize: 26, fontWeight: 900, color: '#dc2626', margin: 0 }}
-                      animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
-                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      Stable
-                    </motion.p>
+                      <motion.div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          background: '#fff',
+                          borderRadius: '50%',
+                          position: 'relative',
+                          zIndex: 3,
+                        }}
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeInOut'
+                        }}
+                      />
+                      
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          border: '2px solid rgba(255,255,255,.7)',
+                        }}
+                        animate={{ 
+                          scale: [1, 1.6],
+                          opacity: [1, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeOut'
+                        }}
+                      />
+                      
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          border: '1.5px solid rgba(255,255,255,.4)',
+                        }}
+                        animate={{ 
+                          scale: [1, 2],
+                          opacity: [0.8, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeOut',
+                          delay: 0.2
+                        }}
+                      />
+                    </motion.div>
+                    
+                    <div>
+                      <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 4 }}>DONATION STATUS</p>
+                      <motion.p 
+                        style={{ fontSize: 26, fontWeight: 900, color: '#dc2626', margin: 0 }}
+                        animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        Ready to Help
+                      </motion.p>
+                    </div>
+                  </div>
+
+                  <div style={{ height: 40, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <svg
+                      style={{ width: '100%', height: '100%', position: 'absolute' }}
+                      viewBox="0 0 300 40"
+                      preserveAspectRatio="none"
+                    >
+                      <defs>
+                        <linearGradient id="heartbeatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
+                          <stop offset="50%" stopColor="#dc2626" stopOpacity="1" />
+                          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
+                        </linearGradient>
+                      </defs>
+                      <motion.polyline
+                        points="0,20 10,20 15,10 20,30 25,15 35,20 45,20 50,20 55,18 58,22 62,20 70,20 80,20 90,20 100,20 110,20 115,18 118,22 122,20 130,20 140,20 150,20 160,20 165,18 168,22 172,20 180,20 190,20 200,20 210,20 215,18 218,22 222,20 230,20 240,20 250,20 260,20 270,20 280,20 290,20 300,20"
+                        fill="none"
+                        stroke="url(#heartbeatGrad)"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        animate={{ 
+                          strokeDashoffset: [0, 300],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: 'linear'
+                        }}
+                        style={{
+                          strokeDasharray: 300,
+                        }}
+                      />
+                    </svg>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <motion.div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: '#4ade80',
+                        boxShadow: '0 0 8px rgba(74,222,128,.6)'
+                      }}
+                      animate={{ scale: [1, 1.4, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                    />
+                    <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
+                     · Blood Requests Online
+                    </p>
                   </div>
                 </div>
+              </motion.div>
 
-                <div style={{ height: 40, display: 'flex', alignItems: 'center', position: 'relative' }}>
-                  <svg
-                    style={{ width: '100%', height: '100%', position: 'absolute' }}
-                    viewBox="0 0 300 40"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <linearGradient id="heartbeatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
-                        <stop offset="50%" stopColor="#dc2626" stopOpacity="1" />
-                        <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
-                      </linearGradient>
-                    </defs>
-                    <motion.polyline
-                      points="0,20 10,20 15,10 20,30 25,15 35,20 45,20 50,20 55,18 58,22 62,20 70,20 80,20 90,20 100,20 110,20 115,18 118,22 122,20 130,20 140,20 150,20 160,20 165,18 168,22 172,20 180,20 190,20 200,20 210,20 215,18 218,22 222,20 230,20 240,20 250,20 260,20 270,20 280,20 290,20 300,20"
-                      fill="none"
-                      stroke="url(#heartbeatGrad)"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      animate={{ 
-                        strokeDashoffset: [0, 300],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: 'linear'
-                      }}
-                      style={{
-                        strokeDasharray: 300,
-                      }}
-                    />
-                  </svg>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <motion.div
+                className="bc-glass-deep glow-pulse-lg"
+                style={{
+                  position: 'absolute',
+                  bottom: '-8%',
+                  left: '-10%',
+                  width: 'clamp(120px,14vw,180px)',
+                  height: 'clamp(120px,14vw,180px)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 20,
+                }}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.15 }}
+              >
+                <div style={{ textAlign: 'center' }}>
                   <motion.div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: '#4ade80',
-                      boxShadow: '0 0 8px rgba(74,222,128,.6)'
-                    }}
-                    animate={{ scale: [1, 1.4, 1] }}
-                    transition={{ duration: 1.2, repeat: Infinity }}
-                  />
-                  <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
-                    72 BPM · ACTIVE SYNC
-                  </p>
+                    style={{ fontSize: 32, fontWeight: 900, color: '#ff6b6b' }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    24/7
+                  </motion.div>
+                  <div style={{ fontSize: 9, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 4 }}>RESPONSE</div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-
-            <motion.div
-              className="bc-glass-deep glow-pulse-lg"
-              style={{
-                position: 'absolute',
-                bottom: '-8%',
-                left: '-10%',
-                width: 'clamp(120px,14vw,180px)',
-                height: 'clamp(120px,14vw,180px)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 20,
-              }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.15 }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <motion.div
-                  style={{ fontSize: 32, fontWeight: 900, color: '#ff6b6b' }}
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  24/7
-                </motion.div>
-                <div style={{ fontSize: 9, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 4 }}>RESPONSE</div>
-              </div>
-            </motion.div>
-          </motion.div>
+          )}
         </section>
 
         {/* Analytics Section */}
@@ -1276,47 +1293,47 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* Compatibility Matrix - with proper spacing */}
+        {/* Compatibility Matrix */}
         <section style={{ marginTop: '150px' }}>
           <CompatibilityMatrix />
         </section>
 
-       {/* Video Section */}
-<section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-  <motion.div
-    className="bc-glass-deep bc-card-hover"
-    style={{
-      borderRadius: 28,
-      overflow: 'hidden',
-      border: '1px solid rgba(91,115,151,.12)',
-      position: 'relative',
-      width: '100%',
-      aspectRatio: '16 / 9',
-    }}
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.7 }}
-    viewport={{ once: true }}
-    whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
-  >
-    <iframe
-  width="100%"
-  height="100%"
-  src="https://www.youtube.com/embed/MGsZUvVrOtg?vq=hd1440&modestbranding=1&rel=0"
-  title="BloodConnect"
-  frameBorder="0"
-  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  allowFullScreen
-  style={{ 
-    borderRadius: '12px', 
-    display: 'block',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  }}
-/>
-  </motion.div>
-</section>
+        {/* Video Section */}
+        <section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+          <motion.div
+            className="bc-glass-deep bc-card-hover"
+            style={{
+              borderRadius: 28,
+              overflow: 'hidden',
+              border: '1px solid rgba(91,115,151,.12)',
+              position: 'relative',
+              width: '100%',
+              aspectRatio: '16 / 9',
+            }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
+          >
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/MGsZUvVrOtg?vq=hd1440&modestbranding=1&rel=0"
+              title="BloodConnect"
+              frameBorder="0"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{ 
+                borderRadius: '12px', 
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+            />
+          </motion.div>
+        </section>
 
       </main>
 
@@ -1348,7 +1365,7 @@ export default function Home() {
                 fontWeight: 900,
                 marginBottom: 16,
               }}>
-                BloodConnect
+                BloodConnect: Smart Donor Matching System
               </div>
               <p style={{
                 color: 'rgba(71,85,105,.7)',
@@ -1358,7 +1375,7 @@ export default function Home() {
                 fontSize: 'clamp(12px,1.2vw,14px)',
                 margin: 0,
               }}>
-                Pioneering the future of hematological logistics through empathy and code.
+               Building a smarter blood donation network through innovation and connection.
               </p>
             </motion.div>
           </div>
