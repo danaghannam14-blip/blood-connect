@@ -3,12 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-
-
-// Backend API URL - Smart detection
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000'
-  : 'https://blood-bank-eqyr.onrender.com'
+import { API_BASE_URL as API } from '../config/apiConfig'
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl
