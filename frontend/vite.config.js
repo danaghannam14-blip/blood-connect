@@ -8,24 +8,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
-        changeOrigin: true,
-        rewrite: (path) => path
+        changeOrigin: true
       }
-    },
-    port: 5173
-  },
-  build: {
-    rollupOptions: {
-      external: [],
-      output: {
-        globals: {}
-      }
-    },
-    commonjsOptions: {
-      transformMixedEsModules: true
     }
-  },
-  ssr: {
-    noExternal: ['leaflet', 'react-leaflet']
   }
 })
