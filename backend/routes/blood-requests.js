@@ -363,7 +363,6 @@ router.post('/create-emergency', async (req, res) => {
                   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
                   <p style="font-size: 12px; color: #9ca3af; margin: 0; text-align: center;">
                     This is an automated message from BloodConnect Lebanon<br>
-                    Patient Email: <strong>${patient_email}</strong>
                   </p>
                 </div>
               </div>

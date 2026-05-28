@@ -7,7 +7,7 @@ const UNIFIED_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { overflow-x: hidden; height: 100%; }
+  html, body { overflow-x: hidden; height: 100%; width: 100%; }
 
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
@@ -24,6 +24,7 @@ const UNIFIED_STYLES = `
     overflow-x: hidden;
     position: relative;
     color: #380101;
+    width: 100%;
   }
 
   .login-float-orb {
@@ -145,27 +146,31 @@ const UNIFIED_STYLES = `
   @media (max-width: 768px) {
     .login-root {
       min-height: 100vh;
-      padding: 0;
-      margin: 0;
+      width: 100%;
     }
     .login-container {
       padding: clamp(16px, 2vw, 24px) !important;
+      width: 100%;
     }
   }
 
   @media (max-width: 480px) {
     .login-root {
-      min-height: 100vh;
-      padding: 0;
-      margin: 0;
+      width: 100%;
+      overflow-x: hidden;
     }
     .login-container {
-      padding: 12px !important;
-      height: 100vh !important;
+      padding: 16px 14px !important;
+      width: 100%;
+      max-width: 100%;
     }
     .login-grid {
-      gap: 0 !important;
-      maxWidth: 100% !important;
+      width: 100%;
+      max-width: 100%;
+    }
+    html, body { 
+      overflow-x: hidden;
+      width: 100%;
     }
   }
 `
@@ -403,6 +408,7 @@ function Login() {
         alignItems: 'center', 
         justifyContent: 'center', 
         padding: 'clamp(12px, 3vw, 24px)',
+        width: '100%',
       }}>
         <div className="login-grid" style={{ 
           width: '100%', 

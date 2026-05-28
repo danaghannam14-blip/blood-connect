@@ -42,15 +42,16 @@ const MODERN_STYLES = `
   @media (max-width:768px) {
     .hospital-root { font-size: 1em; }
     .hospital-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: wrap; }
-    main { padding: 20px clamp(12px, 2vw, 30px) !important; gap: 32px !important; }
+    main { padding: 20px clamp(12px, 2vw, 30px) !important; gap: 24px !important; }
     h1 { font-size: clamp(18px, 5vw, 28px) !important; }
     p { font-size: clamp(12px, 1.2vw, 14px) !important; }
     .hospital-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 8px clamp(12px, 2vw, 18px) !important; }
+    .hospital-card-title { font-size: clamp(14px, 4vw, 18px) !important; }
   }
 
   @media (max-width:480px) {
     .hospital-root { font-size: 1em; }
-    main { padding: 16px 12px !important; gap: 24px !important; }
+    main { padding: 16px 12px !important; gap: 16px !important; }
     .hospital-nav-inner { padding: 10px 12px; gap: 6px; }
     .hospital-card-title { font-size: clamp(14px, 4vw, 18px) !important; }
     .hospital-tab-btn { padding: 8px clamp(10px, 1.5vw, 14px) !important; font-size: clamp(10px, 0.9vw, 11px) !important; }
@@ -441,7 +442,7 @@ Hospital Page              </motion.div>
           initial={{ opacity: 0 }}
           animate={{ opacity: visible ? 1 : 0 }}
           transition={{ staggerChildren: 0.1 }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20, marginBottom: 44 }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}
         >
           <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
             <p style={{ fontSize: 28, fontWeight: 900, color: '#EA580C', margin: 0 }}>{pendingCount}</p>
@@ -496,7 +497,11 @@ Hospital Page              </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 24 
+            }}
           >
             <motion.div
               className="hospital-glass-deep"
@@ -617,7 +622,7 @@ Hospital Page              </motion.div>
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                               <span style={{ fontSize: 20, fontWeight: 900, color: '#059669' }}>{r.blood_type}</span>
                               <span style={{
                                 fontSize: 9,
@@ -662,7 +667,7 @@ Hospital Page              </motion.div>
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                               <span style={{ fontSize: 20, fontWeight: 900, color: '#1d4ed8' }}>{r.blood_type}</span>
                               <span style={{
                                 fontSize: 9,
@@ -721,7 +726,7 @@ Hospital Page              </motion.div>
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                               <span style={{ fontSize: 20, fontWeight: 900, color: '#c2410c' }}>{r.blood_type}</span>
                               <span style={{
                                 fontSize: 9,
@@ -762,7 +767,7 @@ Hospital Page              </motion.div>
                         }}
                       >
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 20, fontWeight: 900, color: '#7c2d12' }}>{r.blood_type}</span>
                             <span style={{
                               fontSize: 9,
@@ -782,13 +787,13 @@ Hospital Page              </motion.div>
                             {new Date(r.created_at).toLocaleDateString('en-GB')}
                           </p>
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleConfirmReceived(r.id)}
                             className="hospital-btn hospital-btn-success"
-                            style={{ flex: 1, padding: '8px 12px', fontSize: 11 }}
+                            style={{ flex: '1 1 auto', minWidth: '80px', padding: '8px 12px', fontSize: 11 }}
                           >
                             Confirmed
                           </motion.button>
@@ -799,7 +804,8 @@ Hospital Page              </motion.div>
                             disabled={confirmingId === r.id}
                             className="hospital-btn"
                             style={{
-                              flex: 1,
+                              flex: '1 1 auto',
+                              minWidth: '80px',
                               fontSize: 11,
                               fontWeight: 900,
                               color: '#fff',
@@ -818,7 +824,8 @@ Hospital Page              </motion.div>
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleDeleteRequest(r.id)}
                             style={{
-                              flex: 1,
+                              flex: '1 1 auto',
+                              minWidth: '60px',
                               fontSize: 11,
                               fontWeight: 900,
                               color: '#fff',
@@ -875,7 +882,9 @@ Hospital Page              </motion.div>
                             border: '2px solid rgba(220,38,38,.3)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 12
                           }}
                         >
                           <div>
@@ -892,7 +901,7 @@ Hospital Page              </motion.div>
                             onClick={() => handleConfirmDonation(donation.id)}
                             disabled={confirmingId === donation.id}
                             className="hospital-btn hospital-btn-success"
-                            style={{ opacity: confirmingId === donation.id ? 0.7 : 1 }}
+                            style={{ opacity: confirmingId === donation.id ? 0.7 : 1, whiteSpace: 'nowrap' }}
                           >
                             {confirmingId === donation.id ? 'Confirming...' : 'Confirm'}
                           </motion.button>
@@ -916,7 +925,9 @@ Hospital Page              </motion.div>
                             border: '2px solid rgba(34,197,94,.3)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 12
                           }}
                         >
                           <div>
@@ -927,7 +938,7 @@ Hospital Page              </motion.div>
                               Confirmed - {new Date(donation.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10 }}>
+                          <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10, whiteSpace: 'nowrap' }}>
                             Ready
                           </span>
                         </div>
