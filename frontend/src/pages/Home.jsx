@@ -181,28 +181,108 @@ const MODERN_STYLES = `
 
   @media (max-width:768px) {
     .bc-root { font-size: 1em; }
-    .bc-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: wrap; }
-    main { padding: 24px clamp(12px, 2vw, 30px) !important; gap: 40px !important; }
+    .bc-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: nowrap; }
+    main { padding: 20px clamp(14px, 2vw, 28px) !important; gap: 36px !important; }
     h1 { font-size: clamp(28px, 6vw, 45px) !important; }
     p { font-size: clamp(13px, 1.3vw, 16px) !important; }
-    .bc-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 10px clamp(12px, 2vw, 20px) !important; }
+    .bc-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 11px clamp(14px, 2vw, 22px) !important; }
+    section { overflow-x: hidden; }
+  }
+
+  @media (max-width:640px) {
+    .bc-root { font-size: 1em; }
+    main { padding: 18px 14px !important; gap: 28px !important; }
+    h1 { font-size: clamp(26px, 5.5vw, 40px) !important; line-height: 1.15 !important; }
+    p { font-size: clamp(12.5px, 1.25vw, 15px) !important; line-height: 1.6 !important; }
+    .bc-btn { font-size: clamp(11px, 1vw, 12px) !important; padding: 10px clamp(14px, 2.5vw, 20px) !important; }
+    .bc-network-grid { gap: 20px !important; height: auto !important; }
+    .bc-network-grid > div { min-height: 280px !important; }
   }
 
   @media (max-width:480px) {
-    .bc-root { font-size: 1em; }
-    main { padding: 16px 12px !important; gap: 32px !important; }
-    .bc-nav-inner { padding: 10px 12px; gap: 6px; }
-    h1 { font-size: clamp(24px, 5vw, 36px) !important; line-height: 1.2 !important; }
-    p { font-size: clamp(12px, 1.2vw, 14px) !important; }
-    .bc-btn { font-size: clamp(10px, 0.9vw, 12px) !important; padding: 9px clamp(10px, 1.5vw, 16px) !important; }
-    section { margin-top: 24px !important; }
+    .bc-root { font-size: 1em; overflow-x: hidden; }
+    main { padding: 16px 14px !important; gap: 24px !important; max-width: 100vw !important; }
+    .bc-nav-inner { padding: 11px 14px; gap: 6px; justify-content: flex-start; }
+    .bc-nav-inner > div:nth-child(2) { display: none !important; }
+    
+    h1 { font-size: clamp(22px, 5.5vw, 32px) !important; line-height: 1.2 !important; margin-bottom: 12px !important; }
+    h2 { font-size: clamp(18px, 4.5vw, 26px) !important; }
+    p { font-size: clamp(12px, 1.2vw, 13.5px) !important; line-height: 1.6 !important; }
+    
+    .bc-btn { 
+      font-size: clamp(11px, 1vw, 12px) !important; 
+      padding: 10px clamp(12px, 2vw, 16px) !important; 
+      min-height: 44px;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .bc-btn-primary, .bc-btn-secondary { 
+      width: auto;
+      flex: 1;
+      min-width: auto;
+    }
+    
+    section { margin-top: 20px !important; overflow-x: hidden; }
+    
+    /* Navigation buttons stack on small screens */
+    .bc-nav-inner > div:last-child {
+      width: 100% !important;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex !important;
+      gap: 8px;
+    }
+    
+    /* Analytics grid optimization */
+    .bc-network-grid { 
+      grid-template-columns: 1fr !important; 
+      gap: 18px !important; 
+      height: auto !important; 
+    }
+    
+    .bc-network-grid > div { 
+      min-height: auto !important;
+      aspect-ratio: auto !important;
+    }
+    
+    .bc-network-grid > div:first-child {
+      height: 280px;
+    }
+    
+    .bc-network-grid > div:last-child {
+      min-height: 320px;
+    }
     
     /* Hide biometric sync card on mobile - takes too much space */
     .glow-pulse { display: none !important; }
+    .glow-pulse-lg { display: none !important; }
     
     /* Reduce animations on mobile for better performance */
-    .float-orb { animation: none !important; opacity: 0.05 !important; }
-    .bc-float-orb { animation-play-state: paused !important; }
+    .float-orb { animation: none !important; opacity: 0.03 !important; }
+    .bc-float-orb { animation-play-state: paused !important; opacity: 0.05 !important; }
+    
+    /* Video responsive */
+    iframe { border-radius: 16px !important; }
+    
+    /* Footer responsive */
+    footer { margin-top: 40px !important; }
+    footer > div { padding: 32px clamp(14px, 3vw, 32px) !important; }
+    
+    /* Ensure no horizontal scroll */
+    * { max-width: 100vw; }
+    body { overflow-x: hidden; }
+    
+    /* Better touch targets */
+    a, button { min-height: 44px; min-width: 44px; }
+  }
+
+  @media (max-width:380px) {
+    h1 { font-size: clamp(20px, 5vw, 28px) !important; }
+    p { font-size: clamp(11.5px, 1.1vw, 13px) !important; }
+    main { padding: 12px 12px !important; gap: 20px !important; }
+    .bc-btn { padding: 9px clamp(10px, 1.5vw, 14px) !important; font-size: clamp(10px, 0.9vw, 11px) !important; }
+    section { margin-top: 16px !important; }
   }
 `
 
@@ -1039,7 +1119,7 @@ export default function Home() {
                     </motion.div>
                     
                     <div>
-                      <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 4 }}>DONATION STATUS</p>
+                      <p style={{ fontSize: 6, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 4 }}>DONATION STATUS</p>
                       <motion.p 
                         style={{ fontSize: 26, fontWeight: 900, color: '#dc2626', margin: 0 }}
                         animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
