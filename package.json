@@ -1,0 +1,9 @@
+{
+  "name": "blood-connect",
+  "version": "1.0.0",
+  "description": "Blood donation app",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm run build"
+  }
+}
