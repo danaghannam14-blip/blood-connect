@@ -356,7 +356,7 @@ router.post('/create-emergency', async (req, res) => {
                   
                   <div style="background: #ecfdf5; border: 1px solid #d1fae5; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
                     <p style="margin: 0; color: #065f46; font-weight: bold;">
-                      Thank you for being a lifesaver! 💚
+                      Thank you for being a lifesaver!
                     </p>
                   </div>
                   
@@ -822,7 +822,7 @@ router.post('/admin-confirm', async (req, res) => {
             </div>
             
             <div style="background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
-              <p style="margin: 0; font-weight: bold; color: #1f2937;">🏛️ Donation Location: BCC Hamra Center</p>
+              <p style="margin: 0; font-weight: bold; color: #1f2937;">Donation Location: BCC Hamra Center</p>
               <p style="margin: 8px 0 0; color: #666;">The blood is now available for your treatment.</p>
             </div>
             
