@@ -727,7 +727,7 @@ export default function Home() {
                 gap: 8,
               }}
             >
-               How It Works
+               Donor Guide
             </motion.button>
 
             <motion.button
