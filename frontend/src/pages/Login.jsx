@@ -16,12 +16,12 @@ const UNIFIED_STYLES = `
   @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
   .login-root {
-    height: 100vh;
+    min-height: 100vh;
     background: linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
     background-size: 400% 400%;
     animation: gradient-shift 15s ease infinite;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
     color: #380101;
   }
@@ -140,6 +140,33 @@ const UNIFIED_STYLES = `
   @media (max-width: 1024px) {
     .login-left { display: none !important; }
     .login-grid { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 768px) {
+    .login-root {
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+    }
+    .login-container {
+      padding: clamp(16px, 2vw, 24px) !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-root {
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+    }
+    .login-container {
+      padding: 12px !important;
+      height: 100vh !important;
+    }
+    .login-grid {
+      gap: 0 !important;
+      maxWidth: 100% !important;
+    }
   }
 `
 
@@ -368,15 +395,14 @@ function Login() {
     <div className="login-root">
       <AnimatedBackgroundOrbs />
 
-      <div style={{ 
+      <div className="login-container" style={{ 
         position: 'relative', 
         zIndex: 10, 
-        height: '100vh', 
+        minHeight: '100vh', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        padding: 'max(8px, min(16px, 3vh))',
-        overflow: 'hidden'
+        padding: 'clamp(12px, 3vw, 24px)',
       }}>
         <div className="login-grid" style={{ 
           width: '100%', 
@@ -385,8 +411,7 @@ function Login() {
           gridTemplateColumns: '1fr 0.95fr', 
           gap: 'clamp(16px, 3vw, 40px)', 
           alignItems: 'center',
-          height: '100%',
-          maxHeight: '100vh'
+          minHeight: 'auto'
         }}>
 
           {/* LEFT SIDE - ELEGANT BRANDING */}
@@ -396,8 +421,6 @@ function Login() {
               display: 'flex', 
               flexDirection: 'column', 
               gap: 'clamp(12px, 1.5vw, 18px)',
-              height: '100%',
-              justifyContent: 'center'
             }}
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : -40 }}
@@ -454,7 +477,7 @@ function Login() {
               </p>
             </motion.div>
 
-            {/* Compact Journey Steps - Hidden on smaller screens */}
+            {/* Compact Journey Steps */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={visible ? { opacity: 1 } : { opacity: 0 }}
@@ -555,10 +578,9 @@ function Login() {
             animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 50 }}
             transition={{ duration: 0.7, delay: 0.12 }}
             style={{ 
-              height: '100%', 
               display: 'flex', 
               alignItems: 'center',
-              overflow: 'hidden'
+              width: '100%',
             }}
           >
             <div className="login-glass-deep login-card-hover" style={{
@@ -568,7 +590,6 @@ function Login() {
               position: 'relative',
               overflow: 'hidden',
               width: '100%',
-              maxHeight: '90vh',
               display: 'flex',
               flexDirection: 'column'
             }}>
@@ -669,43 +690,47 @@ function Login() {
                   }}>
                     Password
                   </label>
-                  <input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    className="login-input"
-                    style={{ paddingRight: 44 }}
-                  />
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    whileHover={{ scale: 1.1 }}
-                    style={{
-                      position: 'absolute',
-                      right: 14,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 3,
-                      color: 'rgba(61,61,61,.5)',
-                      transition: 'all .2s',
-                      fontSize: 16,
-                    }}
-                  >
-                    {showPassword ? (
-  <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
-    <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
-  </svg>
-) : (
-  <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
-    <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
-  </svg>
-)}
-                  </motion.button>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                      className="login-input"
+                      style={{ paddingRight: 44 }}
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      whileHover={{ scale: 1.1 }}
+                      style={{
+                        position: 'absolute',
+                        right: 14,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 4,
+                        color: 'rgba(61,61,61,.5)',
+                        transition: 'all .2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
+                          <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
+                          <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
+                        </svg>
+                      )}
+                    </motion.button>
+                  </div>
                 </motion.div>
 
                 {/* Forgot Password Link */}
