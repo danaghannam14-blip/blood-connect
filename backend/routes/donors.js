@@ -34,31 +34,25 @@ router.post('/login', (req, res) => {
     const isMatch = bcrypt.compareSync(password, donor.password)
     if (!isMatch) return res.status(401).json({ message: 'Incorrect password' })
 
-    // ── Reset is_eligible on every login so screening is required each session ──
-    db.query('UPDATE donors SET is_eligible = 0 WHERE id = ?', [donor.id], (updateErr) => {
-      if (updateErr) return res.status(500).json({ message: 'Login failed during reset', error: updateErr.message })
+    // ✅ REMOVED THE RESET - no longer setting is_eligible = 0
+    const token = jwt.sign(
+      { id: donor.id, email: donor.email },
+      process.env.JWT_SECRET || 'bloodbank_secret',
+      { expiresIn: '24h' }
+    )
 
-      const token = jwt.sign(
-        { id: donor.id, email: donor.email },
-        process.env.JWT_SECRET || 'bloodbank_secret',
-        { expiresIn: '24h' }
-      )
-
-      res.json({
-        message: 'Login successful',
-        token,
-        donor: {
-          id: donor.id,
-          full_name: donor.full_name,
-          first_name: donor.first_name,
-          last_name: donor.last_name,
-          email: donor.email,
-          blood_type: donor.blood_type,
-          governorate: donor.governorate,
-          phone: donor.phone,
-          is_eligible: false  // always false at login — screening required
-        }
-      })
+    res.json({
+      message: 'Login successful',
+      token,
+      donor: {
+        id: donor.id,
+        full_name: donor.full_name,
+        email: donor.email,
+        blood_type: donor.blood_type,
+        governorate: donor.governorate,
+        phone: donor.phone,
+        is_eligible: donor.is_eligible
+      }
     })
   })
 })
