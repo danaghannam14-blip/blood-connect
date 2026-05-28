@@ -136,7 +136,7 @@ const getCompatibleDonors = (bloodType) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ PUT ROUTE - Update blood request status
+// ✅ PUT ROUTE - Update blood request status (Admin confirms supply)
 // ════════════════════════════════════════════════════════════════════════════
 router.put('/:requestId', (req, res) => {
   const requestId = req.params.requestId;
@@ -157,6 +157,12 @@ router.put('/:requestId', (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
+      // ✅ CHECK: Verify request actually exists
+      if (result.affectedRows === 0) {
+        console.log(`[PUT /:requestId] ⚠️ Request ${requestId} not found`);
+        return res.status(404).json({ error: 'Request not found' });
+      }
+
       console.log(`[PUT /:requestId] ✅ Request ${requestId} updated to status: ${status}`);
       res.json({ success: true, message: `Request updated to status: ${status}` });
     });
@@ -167,7 +173,7 @@ router.put('/:requestId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ DELETE ROUTE
+// ✅ DELETE ROUTE 1 - Remove EMERGENCY DONATION (from donor declining in Emergency tab)
 // ════════════════════════════════════════════════════════════════════════════
 router.delete('/:requestId', (req, res) => {
   const requestId = req.params.requestId;
@@ -177,18 +183,25 @@ router.delete('/:requestId', (req, res) => {
   }
 
   try {
-    console.log(`[DELETE /:requestId] Deleting request ${requestId}`);
+    console.log(`[DELETE /:requestId] Deleting emergency donation ${requestId}`);
 
-    const deleteSql = `DELETE FROM blood_requests WHERE id = ?`;
+    // ✅ Delete from emergency_donations table (where donor requests come from)
+    const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
 
-    db.query(deleteSql, [requestId], (err) => {
+    db.query(deleteSql, [requestId], (err, result) => {
       if (err) {
         console.error('[DELETE /:requestId] ❌ Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      console.log(`[DELETE /:requestId] ✅ Request ${requestId} deleted`);
-      res.json({ success: true, message: 'Request deleted successfully' });
+      // ✅ CHECK: Verify request actually existed
+      if (result.affectedRows === 0) {
+        console.log(`[DELETE /:requestId] ⚠️ Emergency donation ${requestId} not found`);
+        return res.status(404).json({ error: 'Request not found' });
+      }
+
+      console.log(`[DELETE /:requestId] ✅ Emergency donation ${requestId} deleted`);
+      res.json({ success: true, message: 'Request declined and removed from dashboard' });
     });
   } catch (error) {
     console.error('[DELETE /:requestId] Error:', error.message);
@@ -197,7 +210,44 @@ router.delete('/:requestId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 1: EMERGENCY REQUEST - FIXED WITH TRIM() AND COALESCE()
+// ✅ DELETE ROUTE 2 - Remove HOSPITAL BLOOD REQUEST (from hospital dashboard)
+// ════════════════════════════════════════════════════════════════════════════
+router.delete('/hospital/:requestId', (req, res) => {
+  const requestId = req.params.requestId;
+
+  if (!requestId) {
+    return res.status(400).json({ error: 'Request ID required' });
+  }
+
+  try {
+    console.log(`[DELETE /hospital/:requestId] Deleting hospital blood request ${requestId}`);
+
+    // ✅ Delete from blood_requests table (where hospital requests come from)
+    const deleteSql = `DELETE FROM blood_requests WHERE id = ?`;
+
+    db.query(deleteSql, [requestId], (err, result) => {
+      if (err) {
+        console.error('[DELETE /hospital/:requestId] ❌ Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      // ✅ CHECK: Verify request actually existed
+      if (result.affectedRows === 0) {
+        console.log(`[DELETE /hospital/:requestId] ⚠️ Hospital blood request ${requestId} not found`);
+        return res.status(404).json({ error: 'Request not found' });
+      }
+
+      console.log(`[DELETE /hospital/:requestId] ✅ Hospital blood request ${requestId} deleted`);
+      res.json({ success: true, message: 'Request deleted from hospital dashboard' });
+    });
+  } catch (error) {
+    console.error('[DELETE /hospital/:requestId] Error:', error.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// ✅ CASE 1: EMERGENCY REQUEST
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-emergency', async (req, res) => {
   const { patient_email, blood_type, governorate } = req.body;
@@ -234,7 +284,6 @@ router.post('/create-emergency', async (req, res) => {
       console.log('[create-emergency] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: filterGovernorate });
 
       const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-      // ✅ CORRECT: Single governorate filter with TRIM() and COALESCE()
       const donorQuery = `
         SELECT id, email, full_name 
         FROM donors 
@@ -349,7 +398,7 @@ router.post('/create-emergency', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CASE 2: HOSPITAL REQUEST - FIXED WITH TRIM()
+// ✅ CASE 2: HOSPITAL REQUEST
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/create-hospital', async (req, res) => {
   const { hospital_id, blood_type, quantity_needed, urgency } = req.body;
@@ -398,7 +447,6 @@ router.post('/create-hospital', async (req, res) => {
         console.log('[create-hospital] Looking for donors:', { blood_types: compatibleBloodTypes, governorate: hospitalGovernorate });
         
         const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-        // ✅ CORRECT: Single governorate filter with TRIM()
         const donorQuery = `
           SELECT id, email, full_name FROM donors 
           WHERE blood_type IN (${placeholders})
@@ -486,6 +534,41 @@ router.post('/create-hospital', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// ✅ GET BCC CENTER DONATIONS
+// ════════════════════════════════════════════════════════════════════════════
+router.get('/center-donations', (req, res) => {
+  const sql = `
+    SELECT 
+      ed.id,
+      ed.donor_id,
+      ed.blood_type,
+      ed.patient_email,
+      ed.governorate,
+      ed.status,
+      ed.request_type,
+      ed.quantity_needed,
+      ed.urgency,
+      d.full_name as donor_name,
+      ed.created_at
+    FROM emergency_donations ed
+    LEFT JOIN donors d ON ed.donor_id = d.id
+    WHERE ed.request_type = 'center' 
+    OR (ed.donor_id IS NOT NULL AND ed.hospital_id IS NULL)
+    ORDER BY ed.created_at DESC
+    LIMIT 100
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('[center-donations] Error:', err);
+      return res.status(500).json({ error: 'Error fetching center donations' });
+    }
+    console.log(`[center-donations] ✅ Found ${results?.length || 0} BCC center donations`);
+    res.json(results || []);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // ✅ DEBUG ENDPOINT
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/debug/donors-list', (req, res) => {
@@ -537,8 +620,11 @@ router.get('/donor/:donorId', (req, res) => {
     const query = `
       SELECT ed.*
       FROM emergency_donations ed
-      WHERE (ed.donor_id = ? OR (ed.donor_id IS NULL AND ed.status = 'pending'))
-      AND ed.status IN ('pending', 'awaiting_confirmation')
+      WHERE (
+        (ed.donor_id IS NULL AND ed.status = 'pending') 
+        OR 
+        (ed.donor_id = ? AND ed.status = 'awaiting_confirmation')
+      )
       AND ed.governorate = ?
       ORDER BY ed.created_at DESC
     `;
@@ -581,27 +667,30 @@ router.get('/hospital/:hospitalId', (req, res) => {
 // ✅ DONOR CONFIRMS DONATION
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/donor-confirm-donation', async (req, res) => {
-  try {
-    const { notification_id, donation_location, hospital_id } = req.body;
+try {
+const { notification_id, donation_location, hospital_id, donor_id } = req.body;
+if (!notification_id || !donation_location || !donor_id) {
+  return res.status(400).json({ error: 'notification_id, donor_id, and donation_location required' });
+}
 
-    if (!notification_id || !donation_location) {
-      return res.status(400).json({ error: 'notification_id and donation_location required' });
-    }
+const updateSql = `
+  UPDATE emergency_donations 
+  SET status = 'awaiting_confirmation', 
+      donor_id = ?,
+      donor_donation_location = ?,
+      hospital_id = ?
+  WHERE id = ?
+`;
 
-    console.log(`[donor-confirm-donation] Donor responding to request ${notification_id}`);
-
-    const updateSql = `
-      UPDATE emergency_donations 
-      SET status = 'awaiting_confirmation', 
-          donor_donation_location = ?,
-          hospital_id = ?
-      WHERE id = ?
-    `;
-
-    db.query(updateSql, [donation_location, hospital_id || null, notification_id], (err) => {
+db.query(updateSql, [donor_id, donation_location, hospital_id || null, notification_id], (err, result) => {
       if (err) {
         console.error('Error updating donation:', err);
         return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (result.affectedRows === 0) {
+        console.log(`[donor-confirm-donation] ⚠️ Donation ${notification_id} not found`);
+        return res.status(404).json({ error: 'Donation not found' });
       }
 
       console.log(`[donor-confirm-donation] ✅ Updated donation ${notification_id}`);
@@ -617,24 +706,30 @@ router.post('/donor-confirm-donation', async (req, res) => {
 // ✅ HOSPITAL CONFIRMS DONATION
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/hospital-confirm', async (req, res) => {
-  const { donationId, hospitalId, bloodType, patientEmail } = req.body;
+  const { request_id, donationId, hospitalId, bloodType, patientEmail, donorEmail } = req.body;
+  const id = request_id || donationId;
 
-  if (!donationId || !patientEmail) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!id || !patientEmail) {
+    return res.status(400).json({ error: 'Missing required fields (request_id/donationId and patientEmail)' });
   }
 
   try {
-    console.log(`[hospital-confirm] Hospital confirming donation ${donationId}`);
+    console.log(`[hospital-confirm] Hospital confirming donation ${id}`);
 
     const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
 
-    db.query(deleteSql, [donationId], async (err) => {
+    db.query(deleteSql, [id], async (err, result) => {
       if (err) {
         console.error('[hospital-confirm] ❌ Database error:', err);
         return res.status(500).json({ error: 'Failed to confirm donation' });
       }
 
-      console.log(`[hospital-confirm] ✅ Deleted from donor dashboard`);
+      if (result.affectedRows === 0) {
+        console.log(`[hospital-confirm] ⚠️ Donation ${id} not found`);
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+
+      console.log(`[hospital-confirm] ✅ Deleted donation ${id} from donor dashboard`);
 
       const hospitalQuery = 'SELECT name FROM hospitals WHERE id = ?';
       db.query(hospitalQuery, [hospitalId], async (err, hospitals) => {
@@ -691,6 +786,124 @@ router.post('/hospital-confirm', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// ✅ ADMIN CONFIRMS BCC HAMRA CENTER DONATION
+// ════════════════════════════════════════════════════════════════════════════
+router.post('/admin-confirm', async (req, res) => {
+  const { donationId, bloodType, patientEmail, donorEmail } = req.body;
+
+  if (!donationId || !patientEmail) {
+    return res.status(400).json({ error: 'Missing required fields (donationId and patientEmail)' });
+  }
+
+  try {
+    console.log(`[admin-confirm] 🏛️ Admin confirming BCC Hamra donation ${donationId}`);
+
+    const deleteSql = `DELETE FROM emergency_donations WHERE id = ?`;
+
+    db.query(deleteSql, [donationId], async (err, result) => {
+      if (err) {
+        console.error('[admin-confirm] ❌ Database error:', err);
+        return res.status(500).json({ error: 'Failed to confirm donation' });
+      }
+
+      if (result.affectedRows === 0) {
+        console.log(`[admin-confirm] ⚠️ Donation ${donationId} not found`);
+        return res.status(404).json({ error: 'Donation not found' });
+      }
+
+      console.log(`[admin-confirm] ✅ Deleted donation ${donationId} from donor dashboard`);
+
+      try {
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #22c55e;">✅ Blood Donation Confirmed!</h2>
+            
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p>Good news! A compatible donor has successfully donated <strong>${bloodType}</strong> blood for your emergency case.</p>
+            </div>
+            
+            <div style="background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; font-weight: bold; color: #1f2937;">🏛️ Donation Location: BCC Hamra Center</p>
+              <p style="margin: 8px 0 0; color: #666;">The blood is now available for your treatment.</p>
+            </div>
+            
+            <p>Thank you for trusting BloodConnect with your emergency blood needs. Your health and safety are our priority.</p>
+            
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+            <p style="font-size: 12px; color: #666; margin: 0;">
+              This is an automated message from BloodConnect. Please do not reply to this email.
+            </p>
+          </div>
+        `;
+
+        await axios.post('https://api.brevo.com/v3/smtp/email', {
+          to: [{ email: patientEmail }],
+          sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
+          subject: `✅ Blood Donation Confirmed - ${bloodType}`,
+          htmlContent: emailHtml
+        }, {
+          headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        });
+
+        console.log(`[admin-confirm] ✅ Email sent to patient: ${patientEmail}`);
+      } catch (emailErr) {
+        console.error(`[admin-confirm] ❌ Error sending patient email:`, emailErr.message);
+      }
+
+      if (donorEmail) {
+        try {
+          const donorEmailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #22c55e;">✅ Thank You! Your Donation Was Confirmed</h2>
+              
+              <div style="background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #065f46;">🙏 Your blood donation has been confirmed and accepted by BCC Hamra Center</p>
+              </div>
+              
+              <p>Thank you for saving a life! Your generosity means the world to patients in need.</p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+              <p style="font-size: 12px; color: #666; margin: 0;">
+                BloodConnect - Together we save lives
+              </p>
+            </div>
+          `;
+
+          await axios.post('https://api.brevo.com/v3/smtp/email', {
+            to: [{ email: donorEmail }],
+            sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
+            subject: `✅ Your Blood Donation Confirmed - Thank You!`,
+            htmlContent: donorEmailHtml
+          }, {
+            headers: {
+              'api-key': process.env.BREVO_API_KEY,
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000
+          });
+
+          console.log(`[admin-confirm] ✅ Thank you email sent to donor`);
+        } catch (emailErr) {
+          console.error(`[admin-confirm] ⚠️ Error sending donor email:`, emailErr.message);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: '✅ BCC Hamra donation confirmed! Patient and donor notified.' 
+      });
+    });
+  } catch (error) {
+    console.error('[admin-confirm] Error:', error.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // ✅ HOSPITAL MARKS: DONOR DIDN'T SHOW UP
 // ════════════════════════════════════════════════════════════════════════════
 router.post('/hospital-no-show', async (req, res) => {
@@ -701,7 +914,7 @@ router.post('/hospital-no-show', async (req, res) => {
   }
 
   try {
-    console.log(`[hospital-no-show] Marking request ${requestId} as no-show for hospital ${hospitalId}, blood type ${bloodType}`);
+    console.log(`[hospital-no-show] 🏥 Hospital ${hospitalId} marking donors as "did not show up" for request ${requestId}, blood type ${bloodType}`);
 
     const deleteEmergencySql = `
       DELETE FROM emergency_donations 
@@ -714,20 +927,26 @@ router.post('/hospital-no-show', async (req, res) => {
         return res.status(500).json({ error: 'Failed to delete emergency donations' });
       }
 
-      console.log(`[hospital-no-show] ✅ Deleted ${deleteResult.affectedRows} emergency donations`);
+      console.log(`[hospital-no-show] ✅ Deleted ${deleteResult.affectedRows} emergency donations from donor dashboard`);
 
       const updateSql = `UPDATE blood_requests SET status = 'ns' WHERE id = ?`;
       
-      db.query(updateSql, [requestId], (updateErr) => {
+      db.query(updateSql, [requestId], (updateErr, updateResult) => {
         if (updateErr) {
           console.error('[hospital-no-show] ❌ Error updating blood_requests:', updateErr);
           return res.status(500).json({ error: 'Failed to update request status' });
         }
 
+        if (updateResult.affectedRows === 0) {
+          console.log(`[hospital-no-show] ⚠️ Request ${requestId} not found`);
+          return res.status(404).json({ error: 'Blood request not found' });
+        }
+
         console.log(`[hospital-no-show] ✅ Updated blood_request ${requestId} status to 'ns'`);
         res.json({ 
           success: true, 
-          message: '✅ Marked as not shown. All responding donors removed. Appears in admin Hospital Supply.' 
+          deletedDonations: deleteResult.affectedRows,
+          message: `✅ Marked as not shown. Deleted ${deleteResult.affectedRows} donors from dashboard.` 
         });
       });
     });
@@ -738,7 +957,7 @@ router.post('/hospital-no-show', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ GET ALL EMERGENCY DONATIONS (for admin)
+// ✅ GET ALL EMERGENCY DONATIONS
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/all-emergency-donations', (req, res) => {
   const sql = `
@@ -801,7 +1020,7 @@ router.get('/hospital-list/:hospitalId', (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ GET ALL HOSPITAL SUPPLY REQUESTS (status = 'ns')
+// ✅ GET ALL HOSPITAL SUPPLY REQUESTS
 // ════════════════════════════════════════════════════════════════════════════
 router.get('/all-no-show', (req, res) => {
   const sql = `
@@ -864,12 +1083,11 @@ router.get('/hospital-requests/:donorId', (req, res) => {
     const compatibleBloodTypes = canGiveTo[donorBloodType] || [];
     
     if (compatibleBloodTypes.length === 0) {
-      console.log(`[hospital-requests] No compatible blood types for donor ${donorId} (${donorBloodType})`);
+      console.log(`[hospital-requests] No compatible blood types for donor ${donorId}`);
       return res.json([]);
     }
 
     const placeholders = compatibleBloodTypes.map(() => '?').join(',');
-    // ✅ CORRECT: Single governorate filter with TRIM()
     const sql = `
       SELECT 
         br.id,
@@ -895,12 +1113,12 @@ router.get('/hospital-requests/:donorId', (req, res) => {
         console.error('[hospital-requests] Error:', err);
         return res.status(500).json({ error: 'Error fetching hospital requests' });
       }
-      console.log(`[hospital-requests] Donor ${donorId} (${donorBloodType}, ${donorGovernorate}) → Found ${results?.length || 0} requests`);
+      console.log(`[hospital-requests] Found ${results?.length || 0} requests for donor`);
       res.json(results || []);
     });
   });
 });
 
-console.log('[blood-requests.js] ✅ All routes registered - FIXED with TRIM() and COALESCE()');
+console.log('[blood-requests.js] ✅ All routes registered - TWO DELETE endpoints working (emergency + hospital)');
 
 module.exports = router;
