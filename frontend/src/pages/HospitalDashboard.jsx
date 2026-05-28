@@ -12,11 +12,12 @@ const MODERN_STYLES = `
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-  .hospital-root { min-height:100vh; background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); background-size:400% 400%; animation:gradient-shift 15s ease infinite; font-family:'Plus Jakarta Sans',sans-serif; overflow-x:hidden; position:relative; color:#380101; zoom: 0.85; }
+  .hospital-root { min-height:100vh; background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); background-size:400% 400%; animation:gradient-shift 15s ease infinite; font-family:'Plus Jakarta Sans',sans-serif; overflow-x:hidden; position:relative; color:#380101; }
   .hospital-float-orb { position:absolute;border-radius:50%;filter:blur(80px); pointer-events:none;animation:float-orb 6s ease-in-out infinite; }
   .hospital-glass { background:rgba(255,255,255,.6);backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); border:1px solid rgba(180,180,180,.2);box-shadow:0 8px 32px rgba(0,0,0,.08); }
   .hospital-glass-deep { background:rgba(255,255,255,.65);backdrop-filter:blur(30px) saturate(200%); -webkit-backdrop-filter:blur(30px) saturate(200%); border:1px solid rgba(180,180,180,.25); box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4); }
   .hospital-nav { position:sticky;top:0;z-index:40; background:rgba(248,248,248,.85);backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-bottom:1px solid rgba(180,180,180,.15);box-shadow:0 4px 30px rgba(0,0,0,.08); }
+  .hospital-nav-inner { max-width:1360px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:14px clamp(16px,3.5vw,44px);gap:clamp(16px,2.5vw,32px); }
   .hospital-btn { position:relative;overflow:hidden;cursor:pointer;border:none;outline:none; transition:all .35s cubic-bezier(.25,1,.5,1); font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;border-radius:10px; letter-spacing:.5px;font-size:13px; }
   .hospital-btn::before { content:'';position:absolute;top:0;left:-100%;width:100%;height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s; }
   .hospital-btn:hover::before { left:100%; }
@@ -33,6 +34,28 @@ const MODERN_STYLES = `
   .hospital-message { border-radius:12px;padding:12px 16px;text-align:center; color:#dc2626;font-weight:700;font-size:13px;margin-bottom:20px; }
   .hospital-message.success { background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e; }
   .hospital-message.error { background:rgba(255,235,238,.8);border:1px solid rgba(220,38,38,.3);color:#dc2626; }
+
+  @media (max-width:1024px) {
+    .hospital-root { font-size: 0.9em; }
+  }
+
+  @media (max-width:768px) {
+    .hospital-root { font-size: 1em; }
+    .hospital-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: wrap; }
+    main { padding: 20px clamp(12px, 2vw, 30px) !important; gap: 32px !important; }
+    h1 { font-size: clamp(18px, 5vw, 28px) !important; }
+    p { font-size: clamp(12px, 1.2vw, 14px) !important; }
+    .hospital-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 8px clamp(12px, 2vw, 18px) !important; }
+  }
+
+  @media (max-width:480px) {
+    .hospital-root { font-size: 1em; }
+    main { padding: 16px 12px !important; gap: 24px !important; }
+    .hospital-nav-inner { padding: 10px 12px; gap: 6px; }
+    .hospital-card-title { font-size: clamp(14px, 4vw, 18px) !important; }
+    .hospital-tab-btn { padding: 8px clamp(10px, 1.5vw, 14px) !important; font-size: clamp(10px, 0.9vw, 11px) !important; }
+    .hospital-input { font-size: clamp(12px, 1vw, 13px) !important; padding: 8px 12px !important; }
+  }
 `
 
 if (typeof document !== 'undefined' && !document.getElementById('hospital-modern-styles')) {
@@ -330,42 +353,89 @@ function HospitalDashboard() {
         transition={{ duration: 0.6 }}
         className="hospital-nav"
       >
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="hospital-nav-inner">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+            whileHover={{ x: 3 }}
+          >
             <motion.div
               style={{
                 width: 50,
                 height: 50,
-                borderRadius: 14,
                 background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 14,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 900,
-                fontSize: 22,
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
-              whileHover={{ scale: 1.12 }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
             >
-              H
+              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+                <defs>
+                  <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+              </svg>
             </motion.div>
             <div>
-              <h1 style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }}>{hospital.name}</h1>
-              <p style={{ fontSize: 10, color: 'rgba(211,47,47,.5)', margin: '4px 0 0', fontWeight: 700 }}>{hospital.email}</p>
+              <motion.div 
+                style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+                animate={{ letterSpacing: [0, 1, 0] }} 
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {hospital.name}
+              </motion.div>
+              <motion.div
+                style={{ 
+                  fontSize: 'clamp(9px, 1vw, 12px)', 
+                  fontWeight: 500, 
+                  color: 'rgba(71, 85, 105, 0.7)',
+                  margin: '2px 0 0 0',
+                  letterSpacing: '0.5px'
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              >
+Hospital Page              </motion.div>
             </div>
-          </div>
+          </motion.div>
+
+          <div style={{ flex: 1 }} />
+          
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
             className="hospital-btn hospital-btn-primary"
+            style={{
+              padding: '13px 26px',
+              borderRadius: 24,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
           >
             Logout
           </motion.button>
         </div>
       </motion.div>
 
-      <main style={{ maxWidth: 1360, margin: '0 auto', padding: '32px 24px', position: 'relative', zIndex: 10 }}>
+      <main style={{ maxWidth: 1360, margin: '0 auto', padding: '32px clamp(20px,3vw,50px)', position: 'relative', zIndex: 10 }}>
 
         <motion.div
           initial={{ opacity: 0 }}
