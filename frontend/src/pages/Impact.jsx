@@ -1,341 +1,862 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-
-function Impact() {
+function HowItWorks() {
   const navigate = useNavigate()
 
   const STYLES = `
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
     
-    @keyframes gradient { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-    @keyframes pulse-number { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+    @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
+    @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(220,38,38,.3); } 50% { box-shadow: 0 0 40px rgba(220,38,38,.5); } }
 
-    .imp-root {
+    .hiw-root {
       min-height:100vh;
-      background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.35));
+      background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
       background-size:400% 400%;
-      animation:gradient 14s ease infinite;
+      animation:gradient-shift 15s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
       overflow-x:hidden;
+      position:relative;
+      color:#380101;
     }
 
-    .imp-nav {
+    .hiw-orbs {
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .hiw-orb {
+      position:absolute;
+      border-radius:50%;
+      filter:blur(80px);
+      animation:float-orb 6s ease-in-out infinite;
+    }
+
+    .hiw-dots {
+      position:fixed;
+      width:100%;
+      height:100%;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .hiw-dot {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
+    }
+
+    .hiw-nav {
       position:sticky;top:0;z-index:50;
-      background:rgba(255,255,255,.85);
-      backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(211,47,47,.08);
-      padding:16px 44px;
+      background:rgba(248,248,248,.85);
+      backdrop-filter:blur(20px) saturate(200%);
+      -webkit-backdrop-filter:blur(20px) saturate(200%);
+      border-bottom:1px solid rgba(180,180,180,.15);
+      box-shadow:0 4px 30px rgba(0,0,0,.08);
+    }
+
+    .hiw-nav-inner {
+      max-width:1360px;margin:0 auto;
       display:flex;justify-content:space-between;align-items:center;
+      padding:14px clamp(16px,3.5vw,44px);
+      gap:clamp(16px,2.5vw,32px);
     }
 
-    .imp-logo {
-      display:flex;flex-direction:column;gap:2px;cursor:pointer;
+    .hiw-logo {
+      display:flex;align-items:center;gap:14px;cursor:pointer;
     }
 
-    .imp-logo-main {
-      font-size:16px;font-weight:900;color:#dc2626;
+    .hiw-logo-icon {
+      width:50px;height:50px;
+      background:linear-gradient(135deg,#dc2626,#991b1b);
+      border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 12px 32px rgba(220,38,38,.3);
+      position:relative;
+      overflow:hidden;
     }
 
-    .imp-logo-sub {
-      font-size:10px;font-weight:700;color:rgba(211,47,47,.6);font-style:italic;
+    .hiw-logo-icon svg {
+      width:28px;height:38px;
     }
 
-    .imp-hero {
-      padding:100px 44px;
+    .hiw-logo-text {
+      font-size:22px;font-weight:900;color:#dc2626;
+      font-family:'Fraunces',serif;
+      letter-spacing:0.5px;
+    }
+
+    .hiw-hero {
+      padding:60px clamp(20px,3vw,44px);
       text-align:center;
-      max-width:1200px;
+      max-width:900px;
       margin:0 auto;
+      position:relative;
+      z-index:10;
     }
 
-    .imp-hero h1 {
+    .hiw-hero h1 {
       font-family:'Fraunces',serif;
-      font-size:56px;
+      font-size:clamp(32px,5vw,56px);
       font-weight:900;
-      color:#dc2626;
-      margin:0 0 24px;
+      color:#6e2016;
+      margin:0 0 16px;
       line-height:1.1;
+      letter-spacing:-0.5px;
     }
 
-    .imp-hero p {
-      font-size:16px;
-      color:rgba(211,47,47,.65);
-      font-weight:600;
-      margin:0 0 40px;
-      line-height:1.7;
-    }
-
-    .imp-stats {
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
-      gap:32px;
-      max-width:1200px;
-      margin:60px auto;
-      padding:0 44px;
-    }
-
-    .imp-stat-card {
-      background:rgba(255,255,255,.5);
-      backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,.8);
-      border-radius:24px;
-      padding:40px 32px;
-      text-align:center;
-      transition:all .3s ease;
-    }
-
-    .imp-stat-card:hover {
-      transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba#991b1b;
-    }
-
-    .imp-stat-number {
-      font-family:'Fraunces',serif;
-      font-size:48px;
-      font-weight:900;
+    .hiw-hero-subtitle {
+      font-size:clamp(9px,1.2vw,11px);
       color:#dc2626;
-      margin:0 0 8px;
-      animation:pulse-number 2s ease-in-out infinite;
-    }
-
-    .imp-stat-label {
-      font-size:14px;
-      font-weight:700;
-      color:rgba(211,47,47,.65);
+      font-weight:900;
+      margin:0 0 12px;
       text-transform:uppercase;
-      letter-spacing:0.1em;
+      letter-spacing:2px;
+    }
+
+    .hiw-hero p {
+      font-size:clamp(13px,1.5vw,16px);
+      color:rgba(42,42,42,.65);
+      font-weight:500;
       margin:0;
+      line-height:1.8;
+      max-width:650px;
+      margin-left:auto;
+      margin-right:auto;
     }
 
-    .imp-stat-description {
-      font-size:12px;
-      color:rgba(211,47,47,.5);
-      margin-top:12px;
-    }
-
-    .imp-stories {
-      max-width:1200px;
-      margin:100px auto;
-      padding:0 44px;
-    }
-
-    .imp-stories h2 {
+    .hiw-section-title {
       font-family:'Fraunces',serif;
-      font-size:36px;
+      font-size:clamp(28px,4vw,42px);
       font-weight:900;
-      color:#dc2626;
+      color:#6e2016;
+      margin:50px clamp(20px,3vw,44px) 16px;
       text-align:center;
-      margin:0 0 60px;
+      position:relative;
+      z-index:10;
+      letter-spacing:-0.3px;
     }
 
-    .imp-story-grid {
+    .hiw-section-desc {
+      text-align:center;
+      font-size:clamp(13px,1.3vw,15px);
+      color:#3d3d3d;
+      margin:0 clamp(20px,3vw,44px) 40px;
+      max-width:650px;
+      margin-left:auto;
+      margin-right:auto;
+      position:relative;
+      z-index:10;
+      line-height:1.7;
+      font-weight:600;
+    }
+
+    .hiw-cards-grid {
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
-      gap:32px;
+      gap:clamp(16px, 2vw, 24px);
+      max-width:1200px;
+      margin:0 auto;
+      padding:0 clamp(16px, 2vw, 40px) 60px;
+      position:relative;
+      z-index:10;
     }
 
-    .imp-story-card {
-      background:rgba(255,255,255,.5);
-      backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,.8);
-      border-radius:24px;
-      padding:32px;
-      transition:all .3s ease;
+    .hiw-card {
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
+      border-radius:16px;
+      padding:clamp(24px,3vw,32px);
+      text-align:left;
+      transition:all .4s cubic-bezier(.22,1,.36,1);
+      position:relative;
+      overflow:hidden;
     }
 
-    .imp-story-card:hover {
-      transform:translateY(-8px);
-      box-shadow:0 20px 40px rgba#991b1b;
+    .hiw-card::before {
+      content:'';
+      position:absolute;
+      top:0;left:0;right:0;bottom:0;
+      background:radial-gradient(circle at top right, rgba(220,38,38,.04), transparent);
+      pointer-events:none;
     }
 
-    .imp-story-card h3 {
+    .hiw-card:hover {
+      transform:translateY(-6px);
+      box-shadow:0 20px 50px rgba(220,38,38,.12);
+      border-color:rgba(220,38,38,.2);
+    }
+
+    .hiw-card-icon {
+      width:56px;height:56px;
+      background:linear-gradient(135deg,#dc2626,#991b1b);
+      border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 0 16px;
+      position:relative;
+      z-index:1;
+      box-shadow:0 8px 24px rgba(220,38,38,.2);
+      font-size:28px;
+    }
+
+    .hiw-card h3 {
       font-family:'Fraunces',serif;
-      font-size:18px;
+      font-size:clamp(18px,2.2vw,24px);
+      font-weight:900;
+      color:#6e2016;
+      margin:0 0 12px;
+      position:relative;
+      z-index:1;
+      letter-spacing:-0.3px;
+    }
+
+    .hiw-card p {
+      font-size:clamp(12px,1.3vw,14px);
+      color:#2d2d2d;
+      margin:0;
+      line-height:1.7;
+      position:relative;
+      z-index:1;
+      font-weight:500;
+    }
+
+    .hiw-timeline {
+      max-width:900px;
+      margin:60px auto;
+      padding:0 clamp(20px,3vw,44px);
+      position:relative;
+      z-index:10;
+    }
+
+    .hiw-timeline-item {
+      display:grid;
+      grid-template-columns:80px 1fr;
+      gap:clamp(20px,3vw,32px);
+      margin-bottom:clamp(24px,3vw,32px);
+      position:relative;
+    }
+
+    .hiw-timeline-dot {
+      width:80px;
+      height:80px;
+      background:linear-gradient(135deg,#dc2626,#ff6b6b);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900;
+      color:#ffffff;
+      font-size:clamp(14px,1.8vw,18px);
+      box-shadow:0 8px 24px rgba(220,38,38,.3);
+      position:sticky;
+      top:100px;
+    }
+
+    .hiw-timeline-content {
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
+      border-radius:16px;
+      padding:clamp(20px,3vw,28px);
+      position:relative;
+      z-index:1;
+    }
+
+    .hiw-timeline-content h4 {
+      font-size:clamp(16px,2vw,20px);
       font-weight:900;
       color:#dc2626;
       margin:0 0 12px;
-    }
-
-    .imp-story-card p {
-      font-size:14px;
-      color:rgba(211,47,47,.65);
-      line-height:1.6;
-      margin:0;
-    }
-
-    .imp-cta {
-      text-align:center;
-      padding:60px 44px;
-      background:rgba(211,47,47,.05);
-      margin-top:80px;
-    }
-
-    .imp-cta h2 {
       font-family:'Fraunces',serif;
-      font-size:36px;
-      font-weight:900;
-      color:#dc2626;
-      margin:0 0 20px;
     }
 
-    .imp-cta-btn {
-      background:linear-gradient(135deg,#dc2626,#ff6b6b);
-      color:#faf7f7;
+    .hiw-timeline-content p {
+      font-size:clamp(12px,1.2vw,14px);
+      color:#2d2d2d;
+      margin:0;
+      line-height:1.7;
+      font-weight:500;
+    }
+
+    .hiw-do-donts {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:clamp(20px, 2.5vw, 28px);
+      max-width:1200px;
+      margin:40px auto;
+      padding:0 clamp(16px, 2vw, 40px) 60px;
+      position:relative;
+      z-index:10;
+    }
+
+    .hiw-do, .hiw-dont {
+      border-radius:16px;
+      padding:clamp(20px,3vw,28px);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1.5px solid;
+      transition:all .3s ease;
+    }
+
+    .hiw-do {
+      background:rgba(34,197,94,.1);
+      border-color:rgba(34,197,94,.3);
+    }
+
+    .hiw-do:hover {
+      transform:translateY(-4px);
+      box-shadow:0 16px 40px rgba(34,197,94,.15);
+    }
+
+    .hiw-dont {
+      background:rgba(220,38,38,.08);
+      border-color:rgba(220,38,38,.3);
+    }
+
+    .hiw-dont:hover {
+      transform:translateY(-4px);
+      box-shadow:0 16px 40px rgba(220,38,38,.15);
+    }
+
+    .hiw-do h4, .hiw-dont h4 {
+      font-size:clamp(14px,1.8vw,18px);
+      font-weight:900;
+      margin:0 0 12px;
+      font-family:'Fraunces',serif;
+    }
+
+    .hiw-do h4 {
+      color:#22c55e;
+    }
+
+    .hiw-dont h4 {
+      color:#dc2626;
+    }
+
+    .hiw-do ul, .hiw-dont ul {
+      margin:0;
+      padding:0 0 0 20px;
+      list-style:none;
+    }
+
+    .hiw-do li, .hiw-dont li {
+      font-size:clamp(12px,1.2vw,13px);
+      color:#2d2d2d;
+      margin-bottom:8px;
+      line-height:1.6;
+      font-weight:500;
+      position:relative;
+      padding-left:12px;
+    }
+
+    .hiw-do li::before {
+      content:'';
+      position:absolute;
+      left:0;
+      top:6px;
+      width:6px;
+      height:6px;
+      background:#22c55e;
+      border-radius:50%;
+    }
+
+    .hiw-dont li::before {
+      content:'';
+      position:absolute;
+      left:0;
+      top:6px;
+      width:6px;
+      height:6px;
+      background:#dc2626;
+      border-radius:50%;
+    }
+
+    .hiw-cta {
+      text-align:center;
+      padding:clamp(40px,6vw,60px) clamp(20px,3vw,44px);
+      background:rgba(255,255,255,.5);
+      backdrop-filter:blur(20px) saturate(180%);
+      margin:40px clamp(20px,3vw,44px);
+      border:1px solid rgba(180,180,180,.15);
+      border-radius:20px;
+      position:relative;
+      z-index:10;
+    }
+
+    .hiw-cta h2 {
+      font-family:'Fraunces',serif;
+      font-size:clamp(28px,4vw,42px);
+      font-weight:900;
+      color:#6e2016;
+      margin:0 0 12px;
+      letter-spacing:-0.3px;
+    }
+
+    .hiw-cta-subtitle {
+      font-size:clamp(13px,1.3vw,15px);
+      color:#3d3d3d;
+      margin:0 0 24px;
+      font-weight:600;
+    }
+
+    .hiw-cta-btn {
+      background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);
+      color:#ffffff;
       border:none;
-      padding:16px 48px;
-      border-radius:24px;
+      padding:clamp(12px,2vw,15px) clamp(24px,4vw,40px);
+      border-radius:10px;
       font-weight:900;
       cursor:pointer;
-      transition:all .3s ease;
-      font-size:15px;
+      transition:all .35s cubic-bezier(.25,1,.5,1);
+      font-size:clamp(12px,1.2vw,14px);
+      text-transform:uppercase;
+      letter-spacing:1px;
+      box-shadow:0 10px 30px rgba(220,38,38,.25);
+      position:relative;
+      overflow:hidden;
     }
 
-    .imp-cta-btn:hover {
-      transform:translateY(-3px);
-      box-shadow:0 12px 24px rgba(211,47,47,.3);
+    .hiw-cta-btn::before {
+      content:'';
+      position:absolute;
+      top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+      transition:left .5s;
+    }
+
+    .hiw-cta-btn:hover {
+      transform:translateY(-2px);
+      box-shadow:0 16px 48px rgba(220,38,38,.35);
+    }
+
+    .hiw-cta-btn:hover::before {
+      left:100%;
+    }
+
+    .hiw-footer {
+      background:rgba(255,255,255,.3);
+      backdrop-filter:blur(12px);
+      border-top:1px solid rgba(180,180,180,.15);
+      padding:clamp(16px,2vw,32px) clamp(20px,3vw,44px);
+      text-align:center;
+      font-size:clamp(10px,1vw,12px);
+      color:rgba(45,45,45,.55);
+      font-weight:600;
+      position:relative;
+      z-index:10;
     }
 
     @media (max-width:960px) {
-      .imp-nav { padding:12px 20px; }
-      .imp-hero { padding:60px 20px; }
-      .imp-hero h1 { font-size:36px; }
-      .imp-stats { padding:0 20px; }
-      .imp-stories { padding:0 20px; }
+      .hiw-nav { padding:12px clamp(12px,2vw,20px); }
+      .hiw-logo-icon { width:40px; height:40px; }
+      .hiw-logo-icon svg { width:22px; height:30px; }
+      .hiw-logo-text { font-size:18px; }
+      .hiw-timeline-item {
+        grid-template-columns:1fr;
+      }
+      .hiw-timeline-dot {
+        position:static;
+      }
     }
   `
 
-  if (typeof document !== 'undefined' && !document.getElementById('imp-styles')) {
+  if (typeof document !== 'undefined' && !document.getElementById('hiw-styles')) {
     const s = document.createElement('style')
-    s.id = 'imp-styles'
+    s.id = 'hiw-styles'
     s.textContent = STYLES
     document.head.appendChild(s)
   }
 
-  const stats = [
-    { number: '189+', label: 'Hospital Partners', desc: 'Across Lebanon' },
-    { number: '2500+', label: 'Active Donors', desc: 'Lives in action' },
-    { number: '15K+', label: 'Units Donated', desc: 'In 2025' },
-    { number: '45K+', label: 'Lives Impacted', desc: 'Patients helped' },
+  const eligibilityCriteria = [
+    {
+      title: 'Age & Weight',
+      description: 'Must be 18 years or older and weigh at least 50 kg. Your body needs sufficient mass to safely donate blood.'
+    },
+    {
+      title: 'Health Status',
+      description: 'Be in good general health with no active infections, fever, or chronic conditions that could affect donation safety.'
+    },
+    {
+      title: 'Blood Type',
+      description: 'Possess one of the eight major blood types: O, A, B, or AB with Rh positive or negative factors.'
+    },
+    {
+      title: 'Hemoglobin Levels',
+      description: 'Have adequate hemoglobin count. We screen during registration to ensure your blood iron levels are healthy.'
+    },
+    {
+      title: 'Medications',
+      description: 'Not taking medications that could affect blood safety. Some medications require a waiting period before donation.'
+    },
+    {
+      title: 'Lifestyle Factors',
+      description: 'Maintain responsible habits - adequate sleep, proper nutrition, and avoid substance abuse to maintain donor eligibility.'
+    }
   ]
 
+  const recoveryTimeline = [
+    {
+      time: '0-30 Minutes',
+      title: 'The Donation',
+      description: 'A trained phlebotomist will collect approximately 450ml of blood. The process is quick and safe with medical professionals monitoring your vitals throughout.'
+    },
+    {
+      time: '30 Minutes - 2 Hours',
+      title: 'Recovery Station',
+      description: 'Rest in our recovery area. Enjoy refreshments including juice, water, and snacks. Your body begins replacing lost fluids immediately.'
+    },
+    {
+      time: '2-24 Hours',
+      title: 'First Day',
+      description: 'Light activities are fine. Stay hydrated and maintain normal eating patterns. Avoid strenuous exercise and heavy lifting for the rest of the day.'
+    },
+    {
+      time: '1-7 Days',
+      title: 'First Week',
+      description: 'Your body continues replenishing blood cells. Drink plenty of fluids, eat iron-rich foods, and get adequate sleep. Most donors feel completely normal within 48 hours.'
+    },
+    {
+      time: '1-3 Months',
+      title: 'Full Recovery',
+      description: 'Your body fully replaces the donated blood volume. Red blood cells take about 4-6 weeks to recover completely. You can donate again after 8 weeks.'
+    }
+  ]
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.06, delayChildren: 0.1 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] }
+    }
+  }
+
+  const dots = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 1.5,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
+  }))
+
   return (
-    <div className="imp-root">
+    <div className="hiw-root">
+      {/* ANIMATED ORBS */}
+      <div className="hiw-orbs">
+        <motion.div
+          className="hiw-orb"
+          style={{
+            width: 'min(200px,20vw)',
+            height: 'min(200px,20vw)',
+            background: 'rgba(220,38,38,.08)',
+            top: '-5%',
+            left: '-3%',
+          }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="hiw-orb"
+          style={{
+            width: 'min(180px,18vw)',
+            height: 'min(180px,18vw)',
+            background: 'rgba(180,180,180,.06)',
+            top: '20%',
+            right: '-8%',
+          }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="hiw-orb"
+          style={{
+            width: 'min(190px,19vw)',
+            height: 'min(190px,19vw)',
+            background: 'rgba(220,38,38,.07)',
+            bottom: '-10%',
+            left: '5%',
+          }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+
+      {/* ANIMATED DOTS */}
+      <div className="hiw-dots">
+        {dots.map((dot) => (
+          <motion.div
+            key={`dot-${dot.id}`}
+            className="hiw-dot"
+            style={{
+              width: dot.size,
+              height: dot.size,
+              background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+              left: `${dot.startX}%`,
+              top: `${dot.startY}%`,
+              boxShadow: `0 0 ${dot.size * 1.5}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+            }}
+            animate={{
+              y: [0, -200 - Math.random() * 100],
+              x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+              opacity: [0, 0.7, 0],
+            }}
+            transition={{
+              duration: dot.duration,
+              delay: dot.delay,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+      </div>
+
       {/* NAV */}
-      <nav className="imp-nav">
-        <div className="imp-logo" onClick={() => navigate('/')}>
-          <div className="imp-logo-main">BloodConnect</div>
-          <div className="imp-logo-sub">Smart Donor Matching System</div>
+      <header className="hiw-nav" style={{ transform: 'translateY(0)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+        <div className="hiw-nav-inner">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+            whileHover={{ x: 3 }}
+          >
+            <motion.div
+              style={{
+                width: 50,
+                height: 50,
+                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+                <defs>
+                  <linearGradient id="navBlood2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood2)" opacity="0.95" />
+              </svg>
+            </motion.div>
+            <motion.div 
+              style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }}
+              animate={{ letterSpacing: [0, 1, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              BloodConnect
+            </motion.div>
+          </motion.div>
         </div>
-       
-      </nav>
+      </header>
 
       {/* HERO */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="imp-hero"
+        transition={{ duration: 0.7, delay: 0.1 }}
+        className="hiw-hero"
       >
-        <h1>Our Impact</h1>
+        <p className="hiw-hero-subtitle">Be A Responsible Donor</p>
+        <h1>Your Health Matters</h1>
         <p>
-          Since our launch, BloodConnect has transformed how Lebanon approaches 
-          blood donation. Here's what we've accomplished together.
+          Learn who can donate, what makes you eligible, and how to care for yourself after giving blood. A healthy donor saves more lives.
         </p>
       </motion.section>
 
-      {/* STATS */}
-      <div className="imp-stats">
-        {stats.map((stat, idx) => (
+      {/* ELIGIBILITY SECTION */}
+      <h2 className="hiw-section-title">Who Can Donate</h2>
+      <p className="hiw-section-desc">
+        Blood donation requires meeting specific health and physical criteria to ensure the safety of both donors and recipients
+      </p>
+
+      <motion.div
+        className="hiw-cards-grid"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
+        {eligibilityCriteria.map((item, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: idx * 0.1 }}
-            className="imp-stat-card"
+            className="hiw-card"
+            variants={itemVariants}
+            whileHover={{ y: -4 }}
           >
-            <div className="imp-stat-number">{stat.number}</div>
-            <p className="imp-stat-label">{stat.label}</p>
-            <p className="imp-stat-description">{stat.desc}</p>
+            <div className="hiw-card-icon">
+              {idx === 0 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                </svg>
+              )}
+              {idx === 1 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              )}
+              {idx === 2 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+              )}
+              {idx === 3 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+              )}
+              {idx === 4 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 9.5c0 .83-.67 1.5-1.5 1.5S11 13.33 11 12.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm5 4h-10v-2h10v2zm0-4h-10V7h10v5.5z"/>
+                </svg>
+              )}
+              {idx === 5 && (
+                <svg viewBox="0 0 24 24" style={{ width: '70%', height: '70%', fill: '#ffffff' }}>
+                  <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 2.4c-.4-.4-1-.4-1.4 0l-5.01 5.01c-.4.4-.4 1 0 1.4l5.01 5.01c.4.4 1 .4 1.4 0l5.01-5.01c.4-.4.4-1 0-1.4l-5.01-5.01zM19.9 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 7.9c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM7.1 19.9c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                </svg>
+              )}
+            </div>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
-      {/* STORIES */}
-      <section className="imp-stories">
-        <h2>Donor Stories</h2>
-        <div className="imp-story-grid">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="imp-story-card"
-          >
-            <h3>Fatima's First Donation</h3>
-            <p>
-              "I was nervous about donating, but BloodConnect made it so easy. 
-              Knowing my blood helped 3 patients in the first month is incredible."
-            </p>
-          </motion.div>
+      {/* POST-DONATION TIMELINE */}
+      <h2 className="hiw-section-title">Your Recovery Journey</h2>
+      <p className="hiw-section-desc">
+        What to expect after donating and how your body bounces back
+      </p>
 
+      <motion.div
+        className="hiw-timeline"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
+        {recoveryTimeline.map((item, idx) => (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="imp-story-card"
+            key={idx}
+            className="hiw-timeline-item"
+            variants={itemVariants}
           >
-            <h3>Hospital Partnership Success</h3>
-            <p>
-              "BloodConnect has streamlined our blood management. We can now 
-              predict demand and reduce waste by 40%."
-            </p>
+            <div className="hiw-timeline-dot">{idx + 1}</div>
+            <div className="hiw-timeline-content">
+              <h4>{item.title}</h4>
+              <p style={{ fontSize: 'clamp(11px,1.1vw,12px)', color: '#666', fontWeight: 600, marginBottom: 8 }}>
+                {item.time}
+              </p>
+              <p>{item.description}</p>
+            </div>
           </motion.div>
+        ))}
+      </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="imp-story-card"
-          >
-            <h3>Emergency Response</h3>
-            <p>
-              "During the hospital crisis, BloodConnect helped us find O- blood 
-              donors in 30 minutes. Literally life-saving."
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* DO'S AND DON'TS */}
+      <h2 className="hiw-section-title">After Donation</h2>
+      <p className="hiw-section-desc">
+        Simple guidelines to help your body recover quickly and safely
+      </p>
+
+      <motion.div
+        className="hiw-do-donts"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
+        <motion.div className="hiw-do" variants={itemVariants}>
+          <h4>What To Do</h4>
+          <ul>
+            <li>Stay hydrated - drink plenty of water and fluids</li>
+            <li>Eat iron-rich foods like red meat, spinach, beans</li>
+            <li>Rest for at least 24 hours after donation</li>
+            <li>Keep the donation site clean and dry</li>
+            <li>Return for follow-up screening if advised</li>
+            <li>Wear loose, comfortable clothing for 24 hours</li>
+          </ul>
+        </motion.div>
+
+        <motion.div className="hiw-dont" variants={itemVariants}>
+          <h4>What To Avoid</h4>
+          <ul>
+            <li>Strenuous exercise or heavy lifting for 24-48 hours</li>
+            <li>Driving or operating machinery for 15 minutes post-donation</li>
+            <li>Smoking and alcohol for at least 48 hours</li>
+            <li>Hot baths or saunas for 24 hours</li>
+            <li>Removing the bandage for at least 4 hours</li>
+            <li>Donating plasma for 48 hours after blood donation</li>
+          </ul>
+        </motion.div>
+      </motion.div>
+
+      {/* IMPORTANT INFO */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="hiw-cta"
+        style={{ background: 'rgba(220,38,38,.08)' }}
+      >
+        <h2 style={{ color: '#dc2626' }}>Critical Health Information</h2>
+        <p className="hiw-cta-subtitle" style={{ color: '#666' }}>
+          You cannot donate if you have: active infections or fever, hepatitis or HIV, bleeding disorders, recent vaccinations within the specified timeframe, or are pregnant. Always inform medical staff of your complete medical history.
+        </p>
+      </motion.section>
 
       {/* CTA */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="imp-cta"
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="hiw-cta"
       >
-        <h2>Join the Movement</h2>
-        <p style={{ fontSize: '16px', color: 'rgba(211,47,47,.65)', marginBottom: '24px' }}>
-          Every donation counts. Be part of Lebanon's blood revolution.
+        <h2>Ready To Become A Hero</h2>
+        <p className="hiw-cta-subtitle">
+          If you meet the eligibility criteria and feel healthy, start your donation journey today. Your commitment saves lives.
         </p>
-        <button className="imp-cta-btn" onClick={() => navigate('/donor/register')}>
-          Become a Donor Today
-        </button>
+        <motion.button
+          className="hiw-cta-btn"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('/donor/register')}
+        >
+          Register As A Donor
+        </motion.button>
       </motion.section>
 
       {/* FOOTER */}
-      <footer style={{ 
-        background: 'rgba(255,255,255,.4)', 
-        backdropFilter: 'blur(12px)', 
-        borderTop: '1px solid rgba(211,47,47,.08)', 
-        padding: '24px 44px', 
-        textAlign: 'center', 
-        fontSize: '12px', 
-        color: 'rgba(211,47,47,.5)', 
-        fontWeight: '500' 
-      }}>
-        © 2026 BloodConnect. Smart Donor Matching System. All rights reserved.
+      <footer className="hiw-footer">
+        BloodConnect Health Guidelines 2026. Always consult healthcare professionals before donating. Your health and safety come first.
       </footer>
     </div>
   )
 }
 
-export default Impact
+export default HowItWorks

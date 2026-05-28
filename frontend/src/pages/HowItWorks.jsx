@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
+
 function HowItWorks() {
   const navigate = useNavigate()
 
   const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
     
     @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
     @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
@@ -92,6 +93,11 @@ function HowItWorks() {
       letter-spacing:0.5px;
     }
 
+    @keyframes logoGlow {
+      0%, 100% { letter-spacing:0.5px; }
+      50% { letter-spacing:1px; }
+    }
+
     .hiw-hero {
       padding:60px clamp(20px,3vw,44px);
       text-align:center;
@@ -131,6 +137,49 @@ function HowItWorks() {
       margin-right:auto;
     }
 
+    .hiw-stats {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:20px;
+      max-width:1000px;
+      margin:50px auto;
+      padding:0 clamp(20px,3vw,44px);
+      position:relative;
+      z-index:10;
+    }
+
+    .hiw-stat-box {
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
+      border-radius:16px;
+      padding:clamp(16px,2vw,24px);
+      text-align:center;
+      transition:all .3s ease;
+    }
+
+    .hiw-stat-box:hover {
+      transform:translateY(-4px);
+      box-shadow:0 16px 40px rgba(220,38,38,.15);
+      border-color:rgba(220,38,38,.25);
+    }
+
+    .hiw-stat-number {
+      font-size:clamp(24px,4vw,36px);
+      font-weight:900;
+      color:#dc2626;
+      margin:0 0 8px;
+    }
+
+    .hiw-stat-label {
+      font-size:clamp(11px,1.1vw,12px);
+      color:rgba(45,45,45,.6);
+      text-transform:uppercase;
+      font-weight:700;
+      letter-spacing:1px;
+      margin:0;
+    }
+
     .hiw-section-title {
       font-family:'Fraunces',serif;
       font-size:clamp(28px,4vw,42px);
@@ -157,30 +206,54 @@ function HowItWorks() {
       font-weight:600;
     }
 
-    .hiw-cards-grid {
+    .hiw-steps {
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns:repeat(3, 1fr);
       gap:clamp(16px, 2vw, 24px);
-      max-width:1200px;
+      max-width:100%;
       margin:0 auto;
       padding:0 clamp(16px, 2vw, 40px) 60px;
       position:relative;
       z-index:10;
     }
 
-    .hiw-card {
+    @media (max-width:1200px) {
+      .hiw-steps {
+        grid-template-columns:repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width:768px) {
+      .hiw-steps {
+        grid-template-columns:repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width:480px) {
+      .hiw-steps {
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:768px) {
+      .hiw-steps {
+        grid-template-columns:repeat(3, 1fr);
+      }
+    }
+
+    .hiw-step-card {
       background:rgba(255,255,255,.6);
       backdrop-filter:blur(20px) saturate(180%);
       border:1px solid rgba(180,180,180,.2);
       border-radius:16px;
-      padding:clamp(24px,3vw,32px);
-      text-align:left;
+      padding:clamp(20px,3vw,32px);
+      text-align:center;
       transition:all .4s cubic-bezier(.22,1,.36,1);
       position:relative;
       overflow:hidden;
     }
 
-    .hiw-card::before {
+    .hiw-step-card::before {
       content:'';
       position:absolute;
       top:0;left:0;right:0;bottom:0;
@@ -188,27 +261,29 @@ function HowItWorks() {
       pointer-events:none;
     }
 
-    .hiw-card:hover {
+    .hiw-step-card:hover {
       transform:translateY(-6px);
       box-shadow:0 20px 50px rgba(220,38,38,.12);
       border-color:rgba(220,38,38,.2);
     }
 
-    .hiw-card-icon {
-      width:56px;height:56px;
+    .hiw-step-number {
+      width:60px;height:60px;
       background:linear-gradient(135deg,#dc2626,#991b1b);
-      border-radius:12px;
+      color:#ffffff;
+      border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      margin:0 0 16px;
+      font-size:clamp(22px,3vw,28px);font-weight:900;
+      margin:0 auto 16px;
       position:relative;
       z-index:1;
-      box-shadow:0 8px 24px rgba(220,38,38,.2);
-      font-size:28px;
+      box-shadow:0 8px 24px rgba(220,38,38,.3);
+      animation:pulse-glow 3s ease-in-out infinite;
     }
 
-    .hiw-card h3 {
+    .hiw-step-card h3 {
       font-family:'Fraunces',serif;
-      font-size:clamp(18px,2.2vw,24px);
+      font-size:clamp(16px,2.2vw,22px);
       font-weight:900;
       color:#6e2016;
       margin:0 0 12px;
@@ -217,162 +292,14 @@ function HowItWorks() {
       letter-spacing:-0.3px;
     }
 
-    .hiw-card p {
+    .hiw-step-card p {
       font-size:clamp(12px,1.3vw,14px);
       color:#2d2d2d;
       margin:0;
-      line-height:1.7;
-      position:relative;
-      z-index:1;
-      font-weight:500;
-    }
-
-    .hiw-timeline {
-      max-width:900px;
-      margin:60px auto;
-      padding:0 clamp(20px,3vw,44px);
-      position:relative;
-      z-index:10;
-    }
-
-    .hiw-timeline-item {
-      display:grid;
-      grid-template-columns:80px 1fr;
-      gap:clamp(20px,3vw,32px);
-      margin-bottom:clamp(24px,3vw,32px);
-      position:relative;
-    }
-
-    .hiw-timeline-dot {
-      width:80px;
-      height:80px;
-      background:linear-gradient(135deg,#dc2626,#ff6b6b);
-      border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      font-weight:900;
-      color:#ffffff;
-      font-size:clamp(14px,1.8vw,18px);
-      box-shadow:0 8px 24px rgba(220,38,38,.3);
-      position:sticky;
-      top:100px;
-    }
-
-    .hiw-timeline-content {
-      background:rgba(255,255,255,.6);
-      backdrop-filter:blur(20px) saturate(180%);
-      border:1px solid rgba(180,180,180,.2);
-      border-radius:16px;
-      padding:clamp(20px,3vw,28px);
-      position:relative;
-      z-index:1;
-    }
-
-    .hiw-timeline-content h4 {
-      font-size:clamp(16px,2vw,20px);
-      font-weight:900;
-      color:#dc2626;
-      margin:0 0 12px;
-      font-family:'Fraunces',serif;
-    }
-
-    .hiw-timeline-content p {
-      font-size:clamp(12px,1.2vw,14px);
-      color:#2d2d2d;
-      margin:0;
-      line-height:1.7;
-      font-weight:500;
-    }
-
-    .hiw-do-donts {
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
-      gap:clamp(20px, 2.5vw, 28px);
-      max-width:1200px;
-      margin:40px auto;
-      padding:0 clamp(16px, 2vw, 40px) 60px;
-      position:relative;
-      z-index:10;
-    }
-
-    .hiw-do, .hiw-dont {
-      border-radius:16px;
-      padding:clamp(20px,3vw,28px);
-      backdrop-filter:blur(20px) saturate(180%);
-      border:1.5px solid;
-      transition:all .3s ease;
-    }
-
-    .hiw-do {
-      background:rgba(34,197,94,.1);
-      border-color:rgba(34,197,94,.3);
-    }
-
-    .hiw-do:hover {
-      transform:translateY(-4px);
-      box-shadow:0 16px 40px rgba(34,197,94,.15);
-    }
-
-    .hiw-dont {
-      background:rgba(220,38,38,.08);
-      border-color:rgba(220,38,38,.3);
-    }
-
-    .hiw-dont:hover {
-      transform:translateY(-4px);
-      box-shadow:0 16px 40px rgba(220,38,38,.15);
-    }
-
-    .hiw-do h4, .hiw-dont h4 {
-      font-size:clamp(14px,1.8vw,18px);
-      font-weight:900;
-      margin:0 0 12px;
-      font-family:'Fraunces',serif;
-    }
-
-    .hiw-do h4 {
-      color:#22c55e;
-    }
-
-    .hiw-dont h4 {
-      color:#dc2626;
-    }
-
-    .hiw-do ul, .hiw-dont ul {
-      margin:0;
-      padding:0 0 0 20px;
-      list-style:none;
-    }
-
-    .hiw-do li, .hiw-dont li {
-      font-size:clamp(12px,1.2vw,13px);
-      color:#2d2d2d;
-      margin-bottom:8px;
       line-height:1.6;
-      font-weight:500;
       position:relative;
-      padding-left:12px;
-    }
-
-    .hiw-do li::before {
-      content:'';
-      position:absolute;
-      left:0;
-      top:6px;
-      width:6px;
-      height:6px;
-      background:#22c55e;
-      border-radius:50%;
-    }
-
-    .hiw-dont li::before {
-      content:'';
-      position:absolute;
-      left:0;
-      top:6px;
-      width:6px;
-      height:6px;
-      background:#dc2626;
-      border-radius:50%;
+      z-index:1;
+      font-weight:500;
     }
 
     .hiw-cta {
@@ -455,12 +382,6 @@ function HowItWorks() {
       .hiw-logo-icon { width:40px; height:40px; }
       .hiw-logo-icon svg { width:22px; height:30px; }
       .hiw-logo-text { font-size:18px; }
-      .hiw-timeline-item {
-        grid-template-columns:1fr;
-      }
-      .hiw-timeline-dot {
-        position:static;
-      }
     }
   `
 
@@ -471,58 +392,36 @@ function HowItWorks() {
     document.head.appendChild(s)
   }
 
-  const eligibilityCriteria = [
+  const steps = [
     {
-      title: 'Age & Weight',
-      description: 'Must be 18 years or older and weigh at least 50 kg. Your body needs sufficient mass to safely donate blood.'
+      number: '1',
+      title: 'Create Profile',
+      description: 'Register with your health info. Quick, secure, and protected with medical-grade encryption.'
     },
     {
-      title: 'Health Status',
-      description: 'Be in good general health with no active infections, fever, or chronic conditions that could affect donation safety.'
+      number: '2',
+      title: 'Get Matched',
+      description: 'Our system matches you with patients who need your blood type. Real-time notifications.'
     },
     {
-      title: 'Blood Type',
-      description: 'Possess one of the eight major blood types: O, A, B, or AB with Rh positive or negative factors.'
+      number: '3',
+      title: 'Choose Location',
+      description: 'Donate at our Hamra center or 189+ hospital partners across Lebanon.'
     },
     {
-      title: 'Hemoglobin Levels',
-      description: 'Have adequate hemoglobin count. We screen during registration to ensure your blood iron levels are healthy.'
+      number: '4',
+      title: 'Make Donation',
+      description: 'Complete the process with our medical professionals. 30-45 minutes to save lives.'
     },
     {
-      title: 'Medications',
-      description: 'Not taking medications that could affect blood safety. Some medications require a waiting period before donation.'
+      number: '5',
+      title: 'Track Impact',
+      description: 'See your donation in action. Track who your blood helps.'
     },
     {
-      title: 'Lifestyle Factors',
-      description: 'Maintain responsible habits - adequate sleep, proper nutrition, and avoid substance abuse to maintain donor eligibility.'
-    }
-  ]
-
-  const recoveryTimeline = [
-    {
-      time: '0-30 Minutes',
-      title: 'The Donation',
-      description: 'A trained phlebotomist will collect approximately 450ml of blood. The process is quick and safe with medical professionals monitoring your vitals throughout.'
-    },
-    {
-      time: '30 Minutes - 2 Hours',
-      title: 'Recovery Station',
-      description: 'Rest in our recovery area. Enjoy refreshments including juice, water, and snacks. Your body begins replacing lost fluids immediately.'
-    },
-    {
-      time: '2-24 Hours',
-      title: 'First Day',
-      description: 'Light activities are fine. Stay hydrated and maintain normal eating patterns. Avoid strenuous exercise and heavy lifting for the rest of the day.'
-    },
-    {
-      time: '1-7 Days',
-      title: 'First Week',
-      description: 'Your body continues replenishing blood cells. Drink plenty of fluids, eat iron-rich foods, and get adequate sleep. Most donors feel completely normal within 48 hours.'
-    },
-    {
-      time: '1-3 Months',
-      title: 'Full Recovery',
-      description: 'Your body fully replaces the donated blood volume. Red blood cells take about 4-6 weeks to recover completely. You can donate again after 8 weeks.'
+      number: '6',
+      title: 'Earn Recognition',
+      description: 'Build your donor profile, earn badges, and become a hero.'
     }
   ]
 
@@ -530,7 +429,7 @@ function HowItWorks() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.06, delayChildren: 0.1 }
+      transition: { staggerChildren: 0.08, delayChildren: 0.15 }
     }
   }
 
@@ -543,7 +442,8 @@ function HowItWorks() {
     }
   }
 
-  const dots = Array.from({ length: 12 }, (_, i) => ({
+  // Generate animated dots
+  const dots = Array.from({ length: 8 }, (_, i) => ({
     id: i,
     size: Math.random() * 4 + 1.5,
     startX: Math.random() * 100,
@@ -660,6 +560,7 @@ function HowItWorks() {
                   </linearGradient>
                 </defs>
                 <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood2)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
               </svg>
             </motion.div>
             <motion.div 
@@ -680,127 +581,42 @@ function HowItWorks() {
         transition={{ duration: 0.7, delay: 0.1 }}
         className="hiw-hero"
       >
-        <p className="hiw-hero-subtitle">Be A Responsible Donor</p>
-        <h1>Your Health Matters</h1>
+        <p className="hiw-hero-subtitle">How It Works</p>
+        <h1>Your Blood Saves Lives</h1>
         <p>
-          Learn who can donate, what makes you eligible, and how to care for yourself after giving blood. A healthy donor saves more lives.
+          BloodConnect connects compassionate donors with patients in critical need through intelligent matching. Together, we're building a more connected and efficient blood banking system for Lebanon.
         </p>
       </motion.section>
 
-      {/* ELIGIBILITY SECTION */}
-      <h2 className="hiw-section-title">Who Can Donate</h2>
+      {/* STEPS SECTION */}
+      <h2 className="hiw-section-title">The Journey</h2>
       <p className="hiw-section-desc">
-        Blood donation requires meeting specific health and physical criteria to ensure the safety of both donors and recipients
+        Six simple steps to become a hero in your community
       </p>
 
+      {/* STEPS CARDS */}
       <motion.div
-        className="hiw-cards-grid"
+        className="hiw-steps"
         variants={containerVariants}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
       >
-        {eligibilityCriteria.map((item, idx) => (
+        {steps.map((step, idx) => (
           <motion.div
             key={idx}
-            className="hiw-card"
+            className="hiw-step-card"
             variants={itemVariants}
             whileHover={{ y: -4 }}
           >
-            <div className="hiw-card-icon">
-              {idx === 0 ? '18+' : idx === 1 ? 'OK' : idx === 2 ? 'AB' : idx === 3 ? 'RBC' : idx === 4 ? 'Rx' : 'Fit'}
-            </div>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
+            <div className="hiw-step-number">{step.number}</div>
+            <h3>{step.title}</h3>
+            <p>{step.description}</p>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* POST-DONATION TIMELINE */}
-      <h2 className="hiw-section-title">Your Recovery Journey</h2>
-      <p className="hiw-section-desc">
-        What to expect after donating and how your body bounces back
-      </p>
-
-      <motion.div
-        className="hiw-timeline"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-      >
-        {recoveryTimeline.map((item, idx) => (
-          <motion.div
-            key={idx}
-            className="hiw-timeline-item"
-            variants={itemVariants}
-          >
-            <div className="hiw-timeline-dot">{idx + 1}</div>
-            <div className="hiw-timeline-content">
-              <h4>{item.title}</h4>
-              <p style={{ fontSize: 'clamp(11px,1.1vw,12px)', color: '#666', fontWeight: 600, marginBottom: 8 }}>
-                {item.time}
-              </p>
-              <p>{item.description}</p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* DO'S AND DON'TS */}
-      <h2 className="hiw-section-title">After Donation</h2>
-      <p className="hiw-section-desc">
-        Simple guidelines to help your body recover quickly and safely
-      </p>
-
-      <motion.div
-        className="hiw-do-donts"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-      >
-        <motion.div className="hiw-do" variants={itemVariants}>
-          <h4>What To Do</h4>
-          <ul>
-            <li>Stay hydrated - drink plenty of water and fluids</li>
-            <li>Eat iron-rich foods like red meat, spinach, beans</li>
-            <li>Rest for at least 24 hours after donation</li>
-            <li>Keep the donation site clean and dry</li>
-            <li>Return for follow-up screening if advised</li>
-            <li>Wear loose, comfortable clothing for 24 hours</li>
-          </ul>
-        </motion.div>
-
-        <motion.div className="hiw-dont" variants={itemVariants}>
-          <h4>What To Avoid</h4>
-          <ul>
-            <li>Strenuous exercise or heavy lifting for 24-48 hours</li>
-            <li>Driving or operating machinery for 15 minutes post-donation</li>
-            <li>Smoking and alcohol for at least 48 hours</li>
-            <li>Hot baths or saunas for 24 hours</li>
-            <li>Removing the bandage for at least 4 hours</li>
-            <li>Donating plasma for 48 hours after blood donation</li>
-          </ul>
-        </motion.div>
-      </motion.div>
-
-      {/* IMPORTANT INFO */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        viewport={{ once: true }}
-        className="hiw-cta"
-        style={{ background: 'rgba(220,38,38,.08)' }}
-      >
-        <h2 style={{ color: '#dc2626' }}>Critical Health Information</h2>
-        <p className="hiw-cta-subtitle" style={{ color: '#666' }}>
-          You cannot donate if you have: active infections or fever, hepatitis or HIV, bleeding disorders, recent vaccinations within the specified timeframe, or are pregnant. Always inform medical staff of your complete medical history.
-        </p>
-      </motion.section>
-
-      {/* CTA */}
+      {/* CTA SECTION */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -808,9 +624,9 @@ function HowItWorks() {
         viewport={{ once: true }}
         className="hiw-cta"
       >
-        <h2>Ready To Become A Hero</h2>
+        <h2>Ready to Save Lives Today?</h2>
         <p className="hiw-cta-subtitle">
-          If you meet the eligibility criteria and feel healthy, start your donation journey today. Your commitment saves lives.
+          Join thousands of donors making a real difference in Lebanon. Every drop counts.
         </p>
         <motion.button
           className="hiw-cta-btn"
@@ -818,13 +634,13 @@ function HowItWorks() {
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate('/donor/register')}
         >
-          Register As A Donor
+          Start Your Donor Journey
         </motion.button>
       </motion.section>
 
       {/* FOOTER */}
       <footer className="hiw-footer">
-        BloodConnect Health Guidelines 2026. Always consult healthcare professionals before donating. Your health and safety come first.
+        © 2026 BloodConnect. Smart Donor Matching System. All rights reserved.
       </footer>
     </div>
   )
