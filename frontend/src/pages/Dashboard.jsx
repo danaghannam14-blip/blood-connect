@@ -396,6 +396,7 @@ function Dashboard() {
   const [loadingEmergency, setLoadingEmergency] = useState(true)
   const [expandedNotif, setExpandedNotif] = useState(null)
   const [manualRefreshLoading, setManualRefreshLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   // ✅ FIXED: Load donations on mount (NO auto-refresh)
   useEffect(() => {
@@ -480,7 +481,8 @@ function Dashboard() {
     try {
       await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
-        donation_location: 'center'
+        donation_location: 'center',
+        donor_id: donor.id
       })
       alert('Center donation confirmed!')
       setTimeout(async () => {
@@ -499,11 +501,11 @@ function Dashboard() {
     setConfirmingId(notificationId)
     try {
       console.log('Donor choosing hospital:', hospitalId, 'for request:', notificationId)
-      
       await axios.post(`${API}/api/blood-requests/donor-confirm-donation`, {
         notification_id: notificationId,
         donation_location: 'hospital',
-        hospital_id: hospitalId
+        hospital_id: hospitalId,
+        donor_id: donor.id
       })
       alert('Hospital selected! Waiting for hospital to confirm your donation.')
       
@@ -525,21 +527,37 @@ function Dashboard() {
     }
   }
 
+  // ✅ FIXED: Delete button - immediately removes from UI
   const handleDidntShowUp = async (notificationId) => {
     if (!window.confirm('Are you sure you want to decline this donation request?')) return
-    setConfirmingId(notificationId)
+    
+    setDeletingId(notificationId)
     try {
-      await axios.delete(`${API}/api/blood-requests/${notificationId}`)
-      alert('Request marked as declined.')
-      setTimeout(async () => {
+      console.log('[Dashboard] Deleting request:', notificationId)
+      
+      // Delete from database
+      const response = await axios.delete(`${API}/api/blood-requests/${notificationId}`)
+      console.log('[Dashboard] Delete response:', response.data)
+      
+      // ✅ IMMEDIATELY remove from UI (optimistic update)
+      setEmergencyRequests(prev => prev.filter(req => req.id !== notificationId))
+      setExpandedNotif(null)
+      
+      console.log('[Dashboard] ✅ Request removed from dashboard')
+      alert('✅ Request declined and removed from your dashboard.')
+    } catch (err) {
+      console.error('[Dashboard] Delete error:', err)
+      alert('❌ Error: ' + (err.response?.data?.error || err.message))
+      
+      // On error, refresh to show true state from server
+      try {
         const res = await axios.get(`${API}/api/blood-requests/donor/${donor.id}`)
         setEmergencyRequests(res.data || [])
-        setExpandedNotif(null)
-      }, 500)
-    } catch (err) {
-      alert('Error: ' + (err.response?.data?.error || err.message))
+      } catch (refreshErr) {
+        console.error('[Dashboard] Refresh error:', refreshErr)
+      }
     } finally {
-      setConfirmingId(null)
+      setDeletingId(null)
     }
   }
 
@@ -794,6 +812,7 @@ function Dashboard() {
                       key={notif.id}
                       initial={{ opacity: 0, x: -20, y: 12 }}
                       animate={{ opacity: 1, x: 0, y: 0 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.9 }}
                       transition={{ delay: idx * 0.08, duration: 0.5 }}
                       className="dd-glass dd-card-hover"
                       onClick={() => notif.status === 'pending' && setExpandedNotif(expandedNotif === notif.id ? null : notif.id)}
@@ -896,13 +915,13 @@ function Dashboard() {
                               {donor?.governorate === 'Beirut' && (
                                 <motion.button
                                   onClick={() => handleDonateAtCenter(notif.id)}
-                                  disabled={confirmingId === notif.id}
+                                  disabled={confirmingId === notif.id || deletingId === notif.id}
                                   className="dd-btn dd-btn-success"
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.96 }}
                                   style={{
-                                    opacity: confirmingId === notif.id ? 0.6 : 1,
-                                    pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                    opacity: confirmingId === notif.id || deletingId === notif.id ? 0.6 : 1,
+                                    pointerEvents: confirmingId === notif.id || deletingId === notif.id ? 'none' : 'auto',
                                     fontSize: 'clamp(11px, 1.2vw, 13px)',
                                     padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                   }}
@@ -915,13 +934,13 @@ function Dashboard() {
                                   setHospitalModalOpen(notif.id)
                                   setSearchQuery('')
                                 }}
-                                disabled={confirmingId === notif.id}
+                                disabled={confirmingId === notif.id || deletingId === notif.id}
                                 className="dd-btn dd-btn-primary"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.96 }}
                                 style={{
-                                  opacity: confirmingId === notif.id ? 0.6 : 1,
-                                  pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                  opacity: confirmingId === notif.id || deletingId === notif.id ? 0.6 : 1,
+                                  pointerEvents: confirmingId === notif.id || deletingId === notif.id ? 'none' : 'auto',
                                   fontSize: 'clamp(11px, 1.2vw, 13px)',
                                   padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                 }}
@@ -931,18 +950,18 @@ function Dashboard() {
 
                               <motion.button
                                 onClick={() => handleDidntShowUp(notif.id)}
-                                disabled={confirmingId === notif.id}
+                                disabled={confirmingId === notif.id || deletingId === notif.id}
                                 className="dd-btn dd-btn-danger"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.96 }}
                                 style={{
-                                  opacity: confirmingId === notif.id ? 0.6 : 1,
-                                  pointerEvents: confirmingId === notif.id ? 'none' : 'auto',
+                                  opacity: confirmingId === notif.id || deletingId === notif.id ? 0.6 : 1,
+                                  pointerEvents: confirmingId === notif.id || deletingId === notif.id ? 'none' : 'auto',
                                   fontSize: 'clamp(11px, 1.2vw, 13px)',
                                   padding: 'clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px)',
                                 }}
                               >
-                                Decline
+                                {deletingId === notif.id ? 'Declining...' : 'Decline'}
                               </motion.button>
                             </div>
                           </motion.div>

@@ -511,31 +511,32 @@ function Admin() {
     }
   }
 
-  const handleConfirmBccDonation = async (donationId) => {
-    setConfirmingId(donationId)
-    try {
-      const donation = bccDonations.find(d => d.id === donationId)
-      
-      if (!donation || !donation.patient_email) {
-        alert('Donation or patient email missing')
-        setConfirmingId(null)
-        return
-      }
-      
-      await axios.post(`${API}/api/blood-requests/admin-confirm`, {
-        donationId: donationId,
-        bloodType: donation.blood_type,
-        patientEmail: donation.patient_email
-      })
-      
-      alert('✅ Donation confirmed! Patient and donor notified.')
-      loadData()
-    } catch (err) {
-      alert(`Error: ${err.response?.data?.error || err.message}`)
-    } finally {
+ const handleConfirmBccDonation = async (donationId) => {
+  setConfirmingId(donationId)
+  try {
+    const donation = bccDonations.find(d => d.id === donationId)
+    
+    if (!donation || !donation.patient_email) {
+      alert('Donation or patient email missing')
       setConfirmingId(null)
+      return
     }
+    
+    await axios.post(`${API}/api/blood-requests/admin-confirm`, {
+      donationId: donationId,
+      bloodType: donation.blood_type,
+      patientEmail: donation.patient_email,
+      donorEmail: donation.donor_email  // ✅ ADDED: Pass donor email for thank you
+    })
+    
+    alert('✅ Donation confirmed! Patient and donor notified.')
+    loadData()
+  } catch (err) {
+    alert(`Error: ${err.response?.data?.error || err.message}`)
+  } finally {
+    setConfirmingId(null)
   }
+}
 
   // ✅ Confirm hospital supply - updates request to 'supply_coming'
   const handleConfirmHospitalSupply = async (requestId) => {
@@ -774,7 +775,7 @@ function Admin() {
                         pointerEvents: confirmingNoShowId === request.id ? 'none' : 'auto',
                       }}
                     >
-                      {confirmingNoShowId === request.id ? '⏳ Confirming Supply...' : '✅ Confirm Supply'}
+                      {confirmingNoShowId === request.id ? '⏳ Confirming...' : '✅ Confirmed'}
                     </motion.button>
                   </motion.div>
                 ))}
@@ -1053,4 +1054,3 @@ function Admin() {
 }
 
 export default Admin
-

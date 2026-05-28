@@ -227,7 +227,7 @@ function HospitalDashboard() {
 
   const handleConfirmReceived = async (requestId) => {
     try {
-      await axios.delete(`${API}/api/blood-requests/${requestId}`)
+      await axios.delete(`${API}/api/blood-requests/hospital/${requestId}`)
       alert('✅ Request confirmed. Removed from donor dashboard.')
       loadData()
     } catch (err) {
@@ -279,7 +279,7 @@ function HospitalDashboard() {
     if (!window.confirm('Delete this request permanently?')) return
     
     try {
-      await axios.delete(`${API}/api/blood-requests/${requestId}`)
+     await axios.delete(`${API}/api/blood-requests/hospital/${requestId}`)
       setRequests(requests.filter(r => r.id !== requestId))
       alert('✅ Request deleted.')
       loadData()
@@ -294,7 +294,7 @@ function HospitalDashboard() {
     setConfirmingSupplyId(requestId)
     try {
       console.log('[handleSupplyConfirmedReceived] Deleting request:', requestId)
-      await axios.delete(`${API}/api/blood-requests/${requestId}`)
+    await axios.delete(`${API}/api/blood-requests/hospital/${requestId}`)
       
       alert('✅ Supply confirmed and received.')
       loadData()
@@ -307,19 +307,22 @@ function HospitalDashboard() {
   }
 
   const handleConfirmDonation = async (donationId) => {
-    setConfirmingId(donationId)
-    try {
-      const donation = awaitingDonations.find(d => d.id === donationId)
-      
-      if (!donation) {
-        alert('Donation not found')
-        setConfirmingId(null)
-        return
-      }
+setConfirmingId(donationId)
+try {
+const donation = awaitingDonations.find(d => d.id === donationId)
+if (!donation) {
+  alert('Donation not found')
+  setConfirmingId(null)
+  return
+}
 
-      await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
-        request_id: donationId
-      })
+await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
+  request_id: donationId,
+  hospitalId: hospital.id,
+  bloodType: donation.blood_type,
+  patientEmail: donation.patient_email,
+  donorEmail: donation.donor_email
+})
       
       alert('✅ Donation confirmed! Removed from all dashboards.')
       loadData()
@@ -686,7 +689,7 @@ function HospitalDashboard() {
                               opacity: confirmingSupplyId === r.id ? 0.6 : 1
                             }}
                           >
-                            {confirmingSupplyId === r.id ? 'Confirming Received...' : 'Supply Confirmed and Received'}
+                            {confirmingSupplyId === r.id ? 'Confirming Received...' : 'Supply Confirmation'}
                           </motion.button>
                         </motion.div>
                       )
