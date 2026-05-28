@@ -167,15 +167,25 @@ const PREMIUM_STYLES = `
   }
 
   .prem-bubble-user {
-    background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(34,197,94,.12));
-    border: 1.5px solid rgba(34,197,94,.4);
     border-radius: 16px 16px 4px 16px;
     padding: clamp(10px, 1.8vw, 14px) clamp(14px, 1.8vw, 18px);
-    box-shadow: 0 6px 20px rgba(34,197,94,.1);
     max-width: 85%;
     word-wrap: break-word;
-    color: #16a34a;
     font-weight: 600;
+  }
+
+  .prem-bubble-user-yes {
+    background: linear-gradient(135deg, rgba(22,163,74,.3), rgba(22,163,74,.15));
+    border: 1.5px solid rgba(22,163,74,.5);
+    color: #16a34a;
+    box-shadow: 0 6px 20px rgba(22,163,74,.2);
+  }
+
+  .prem-bubble-user-no {
+    background: linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12));
+    border: 1.5px solid rgba(220,38,38,.4);
+    color: #dc2626;
+    box-shadow: 0 6px 20px rgba(220,38,38,.15);
   }
 
   .prem-bubble-text {
@@ -185,7 +195,7 @@ const PREMIUM_STYLES = `
   }
 
   .prem-bubble-user .prem-bubble-text {
-    color: #16a34a;
+    color: inherit;
   }
 
   .prem-bubble-hint {
@@ -554,7 +564,7 @@ function PremiumChatbot() {
     const newAnswers = { ...answers, [currentQuestion.key]: answer }
     setAnswers(newAnswers)
 
-    setMessages(prev => [...prev, { from: 'user', text: answer === 'yes' ? 'Yes' : 'No' }])
+    setMessages(prev => [...prev, { from: 'user', text: answer === 'yes' ? 'Yes' : 'No', answerType: answer }])
 
     if (step + 1 < SCREENING_QUESTIONS.length) {
       setStep(step + 1)
@@ -702,7 +712,7 @@ function PremiumChatbot() {
                 )}
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  <div className={msg.from === 'bot' ? 'prem-bubble-bot' : 'prem-bubble-user'}>
+                  <div className={msg.from === 'bot' ? 'prem-bubble-bot' : `prem-bubble-user ${msg.answerType === 'yes' ? 'prem-bubble-user-yes' : 'prem-bubble-user-no'}`}>
                     <div className="prem-bubble-text">{msg.text}</div>
                     {msg.hint && msg.from === 'bot' && (
                       <motion.div
@@ -726,17 +736,23 @@ function PremiumChatbot() {
                       width: 30,
                       height: 30,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12))',
-                      border: '1.5px solid rgba(220,38,38,.35)',
+                      background: msg.answerType === 'yes' 
+                        ? 'linear-gradient(135deg, rgba(22,163,74,.3), rgba(22,163,74,.15))'
+                        : 'linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12))',
+                      border: msg.answerType === 'yes'
+                        ? '1.5px solid rgba(22,163,74,.5)'
+                        : '1.5px solid rgba(220,38,38,.4)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      boxShadow: '0 4px 12px rgba(220,38,38,.1)',
+                      boxShadow: msg.answerType === 'yes'
+                        ? '0 4px 12px rgba(22,163,74,.2)'
+                        : '0 4px 12px rgba(220,38,38,.15)',
                       marginTop: 1,
                     }}
                   >
-                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#dc2626' }}>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: msg.answerType === 'yes' ? '#16a34a' : '#dc2626' }}>
                       <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                     </svg>
                   </motion.div>

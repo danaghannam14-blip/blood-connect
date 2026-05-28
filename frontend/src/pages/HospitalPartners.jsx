@@ -26,7 +26,6 @@ function RecenterMap({ center, zoom }) {
   useEffect(() => { 
     if (center && (lastCenterRef.current === null || 
         (lastCenterRef.current[0] !== center[0] || lastCenterRef.current[1] !== center[1]))) {
-      // Only update zoom when center actually changes (from filter button click)
       map.flyTo(center, zoom || 10, { duration: 1 })
       lastCenterRef.current = center
     }
@@ -81,9 +80,9 @@ function HospitalPartners() {
       setLoading(true)
       setError(null)
       
-      console.log('📍 [HospitalPartners] Fetching from:', `${API_BASE_URL}/api/hospitals/all`)
+      console.log('📍 [HospitalPartners] Fetching from:', `${API}/api/hospitals/all`)
       
-      const response = await fetch(`${API_BASE_URL}/api/hospitals/all`, {
+      const response = await fetch(`${API}/api/hospitals/all`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +90,7 @@ function HospitalPartners() {
       })
 
       if (!response.ok) {
-        throw new Error(`Server returned ${response.status}. Make sure your backend is running at ${API_BASE_URL}`)
+        throw new Error(`Server returned ${response.status}. Make sure your backend is running at ${API}`)
       }
 
       const contentType = response.headers.get('content-type')
@@ -237,20 +236,20 @@ function HospitalPartners() {
   }
 
   const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
     @keyframes hp-gradient { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-    @keyframes hp-pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
-    @keyframes hp-orb { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-30px) translateX(20px) scale(1.1); } 66% { transform:translateY(10px) translateX(-15px) scale(.9); } }
+    @keyframes hp-float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
 
     .hp-root {
       min-height:100vh;
-      background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.35));
+      background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
       background-size:400% 400%;
-      animation:hp-gradient 14s ease infinite;
+      animation:hp-gradient 15s ease infinite;
       font-family:'Plus Jakarta Sans',sans-serif;
       overflow-x:hidden;
       position:relative;
+      color:#380101;
     }
 
     .hp-orbs {
@@ -264,95 +263,56 @@ function HospitalPartners() {
     .hp-orb {
       position:absolute;
       border-radius:50%;
-      filter:blur(100px);
+      filter:blur(80px);
       pointer-events:none;
-      animation:hp-orb var(--dur,8s) ease-in-out infinite;
+      animation:hp-float-orb 6s ease-in-out infinite;
     }
 
-    .hp-glass {
-      background:rgba(255,255,255,.42);
-      backdrop-filter:blur(28px) saturate(180%);
-      -webkit-backdrop-filter:blur(28px) saturate(180%);
-      border:1px solid rgba(255,255,255,.72);
-      box-shadow:0 8px 32px rgba(211,47,47,.07),inset 0 0 20px rgba(255,255,255,.6);
+    .hp-dots {
+      position:fixed;
+      width:100%;
+      height:100%;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
     }
 
-    .hp-glass-deep {
-      background:rgba(255,255,255,.35);
-      backdrop-filter:blur(40px) contrast(1.1);
-      -webkit-backdrop-filter:blur(40px) contrast(1.1);
-      border:1px solid rgba(255,255,255,.8);
-      box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
+    .hp-dot {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
     }
 
     .hp-nav {
-      position:sticky;
-      top:0;
-      z-index:50;
-      background:rgba(255,255,255,.62);
-      backdrop-filter:blur(40px);
-      -webkit-backdrop-filter:blur(40px);
-      border-bottom:2px solid rgba(211,47,47,.2);
-      box-shadow:0 4px 24px rgba(211,47,47,.06);
+      position:sticky;top:0;z-index:50;
+      background:rgba(248,248,248,.85);
+      backdrop-filter:blur(20px) saturate(200%);
+      -webkit-backdrop-filter:blur(20px) saturate(200%);
+      border-bottom:1px solid rgba(180,180,180,.15);
+      box-shadow:0 4px 30px rgba(0,0,0,.08);
     }
 
     .hp-nav-inner {
-      max-width:1360px;
-      margin:0 auto;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:clamp(10px,1.4vw,16px) clamp(16px,3.5vw,44px);
+      max-width:1360px;margin:0 auto;
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px clamp(16px,3.5vw,44px);
       gap:clamp(16px,2.5vw,32px);
     }
 
-    .hp-title {
-      font-size:clamp(13px,1.6vw,16px);
-      font-weight:900;
-      color:#dc2626;
-      font-family:'Plus Jakarta Sans',sans-serif;
+    .hp-glass {
+      background:rgba(255,255,255,.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);
+      border:1px solid rgba(180,180,180,.2);
+      box-shadow:0 8px 32px rgba(0,0,0,.08);
     }
 
-    .hp-emergency-btn {
-      background:linear-gradient(135deg,#dc2626,#ff6b6b);
-      color:#faf7f7;
-      border:none;
-      cursor:pointer;
-      padding:10px 24px;
-      border-radius:20px;
-      font-weight:900;
-      font-size:13px;
-      font-family:'Plus Jakarta Sans',sans-serif;
-      box-shadow:0 12px 32px rgba(211,47,47,.32);
-      transition:all .22s cubic-bezier(.34,1.56,.64,1);
-      display:flex;
-      align-items:center;
-      gap:8px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .hp-emergency-btn::after {
-      content:'';
-      position:absolute;
-      top:50%;
-      left:50%;
-      width:0;
-      height:0;
-      background:rgba(255,255,255,.28);
-      border-radius:50%;
-      transform:translate(-50%,-50%);
-      transition:width .4s,height .4s;
-    }
-
-    .hp-emergency-btn:hover {
-      transform:translateY(-3px) scale(1.05);
-      box-shadow:0 18px 48px rgba(211,47,47,.44);
-    }
-
-    .hp-emergency-btn:hover::after {
-      width:300px;
-      height:300px;
+    .hp-glass-deep {
+      background:rgba(255,255,255,.65);
+      backdrop-filter:blur(30px) saturate(200%);
+      -webkit-backdrop-filter:blur(30px) saturate(200%);
+      border:1px solid rgba(180,180,180,.25);
+      box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4);
     }
 
     .hp-filter-btn {
@@ -364,7 +324,7 @@ function HospitalPartners() {
       font-weight:900;
       background:rgba(255,255,255,.5);
       backdrop-filter:blur(20px);
-      border:2px solid rgba(211,47,47,.15);
+      border:2px solid rgba(220,38,38,.15);
       color:#dc2626;
       padding:clamp(8px,1vw,12px) clamp(14px,1.8vw,22px);
       border-radius:clamp(10px,1.4vw,16px);
@@ -376,30 +336,30 @@ function HospitalPartners() {
     .hp-filter-btn:hover {
       transform:translateY(-2px);
       background:rgba(255,255,255,.72);
-      border-color:rgba(211,47,47,.42);
-      box-shadow:0 10px 28px rgba(211,47,47,.15);
+      border-color:rgba(220,38,38,.42);
+      box-shadow:0 10px 28px rgba(220,38,38,.15);
     }
 
     .hp-filter-btn.active {
       background:linear-gradient(135deg,#dc2626,#ff6b6b);
       color:#faf7f7;
-      box-shadow:0 10px 28px rgba(211,47,47,.3);
+      box-shadow:0 10px 28px rgba(220,38,38,.3);
       transform:scale(1.05);
       border-color:#dc2626;
     }
 
     .hp-hospital-card {
-      background:rgba(255,255,255,.45);
+      background:rgba(255,255,255,.65);
       backdrop-filter:blur(28px);
       -webkit-backdrop-filter:blur(28px);
-      border:2px solid rgba(255,255,255,.6);
+      border:1px solid rgba(180,180,180,.25);
       border-radius:clamp(16px,2vw,28px);
       padding:clamp(18px,2.5vw,28px);
       transition:all .28s cubic-bezier(.22,1,.36,1);
       position:relative;
       overflow:hidden;
       cursor:pointer;
-      box-shadow:0 8px 32px rgba(211,47,47,.06),inset 0 0 20px rgba(255,255,255,.4);
+      box-shadow:0 8px 32px rgba(0,0,0,.06),inset 0 1px 1px rgba(255,255,255,.4);
     }
 
     .hp-hospital-card::before {
@@ -424,8 +384,8 @@ function HospitalPartners() {
 
     .hp-hospital-card:hover {
       transform:translateY(-6px) scale(1.02);
-      box-shadow:0 20px 56px rgba(211,47,47,.15),inset 0 0 30px rgba(255,255,255,.5);
-      border-color:rgba(211,47,47,.25);
+      box-shadow:0 20px 56px rgba(220,38,38,.15),inset 0 1px 1px rgba(255,255,255,.5);
+      border-color:rgba(220,38,38,.25);
     }
 
     .hp-hospital-card:hover::after {
@@ -440,13 +400,13 @@ function HospitalPartners() {
     .hp-hospital-icon {
       width:44px;
       height:44px;
-      background:linear-gradient(135deg,rgba(211,47,47,.15),rgba(153,27,27,.1));
+      background:linear-gradient(135deg,rgba(220,38,38,.15),rgba(153,27,27,.1));
       border-radius:12px;
       display:flex;
       align-items:center;
       justify-content:center;
       margin-bottom:12px;
-      border:1px solid rgba(211,47,47,.2);
+      border:1px solid rgba(220,38,38,.2);
     }
 
     .hp-hospital-name {
@@ -480,7 +440,7 @@ function HospitalPartners() {
 
     .hp-hospital-address {
       font-size:clamp(10px,.9vw,12px);
-      color:rgba(211,47,47,.6);
+      color:rgba(220,38,38,.6);
       font-weight:500;
       margin:0;
       line-height:1.4;
@@ -511,9 +471,18 @@ function HospitalPartners() {
       margin-top:12px;
     }
 
+    .hp-badge::before {
+      content:'';
+      width:6px;
+      height:6px;
+      background:#16a34a;
+      border-radius:50%;
+      display:inline-block;
+    }
+
     .hp-error {
-      background:rgba(211,47,47,.08);
-      border:2px solid rgba(211,47,47,.3);
+      background:rgba(220,38,38,.08);
+      border:2px solid rgba(220,38,38,.3);
       border-radius:16px;
       padding:24px;
       color:#dc2626;
@@ -524,7 +493,7 @@ function HospitalPartners() {
     .hp-no-results {
       text-align:center;
       padding:40px 20px;
-      color:rgba(211,47,47,.65);
+      color:rgba(220,38,38,.65);
     }
 
     .hp-loading {
@@ -535,36 +504,6 @@ function HospitalPartners() {
       font-size:18px;
       color:#dc2626;
       font-weight:700;
-    }
-
-    .hp-toggle-btn {
-      flex:1;
-      padding:14px 18px;
-      border-radius:16px;
-      font-size:14px;
-      font-weight:900;
-      font-family:'Plus Jakarta Sans',sans-serif;
-      cursor:pointer;
-      border:none;
-      transition:all .25s cubic-bezier(.34,1.56,.64,1);
-    }
-
-    .hp-toggle-btn.active {
-      background:linear-gradient(135deg,#dc2626,#ff6b6b);
-      color:#faf7f7;
-      box-shadow:0 10px 28px rgba(211,47,47,.32);
-    }
-
-    .hp-toggle-btn.inactive {
-      background:rgba(255,255,255,.5);
-      backdrop-filter:blur(10px);
-      color:rgba(211,47,47,.6);
-      border:2px solid rgba(211,47,47,.12);
-    }
-
-    .hp-toggle-btn.inactive:hover {
-      background:rgba(255,255,255,.75);
-      border-color:rgba(211,47,47,.28);
     }
 
     @media (max-width:960px) {
@@ -605,17 +544,70 @@ function HospitalPartners() {
     }
   }, [filter])
 
+  // Generate animated dots
+  const dots = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 1.5,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
+  }))
+
   return (
     <div className="hp-root">
-      {/* Floating Orbs Background */}
+      {/* Animated Orbs Background */}
       <div className="hp-orbs">
         {[
-          { t: '8%', l: '8%', w: 'min(420px,36vw)', c: 'rgba(211,47,47,.17)', d: '0s' },
-          { b: '18%', r: '8%', w: 'min(480px,40vw)', c: 'rgba(64,88,120,.22)', d: '-2s' },
-          { t: '45%', r: '18%', w: 'min(320px,28vw)', c: 'rgba(255,235,238,.45)', d: '-5s' },
-          { b: '4%', l: '12%', w: 'min(220px,20vw)', c: 'rgba(64,88,120,.28)', d: '-3s' },
+          { w: 'min(420px,36vw)', c: 'rgba(220,38,38,.1)', t: '8%', l: '8%', d: '0s' },
+          { w: 'min(480px,40vw)', c: 'rgba(180,180,180,.08)', b: '18%', r: '8%', d: '-2s' },
+          { w: 'min(320px,28vw)', c: 'rgba(220,38,38,.08)', t: '45%', r: '18%', d: '-5s' },
+          { w: 'min(220px,20vw)', c: 'rgba(180,180,180,.06)', b: '4%', l: '12%', d: '-3s' },
         ].map((o, i) => (
-          <div key={i} className="hp-orb" style={{ '--dur': '8s', width: o.w, height: o.w, background: o.c, top: o.t, bottom: o.b, left: o.l, right: o.r, animationDelay: o.d }} />
+          <motion.div
+            key={i}
+            className="hp-orb"
+            style={{
+              width: o.w,
+              height: o.w,
+              background: o.c,
+              top: o.t,
+              bottom: o.b,
+              left: o.l,
+              right: o.r,
+            }}
+            animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
+
+      {/* Animated Dots */}
+      <div className="hp-dots">
+        {dots.map((dot) => (
+          <motion.div
+            key={`dot-${dot.id}`}
+            className="hp-dot"
+            style={{
+              width: dot.size,
+              height: dot.size,
+              background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+              left: `${dot.startX}%`,
+              top: `${dot.startY}%`,
+              boxShadow: `0 0 ${dot.size * 2}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+            }}
+            animate={{
+              y: [0, -200 - Math.random() * 100],
+              x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+              opacity: [0, 0.7, 0],
+            }}
+            transition={{
+              duration: dot.duration,
+              delay: dot.delay,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
         ))}
       </div>
 
@@ -623,29 +615,52 @@ function HospitalPartners() {
       <header className="hp-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
         <div className="hp-nav-inner">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
             onClick={() => navigate('/')}
+            whileHover={{ x: 3 }}
           >
-            <span className="hp-title">BloodConnect: Smart Donor Matching System</span>
+            <motion.div
+              style={{
+                width: 50,
+                height: 50,
+                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+                <defs>
+                  <linearGradient id="navBloodHP" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBloodHP)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+              </svg>
+            </motion.div>
+            <motion.div 
+              style={{ fontSize: 22, fontWeight: 900, color: '#dc2626' }}
+              animate={{ letterSpacing: [0, 1, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              BloodConnect
+            </motion.div>
           </motion.div>
 
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              onClick={() => navigate('/emergency')}
-              className="hp-emergency-btn"
-            >
-              <span style={{ animation: 'hp-pulse 1.2s cubic-bezier(0,0,.2,1) infinite', display: 'inline-block', fontWeight: 900 }}>!</span>
-              Emergency
-            </motion.button>
-          </div>
-
-          
+          <div style={{ flex: 1 }} />
         </div>
       </header>
 
@@ -660,7 +675,7 @@ function HospitalPartners() {
           initial={{ opacity: 0, y: 10 }}
           animate={visible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.1 }}
-          style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(36px,5.5vw,72px)', lineHeight: 0.93, fontWeight: 900, color: '#dc2626', margin: '0 0 16px', textShadow: '0 4px 20px rgba(211,47,47,.35)' }}
+          style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(36px,5.5vw,72px)', lineHeight: 0.93, fontWeight: 900, color: '#dc2626', margin: '0 0 16px', textShadow: '0 4px 20px rgba(220,38,38,.35)' }}
         >
           Hospital Partners
         </motion.h1>
@@ -668,7 +683,7 @@ function HospitalPartners() {
           initial={{ opacity: 0, y: 10 }}
           animate={visible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.2 }}
-          style={{ fontSize: 'clamp(13px,1.3vw,17px)', color: 'rgba(211,47,47,.7)', fontWeight: 600, maxWidth: 540, margin: '0 auto', lineHeight: 1.65 }}
+          style={{ fontSize: 'clamp(13px,1.3vw,17px)', color: 'rgba(56,1,1,.7)', fontWeight: 600, maxWidth: 540, margin: '0 auto', lineHeight: 1.65 }}
         >
           Trusted medical centers across Lebanon partnered with BloodConnect to ensure life-saving blood reaches patients in critical need.
         </motion.p>
@@ -703,7 +718,6 @@ function HospitalPartners() {
               transition={{ delay: idx * 0.05 }}
               onClick={() => {
                 setFilter(region)
-                // Zoom into governorate
                 if (region === 'all') {
                   setMapCenter([33.8547, 35.8623])
                   setMapZoom(9)
@@ -723,10 +737,10 @@ function HospitalPartners() {
         </motion.section>
       )}
 
-      {/* MAP (always shown) */}
+      {/* MAP */}
       {!loading && filtered.length > 0 && (
         <section style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: 'clamp(20px,2.5vw,32px) clamp(16px,3.5vw,44px) clamp(40px,6vw,80px)' }}>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ borderRadius: 28, overflow: 'hidden', border: '2px solid rgba(211,47,47,.15)', boxShadow: '0 24px 60px rgba(211,47,47,.1)', height: 'clamp(300px,50vh,600px)' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ borderRadius: 28, overflow: 'hidden', border: '2px solid rgba(220,38,38,.15)', boxShadow: '0 24px 60px rgba(220,38,38,.1)', height: 'clamp(300px,50vh,600px)' }}>
             {mapCenter && (
               <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
                 <RecenterMap center={mapCenter} zoom={mapZoom} />
@@ -745,8 +759,8 @@ function HospitalPartners() {
                       <div style={{ minWidth: 200 }}>
                         <p style={{ fontWeight: 'bold', color: '#dc2626', margin: 0, marginBottom: 6 }}>{h.name}</p>
                         <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0' }}>{h.fullAddress}</p>
-                        {h.phone && <p style={{ fontSize: 12, fontWeight: 'bold', color: '#991b1b', margin: '6px 0' }}>📞 {h.phone}</p>}
-                        <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 12, fontWeight: 'bold', textDecoration: 'none' }}>Get Directions →</a>
+                        {h.phone && <p style={{ fontSize: 12, fontWeight: 'bold', color: '#991b1b', margin: '6px 0' }}>Phone: {h.phone}</p>}
+                        <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 12, fontWeight: 'bold', textDecoration: 'none' }}>Get Directions</a>
                       </div>
                     </Popup>
                   </Marker>
@@ -757,14 +771,14 @@ function HospitalPartners() {
         </section>
       )}
 
-      {/* HOSPITALS GRID (always shown) */}
+      {/* HOSPITALS GRID */}
       <section style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: '0 clamp(16px,3.5vw,44px) clamp(60px,8vw,100px)' }}>
         {loading ? (
           <div className="hp-loading">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid rgba(211,47,47,.15)', borderTopColor: '#dc2626', marginRight: 16 }}
+              style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid rgba(220,38,38,.15)', borderTopColor: '#dc2626', marginRight: 16 }}
             />
             Loading hospitals...
           </div>
@@ -812,7 +826,6 @@ function HospitalPartners() {
 
                     {hospital.active && (
                       <div className="hp-badge">
-                        <span style={{ width: 6, height: 6, background: '#16a34a', borderRadius: '50%', display: 'inline-block' }} />
                         Active
                       </div>
                     )}
@@ -823,6 +836,8 @@ function HospitalPartners() {
           </div>
         )}
       </section>
+
+      {/* CTA SECTION */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={visible ? { opacity: 1, y: 0 } : {}}
@@ -832,7 +847,7 @@ function HospitalPartners() {
         <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 'clamp(26px,5.5vw,62px)', fontWeight: 900, color: '#dc2626', lineHeight: 1.1, letterSpacing: '-.04em', margin: 0 }}>
           Ready to save lives?
         </h2>
-        <p style={{ fontSize: 'clamp(12px,1.4vw,16px)', color: 'rgba(211,47,47,.65)', fontWeight: 600, margin: 'clamp(12px,1.8vw,24px) auto 0', maxWidth: 520, lineHeight: 1.65 }}>
+        <p style={{ fontSize: 'clamp(12px,1.4vw,16px)', color: 'rgba(56,1,1,.65)', fontWeight: 600, margin: 'clamp(12px,1.8vw,24px) auto 0', maxWidth: 520, lineHeight: 1.65 }}>
           Join Lebanon's most innovative network of heroes. Your contribution is vital, and with our intelligent logistics, your impact is immediate.
         </p>
         <div style={{ marginTop: 'clamp(20px,2.5vw,36px)' }}>
@@ -840,7 +855,7 @@ function HospitalPartners() {
             whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/donor/register')}
-            style={{ background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', color: '#faf7f7', border: 'none', cursor: 'pointer', padding: 'clamp(14px,1.8vw,20px) clamp(28px,4vw,52px)', borderRadius: 28, fontWeight: 900, fontSize: 'clamp(14px,1.4vw,18px)', fontFamily: "'Plus Jakarta Sans',sans-serif", boxShadow: '0 12px 32px rgba(211,47,47,.32)', transition: 'all .22s cubic-bezier(.34,1.56,.64,1)' }}
+            style={{ background: 'linear-gradient(135deg,#dc2626,#ff6b6b)', color: '#faf7f7', border: 'none', cursor: 'pointer', padding: 'clamp(14px,1.8vw,20px) clamp(28px,4vw,52px)', borderRadius: 28, fontWeight: 900, fontSize: 'clamp(14px,1.4vw,18px)', fontFamily: "'Plus Jakarta Sans',sans-serif", boxShadow: '0 12px 32px rgba(220,38,38,.32)', transition: 'all .22s cubic-bezier(.34,1.56,.64,1)' }}
           >
             Become a Donor Today
           </motion.button>
@@ -848,7 +863,7 @@ function HospitalPartners() {
       </motion.section>
 
       {/* FOOTER */}
-      <footer style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,.4)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(211,47,47,.08)', padding: 'clamp(20px,3vw,32px) clamp(16px,3.5vw,44px)', textAlign: 'center', fontSize: 'clamp(10px,.9vw,12px)', color: 'rgba(211,47,47,.5)', fontWeight: 500 }}>
+      <footer style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,.4)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(220,38,38,.08)', padding: 'clamp(20px,3vw,32px) clamp(16px,3.5vw,44px)', textAlign: 'center', fontSize: 'clamp(10px,.9vw,12px)', color: 'rgba(220,38,38,.5)', fontWeight: 500 }}>
         © 2026 BloodConnect · Dana Ghannam & Lynn Anani · Lebanon.
       </footer>
     </div>

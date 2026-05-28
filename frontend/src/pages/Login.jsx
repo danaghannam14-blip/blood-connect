@@ -644,7 +644,6 @@ function Login() {
                   <input
                     name="email"
                     type="email"
-                    placeholder="donor@bloodconnect.com"
                     value={form.email}
                     onChange={handleChange}
                     required
@@ -673,7 +672,6 @@ function Login() {
                   <input
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
                     value={form.password}
                     onChange={handleChange}
                     required
