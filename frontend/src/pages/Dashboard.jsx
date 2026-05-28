@@ -26,7 +26,6 @@ const UNIFIED_STYLES = `
     overflow-x:hidden;
     position:relative;
     color:#3d3d3d;
-    zoom: 1;
   }
 
   .dd-float-orb {
@@ -262,27 +261,21 @@ const UNIFIED_STYLES = `
     transform:translateX(4px);
   }
 
-  @media (max-width:1200px) {
-    .dd-root { zoom: 0.95; }
-  }
-
   @media (max-width:1024px) {
-    .dd-root { zoom: 0.9; }
+    main { padding: 24px clamp(16px, 3vw, 40px) !important; gap: 32px !important; }
   }
 
   @media (max-width:768px) {
-    .dd-root { zoom: 1; }
-    .dd-tab-btn { padding: 10px 16px; font-size: 12px; }
-  }
-
-  @media (max-width:600px) {
-    .dd-root { zoom: 1; }
-    .dd-modal-content { width: 95vw; padding: 24px; }
-    .dd-btn { font-size: 12px; padding: 10px 12px; }
+    main { padding: 20px clamp(12px, 2vw, 30px) !important; gap: 28px !important; }
+    .dd-tab-btn { padding: 10px clamp(12px, 2vw, 18px); font-size: clamp(11px, 1vw, 12px); }
+    .dd-btn { font-size: clamp(10px, 0.9vw, 12px); padding: clamp(8px, 1.5vw, 12px) clamp(10px, 1.5vw, 14px); }
   }
 
   @media (max-width:480px) {
-    .dd-root { zoom: 1; }
+    main { padding: 16px 12px !important; gap: 20px !important; }
+    .dd-modal-content { width: 95vw; padding: 24px; }
+    .dd-tab-btn { padding: 8px clamp(10px, 1.5vw, 14px); font-size: clamp(10px, 0.85vw, 11px); }
+    .dd-btn { font-size: clamp(9px, 0.8vw, 11px); padding: clamp(6px, 1vw, 10px) clamp(8px, 1.2vw, 12px); }
   }
 `
 
@@ -564,103 +557,112 @@ function Dashboard() {
     <div className="dd-root">
       <AnimatedBackgroundOrbs />
 
+      {/* ✅ NEW: Animated Header with Blood Icon */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: visible ? 1 : 0 }}
-        transition={{ duration: 0.8 }}
-        style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: 'clamp(24px, 4vw, 48px)' }}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          background: 'rgba(248,248,248,.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(180,180,180,.15)',
+          boxShadow: '0 4px 30px rgba(0,0,0,.08)',
+        }}
       >
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -30 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          style={{
-            marginBottom: 'clamp(32px, 6vw, 64px)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: 'clamp(20px, 3vw, 40px)',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <p style={{
-              fontSize: 'clamp(9px, 1.2vw, 11px)',
-              fontWeight: 700,
-              color: '#dc2626',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              margin: '0 0 12px 0',
-            }}>
-              Welcome
-            </p>
-            <h1 style={{
-              fontFamily: "'Fraunces',serif",
-              fontSize: 'clamp(28px, 5vw, 64px)',
-              fontWeight: 900,
-              color: '#6e2016',
-              margin: '0 0 8px 0',
-              lineHeight: 1.1,
-            }}>
-              {donor.full_name}
-            </h1>
-            <div style={{ display: 'flex', gap: 'clamp(16px, 3vw, 24px)', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontSize: 'clamp(9px, 1vw, 11px)', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
-                  Blood Type
-                </p>
-                <p style={{
-                  fontSize: 'clamp(18px, 3vw, 24px)',
-                  fontWeight: 900,
-                  color: '#dc2626',
-                  margin: 0,
-                  fontFamily: "'Fraunces',serif",
-                }}>
-                  {donor.blood_type}
-                </p>
-              </div>
-              <div style={{ width: '1px', height: '30px', background: 'rgba(220,38,38,.2)' }} />
-              <div>
-                <p style={{ fontSize: 'clamp(9px, 1vw, 11px)', color: 'rgba(45,45,45,.6)', fontWeight: 600, textTransform: 'uppercase', margin: '0 0 4px 0', letterSpacing: '1px' }}>
-                  Location
-                </p>
-                <p style={{
-                  fontSize: 'clamp(13px, 2vw, 16px)',
-                  fontWeight: 700,
-                  color: '#2d2d2d',
-                  margin: 0,
-                }}>
-                  {donor.governorate}
-                </p>
-              </div>
+        <div style={{ maxWidth: 1360, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px clamp(16px, 3.5vw, 44px)', gap: 'clamp(16px, 2.5vw, 32px)' }}>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+            whileHover={{ x: 3 }}
+          >
+            <motion.div
+              style={{
+                width: 50,
+                height: 50,
+                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+                <defs>
+                  <linearGradient id="donorBlood" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#donorBlood)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+              </svg>
+            </motion.div>
+            <div>
+              <motion.div 
+                style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+                animate={{ letterSpacing: [0, 1, 0] }} 
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {donor.full_name}
+              </motion.div>
+              <motion.div
+                style={{ 
+                  fontSize: 'clamp(9px, 1vw, 12px)', 
+                  fontWeight: 500, 
+                  color: 'rgba(71, 85, 105, 0.7)',
+                  margin: '2px 0 0 0',
+                  letterSpacing: '0.5px'
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              >
+                {donor.blood_type} • {donor.governorate}
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
+          <div style={{ flex: 1 }} />
+          
           <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
             style={{
-              background: 'linear-gradient(135deg,#dc2626,#b91c1c)',
+              background: 'linear-gradient(135deg,#dc2626 0%,#991b1b 100%)',
               color: '#ffffff',
               border: 'none',
-              padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)',
-              borderRadius: '8px',
-              fontSize: 'clamp(10px, 1.2vw, 12px)',
-              fontWeight: 900,
+              padding: '13px 26px',
+              borderRadius: 24,
+              fontSize: 13,
+              fontWeight: 700,
               cursor: 'pointer',
+              boxShadow: '0 10px 30px rgba(220,38,38,.35)',
               textTransform: 'uppercase',
-              letterSpacing: '0.6px',
-              boxShadow: '0 4px 14px rgba(220,38,38,.25)',
-              transition: 'all .35s cubic-bezier(.25,1,.5,1)',
+              letterSpacing: '0.5px',
               whiteSpace: 'nowrap',
               flexShrink: 0,
             }}
           >
             Sign Out
           </motion.button>
-        </motion.div>
+        </div>
+      </motion.div>
+
+      <main style={{ position: 'relative', zIndex: 10, maxWidth: 1360, margin: '0 auto', padding: 'clamp(24px, 4vw, 48px)' }}>
 
         {/* Tab Navigation */}
         <motion.div
@@ -1129,7 +1131,7 @@ function Dashboard() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </main>
 
       {/* Hospital Selection Modal */}
       <AnimatePresence>
