@@ -3,26 +3,65 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const questions = [
-  { key: 'feeling_healthy', text: 'Are you feeling healthy today?' },
-  { key: 'chronic_illness', text: 'Do you have any chronic illnesses?' },
-  { key: 'recent_surgery', text: 'Have you had any surgeries in the last 6 months?' },
-  { key: 'medications', text: 'Are you currently taking any medications?' },
-  { key: 'recent_travel', text: 'Have you traveled outside the country in the last month?' },
+const SCREENING_QUESTIONS = [
+  {
+    id: 1,
+    key: 'feeling_healthy',
+    text: 'Are you currently feeling healthy with no acute symptoms?',
+    hint: 'No fever, cough, or shortness of breath'
+  },
+  {
+    id: 2,
+    key: 'chronic_illness',
+    text: 'Do you have any chronic medical conditions?',
+    hint: 'Diabetes, hypertension, heart disease, cancer, etc.'
+  },
+  {
+    id: 3,
+    key: 'recent_surgery',
+    text: 'Have you had any surgery in the last 12 months?',
+    hint: 'Major or minor surgical procedures'
+  },
+  {
+    id: 4,
+    key: 'medications',
+    text: 'Are you currently taking any medications?',
+    hint: 'Prescription or over-the-counter drugs'
+  },
+  {
+    id: 5,
+    key: 'recent_travel',
+    text: 'Have you traveled internationally in the last 3 months?',
+    hint: 'To countries with endemic diseases'
+  },
+  {
+    id: 6,
+    key: 'transfusions_tattoos',
+    text: 'Have you had blood transfusions or tattoos recently?',
+    hint: 'In the last 6 months - potential exposure risks'
+  },
+  {
+    id: 7,
+    key: 'willing_donate',
+    text: 'Are you ready to become a lifesaver today?',
+    hint: 'Final confirmation of your donation intent'
+  }
 ]
 
-const STYLES = `
+const PREMIUM_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { overflow-x: hidden; }
 
-  @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
-  @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
+  @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
+  @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
+  @keyframes glow-pulse { 0%,100% { box-shadow: 0 20px 60px rgba(220,38,38,.2), inset 0 1px 1px rgba(255,255,255,.3); } 50% { box-shadow: 0 30px 80px rgba(220,38,38,.3), inset 0 1px 1px rgba(255,255,255,.3); } }
+  @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
-  .cb-root {
+  .prem-root {
     min-height:100vh;
     background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
     background-size:400% 400%;
@@ -31,27 +70,13 @@ const STYLES = `
     overflow-x:hidden;
     position:relative;
     color:#380101;
-    zoom: 0.9;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(20px, 3vw, 40px);
   }
 
-  .cb-glass {
-    background:rgba(255,255,255,.6);
-    backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid rgba(180,180,180,.2);
-    box-shadow:0 8px 32px rgba(0,0,0,.08);
-  }
-
-  .cb-glass-deep {
-    background:rgba(255,255,255,.5);
-    backdrop-filter:blur(30px) saturate(200%);
-    -webkit-backdrop-filter:blur(30px) saturate(200%);
-    border:1px solid rgba(180,180,180,.25);
-    box-shadow:0 16px 48px rgba(0,0,0,.1),inset 0 1px 1px rgba(255,255,255,.3);
-  }
-
-  .cb-float-orb {
+  .prem-float-orb {
     position:absolute;
     border-radius:50%;
     filter:blur(80px);
@@ -59,177 +84,330 @@ const STYLES = `
     animation:float-orb 6s ease-in-out infinite;
   }
 
-  .cb-btn {
-    position:relative;
-    overflow:hidden;
-    cursor:pointer;
-    border:none;
-    outline:none;
-    transition:all .3s cubic-bezier(.34,1.56,.64,1);
-    font-family:'Plus Jakarta Sans',sans-serif;
-    font-weight:700;
-    border-radius:14px;
+  .prem-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 720px;
+    height: 90vh;
+    max-height: 900px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 32px;
   }
 
-  .cb-btn::before {
-    content:'';
-    position:absolute;
-    top:0;
-    left:-100%;
-    width:100%;
-    height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
-    transition:left .5s;
+  .prem-glass-deep {
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(30px) saturate(200%);
+    -webkit-backdrop-filter:blur(30px) saturate(200%);
+    border:1.5px solid rgba(180,180,180,.25);
+    box-shadow:0 25px 80px rgba(0,0,0,.12), inset 0 1px 1px rgba(255,255,255,.4);
+    animation: glow-pulse 3s ease-in-out infinite;
   }
 
-  .cb-btn:hover::before { left:100%; }
-
-  .cb-btn-yes {
-    background:linear-gradient(135deg,rgba(34,197,94,.25),rgba(34,197,94,.12));
-    border:1.5px solid rgba(34,197,94,.4);
-    color:#16a34a;
-    box-shadow:0 8px 24px rgba(34,197,94,.15);
+  .prem-header {
+    padding: clamp(28px, 4vw, 40px);
+    border-bottom: 1.5px solid rgba(180,180,180,.2);
+    text-align: center;
+    flex-shrink: 0;
   }
 
-  .cb-btn-yes:hover {
-    background:linear-gradient(135deg,rgba(34,197,94,.35),rgba(34,197,94,.2));
-    border-color:rgba(34,197,94,.6);
-    transform:translateY(-3px) scale(1.05);
+  .prem-header-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
   }
 
-  .cb-btn-no {
-    background:linear-gradient(135deg,rgba(220,38,38,.2),rgba(220,38,38,.08));
-    border:1.5px solid rgba(220,38,38,.4);
-    color:#dc2626;
-    box-shadow:0 8px 24px rgba(220,38,38,.12);
+  .prem-header-subtitle {
+    font-size: 11px;
+    color: rgba(56,1,1,.55);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    margin: 0;
   }
 
-  .cb-btn-no:hover {
-    background:linear-gradient(135deg,rgba(220,38,38,.3),rgba(220,38,38,.15));
-    border-color:rgba(220,38,38,.6);
-    transform:translateY(-3px) scale(1.05);
+  .prem-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: clamp(24px, 3vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    scroll-behavior: smooth;
   }
 
-  .cb-btn-cta {
-    background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
-    border:1px solid rgba(255,255,255,.15);
-    color:#faf7f7;
-    box-shadow:0 10px 30px rgba(220,38,38,.35);
+  .prem-messages::-webkit-scrollbar {
+    width: 8px;
   }
 
-  .cb-btn-cta:hover {
-    transform:translateY(-3px) scale(1.02);
-    box-shadow:0 20px 60px rgba(220,38,38,.5);
+  .prem-messages::-webkit-scrollbar-track {
+    background: transparent;
   }
 
-  .cb-progress-bar {
-    height:4px;
-    background:rgba(220,38,38,.1);
-    border-radius:9999px;
-    overflow:hidden;
+  .prem-messages::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(220,38,38,.3), rgba(220,38,38,.15));
+    border-radius: 4px;
   }
 
-  .cb-progress-fill {
-    height:100%;
-    background:linear-gradient(90deg,#dc2626,#991b1b);
-    box-shadow:0 0 16px rgba(220,38,38,.5);
+  .prem-bubble-bot {
+    background: rgba(255,255,255,.65);
+    border: 1.5px solid rgba(180,180,180,.25);
+    border-radius: 24px 24px 24px 4px;
+    padding: clamp(14px, 2vw, 18px) clamp(18px, 2.5vw, 24px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.1);
+    max-width: 85%;
+    word-wrap: break-word;
   }
 
-  .cb-bubble-bot {
-    background:rgba(255,255,255,.6);
-    border:1px solid rgba(180,180,180,.2);
-    border-radius:18px 18px 18px 4px;
-    padding:clamp(12px,1.5vw,16px) clamp(14px,2vw,18px);
-    box-shadow:0 4px 16px rgba(0,0,0,.06);
+  .prem-bubble-user {
+    background: linear-gradient(135deg, rgba(220,38,38,.18), rgba(220,38,38,.09));
+    border: 1.5px solid rgba(220,38,38,.3);
+    border-radius: 24px 24px 4px 24px;
+    padding: clamp(14px, 2vw, 18px) clamp(18px, 2.5vw, 24px);
+    box-shadow: 0 8px 28px rgba(220,38,38,.12);
+    max-width: 85%;
+    word-wrap: break-word;
   }
 
-  .cb-bubble-user {
-    background:linear-gradient(135deg,rgba(220,38,38,.15),rgba(220,38,38,.08));
-    border:1px solid rgba(220,38,38,.2);
-    border-radius:18px 18px 4px 18px;
-    padding:clamp(12px,1.5vw,16px) clamp(14px,2vw,18px);
-    box-shadow:0 4px 16px rgba(0,0,0,.05);
+  .prem-bubble-text {
+    font-size: clamp(14px, 1.2vw, 16px);
+    line-height: 1.6;
+    color: rgba(56,1,1,.78);
   }
 
-  .cb-scroll { overflow-y:auto; scroll-behavior:smooth; }
-  .cb-scroll::-webkit-scrollbar { width:6px; }
-  .cb-scroll::-webkit-scrollbar-track { background:transparent; }
-  .cb-scroll::-webkit-scrollbar-thumb { background:rgba(220,38,38,.2); border-radius:3px; }
-
-  .cb-status-badge {
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:8px 14px;
-    background:rgba(255,255,255,.6);
-    border:1px solid rgba(220,38,38,.2);
-    border-radius:10px;
-    font-size:clamp(9px,0.9vw,10px);
-    font-weight:700;
-    color:#dc2626;
-    letter-spacing:.08em;
-    text-transform:uppercase;
+  .prem-bubble-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: rgba(56,1,1,.55);
+    font-style: italic;
+    border-left: 2.5px solid rgba(220,38,38,.25);
+    padding-left: 12px;
+    opacity: 0.9;
   }
 
-  .cb-dot-pulse {
-    width:6px;
-    height:6px;
-    border-radius:50%;
-    background:#dc2626;
+  .prem-footer {
+    padding: clamp(24px, 3vw, 32px);
+    border-top: 1.5px solid rgba(180,180,180,.2);
+    flex-shrink: 0;
+  }
+
+  .prem-button-group {
+    display: flex;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .prem-btn {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    border-radius: 16px;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    font-size: clamp(14px, 1.2vw, 16px);
+    flex: 1;
+    padding: clamp(14px, 1.8vw, 18px);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .prem-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
+    transition: left .5s;
+  }
+
+  .prem-btn:hover::before { left: 100%; }
+
+  .prem-btn-yes {
+    background: linear-gradient(135deg, rgba(34,197,94,.3), rgba(34,197,94,.15));
+    border: 2px solid rgba(34,197,94,.5);
+    color: #16a34a;
+    box-shadow: 0 12px 40px rgba(34,197,94,.2);
+  }
+
+  .prem-btn-yes:hover {
+    background: linear-gradient(135deg, rgba(34,197,94,.4), rgba(34,197,94,.25));
+    border-color: rgba(34,197,94,.7);
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 16px 50px rgba(34,197,94,.35);
+  }
+
+  .prem-btn-no {
+    background: linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12));
+    border: 2px solid rgba(220,38,38,.5);
+    color: #dc2626;
+    box-shadow: 0 12px 40px rgba(220,38,38,.2);
+  }
+
+  .prem-btn-no:hover {
+    background: linear-gradient(135deg, rgba(220,38,38,.35), rgba(220,38,38,.2));
+    border-color: rgba(220,38,38,.7);
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 16px 50px rgba(220,38,38,.35);
+  }
+
+  .prem-btn-cta {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
+    border: 1.5px solid rgba(255,255,255,.2);
+    color: #faf7f7;
+    box-shadow: 0 16px 50px rgba(220,38,38,.4);
+  }
+
+  .prem-btn-cta:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 24px 70px rgba(220,38,38,.6);
+  }
+
+  .prem-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(255,255,255,.7);
+    border: 1.5px solid rgba(220,38,38,.3);
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #dc2626;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(220,38,38,.15);
+  }
+
+  .prem-dot-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dc2626;
+    animation: pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 14px rgba(220,38,38,.7);
+  }
+
+  @keyframes pulse { 0%,100% { opacity: .6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+
+  .prem-progress {
+    width: 100%;
+    height: 6px;
+    background: rgba(220,38,38,.12);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+
+  .prem-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #dc2626, #991b1b);
+    box-shadow: 0 0 20px rgba(220,38,38,.6);
+  }
+
+  .prem-loader {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .prem-loader-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #dc2626;
+  }
+
+  .prem-result-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+
+  .prem-result-success {
+    background: rgba(34,197,94,.12);
+    border: 1.5px solid rgba(34,197,94,.35);
+    color: #16a34a;
+  }
+
+  .prem-result-restriction {
+    background: rgba(220,38,38,.12);
+    border: 1.5px solid rgba(220,38,38,.35);
+    color: #dc2626;
+  }
+
+  .prem-dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
   }
 
-  @keyframes pulse { 0%,100% { opacity:.6; } 50% { opacity:1; } }
-
-  @media (max-width:1024px) {
-    .cb-left-panel { width: 100vw !important; }
-    .cb-right-panel { display: none !important; }
+  .prem-dot-success {
+    background: #22c55e;
+    box-shadow: 0 0 14px rgba(34,197,94,.7);
   }
 
-  @media (max-width:1200px) {
-    .cb-root { zoom: 0.88; }
+  .prem-dot-restriction {
+    background: #dc2626;
+    box-shadow: 0 0 14px rgba(220,38,38,.7);
   }
 
-  @media (max-width:768px) {
-    .cb-root { zoom: 0.75; }
-  }
-
-  @media (max-width:480px) {
-    .cb-root { zoom: 0.65; }
+  @media (max-width: 768px) {
+    .prem-container {
+      max-width: 100%;
+      height: 100vh;
+      border-radius: 20px;
+    }
+    
+    .prem-btn {
+      padding: 14px 12px;
+    }
   }
 `
 
-if (typeof document !== 'undefined' && !document.getElementById('cb-styles-fixed')) {
+if (typeof document !== 'undefined' && !document.getElementById('prem-styles')) {
   const s = document.createElement('style')
-  s.id = 'cb-styles-fixed'
-  s.textContent = STYLES
+  s.id = 'prem-styles'
+  s.textContent = PREMIUM_STYLES
   document.head.appendChild(s)
 }
 
 /* ─── Animated Background Orbs ───────────────────────── */
 function AnimatedBackgroundOrbs() {
   const orbs = [
-    { size: 'min(350px,32vw)', color: 'rgba(220,38,38,.1)', top: '-8%', left: '-5%', duration: 8 },
-    { size: 'min(300px,28vw)', color: 'rgba(180,180,180,.08)', top: '20%', right: '-8%', duration: 11 },
-    { size: 'min(320px,30vw)', color: 'rgba(220,38,38,.08)', bottom: '-12%', left: '8%', duration: 13 },
-    { size: 'min(280px,26vw)', color: 'rgba(180,180,180,.06)', bottom: '15%', right: '-5%', duration: 9 },
+    { size: 'min(400px,50vw)', color: 'rgba(220,38,38,.12)', top: '-15%', left: '-10%', duration: 10 },
+    { size: 'min(350px,45vw)', color: 'rgba(180,180,180,.1)', top: '10%', right: '-12%', duration: 13 },
+    { size: 'min(380px,48vw)', color: 'rgba(220,38,38,.1)', bottom: '-15%', left: '5%', duration: 15 },
+    { size: 'min(320px,40vw)', color: 'rgba(180,180,180,.08)', bottom: '10%', right: '-8%', duration: 11 },
   ]
-
-  const dots = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 8 + 3,
-    startX: Math.random() * 100,
-    startY: Math.random() * 100,
-    duration: Math.random() * 15 + 15,
-    delay: Math.random() * 2,
-  }))
 
   return (
     <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       {orbs.map((orb, i) => (
         <motion.div
           key={`orb-${i}`}
-          className="cb-float-orb"
+          className="prem-float-orb"
           style={{
             width: orb.size,
             height: orb.size,
@@ -239,43 +417,16 @@ function AnimatedBackgroundOrbs() {
             left: orb.left,
             bottom: orb.bottom,
           }}
-          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          animate={{ y: [0, -60, 0], x: [0, 50, 0], scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      ))}
-
-      {dots.map((dot) => (
-        <motion.div
-          key={`dot-${dot.id}`}
-          style={{
-            position: 'fixed',
-            width: dot.size,
-            height: dot.size,
-            borderRadius: '50%',
-            background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
-            left: `${dot.startX}%`,
-            top: `${dot.startY}%`,
-            boxShadow: `0 0 ${dot.size * 2}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
-          }}
-          animate={{
-            y: [0, -200 - Math.random() * 100],
-            x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
-            opacity: [0, 0.7, 0],
-          }}
-          transition={{
-            duration: dot.duration,
-            delay: dot.delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
         />
       ))}
     </motion.div>
   )
 }
 
-/* ─── Animated Heart Pulse ────────────────────────────── */
-function AnimatedHeartPulse({ size = 72 }) {
+/* ─── Enhanced Heart Pulse ───────────────────────────── */
+function EnhancedHeartPulse({ size = 72 }) {
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <motion.div
@@ -285,7 +436,7 @@ function AnimatedHeartPulse({ size = 72 }) {
           position: 'absolute',
           inset: '-15%',
           borderRadius: '50%',
-          border: '2px solid rgba(220,38,38,.3)',
+          border: '2.5px solid rgba(220,38,38,.35)',
           pointerEvents: 'none',
         }}
       />
@@ -296,7 +447,7 @@ function AnimatedHeartPulse({ size = 72 }) {
           position: 'absolute',
           inset: '-25%',
           borderRadius: '50%',
-          border: '2px solid rgba(220,38,38,.15)',
+          border: '2px solid rgba(220,38,38,.2)',
           pointerEvents: 'none',
         }}
       />
@@ -308,7 +459,7 @@ function AnimatedHeartPulse({ size = 72 }) {
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: 'conic-gradient(from 0deg, rgba(220,38,38,.2), rgba(220,38,38,.05), transparent)',
+          background: 'conic-gradient(from 0deg, rgba(220,38,38,.25), rgba(220,38,38,.05), transparent)',
           pointerEvents: 'none',
         }}
       />
@@ -337,7 +488,7 @@ function AnimatedHeartPulse({ size = 72 }) {
           <path
             d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
             fill="url(#heartGrad)"
-            filter="drop-shadow(0 8px 20px rgba(220,38,38,.4))"
+            filter="drop-shadow(0 10px 24px rgba(220,38,38,.45))"
           />
         </svg>
       </motion.div>
@@ -349,7 +500,7 @@ function AnimatedHeartPulse({ size = 72 }) {
           position: 'absolute',
           inset: '-20%',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(220,38,38,.3), transparent)',
+          background: 'radial-gradient(circle, rgba(220,38,38,.35), transparent)',
           filter: 'blur(20px)',
           pointerEvents: 'none',
         }}
@@ -358,112 +509,45 @@ function AnimatedHeartPulse({ size = 72 }) {
   )
 }
 
-/* ─── Health Status Indicator ────────────────────────────── */
-function HealthIndicator({ step, total, done, eligible }) {
-  const pct = Math.round((step / total) * 100)
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay: 0.25, type: 'spring', stiffness: 120 }}
-      className="cb-glass"
-      style={{
-        borderRadius: 18,
-        padding: 'clamp(16px,2vw,20px)',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <div style={{ position: 'relative', width: 9, height: 9, flexShrink: 0 }}>
-          <motion.div
-            animate={{ scale: [1, 1.5, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              background: done ? (eligible ? '#22c55e' : '#dc2626') : '#dc2626',
-              boxShadow: `0 0 12px ${done && eligible ? 'rgba(34,197,94,.8)' : 'rgba(220,38,38,.8)'}`,
-            }}
-          />
-        </div>
-        <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(56,1,1,.6)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-          {done ? (eligible ? 'Cleared' : 'Restricted') : 'Screening Active'}
-        </span>
-      </div>
-
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(56,1,1,.5)' }}>Progress</span>
-          <motion.span
-            key={pct}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ fontSize: 11, fontWeight: 900, color: '#dc2626' }}
-          >
-            {done ? '100' : pct}%
-          </motion.span>
-        </div>
-        <div className="cb-progress-bar">
-          <motion.div
-            className="cb-progress-fill"
-            initial={{ width: 0 }}
-            animate={{ width: done ? '100%' : `${pct}%` }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-        {Array.from({ length: total }).map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              width: i === step && !done ? 14 : 4,
-              background: i < step || done ? '#22c55e' : i === step ? '#dc2626' : 'rgba(220,38,38,.1)',
-            }}
-            transition={{ duration: 0.3 }}
-            style={{ height: 3, borderRadius: 9999 }}
-          />
-        ))}
-      </div>
-    </motion.div>
-  )
-}
-
-/* ─── Main Chatbot ───────────────────────────────────────── */
-function Chatbot() {
+/* ─── Main Premium Centered Chatbot ───────────────────────────────────────── */
+function PremiumChatbot() {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([
-    { from: 'bot', text: 'Hello. I will ask you a few health questions to determine your eligibility to donate blood.' },
-    { from: 'bot', text: questions[0].text },
+    { from: 'bot', text: 'Welcome to your health screening.' },
+    { from: 'bot', text: 'I\'ll ask you a series of important questions to ensure your safety and the safety of those who receive your donation.' },
+    { from: 'bot', text: SCREENING_QUESTIONS[0].text, hint: SCREENING_QUESTIONS[0].hint },
   ])
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(false)
   const [eligible, setEligible] = useState(false)
-  const bottomRef = useRef(null)
+  const messagesEndRef = useRef(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
   }, [messages, loading])
 
-  const handleAnswer = async answer => {
-    const currentQuestion = questions[step]
+  const handleAnswer = async (answer) => {
+    const currentQuestion = SCREENING_QUESTIONS[step]
     const newAnswers = { ...answers, [currentQuestion.key]: answer }
     setAnswers(newAnswers)
-    setMessages(prev => [...prev, { from: 'user', text: answer }])
 
-    if (step + 1 < questions.length) {
+    setMessages(prev => [...prev, { from: 'user', text: answer === 'yes' ? 'Yes' : 'No' }])
+
+    if (step + 1 < SCREENING_QUESTIONS.length) {
       setStep(step + 1)
       setTimeout(() => {
-        setMessages(prev => [...prev, { from: 'bot', text: questions[step + 1].text }])
-      }, 500)
+        const nextQ = SCREENING_QUESTIONS[step + 1]
+        setMessages(prev => [...prev, { from: 'bot', text: nextQ.text, hint: nextQ.hint }])
+      }, 700)
     } else {
       setLoading(true)
-      const donorData = JSON.parse(localStorage.getItem('donorData'))
+      const donorData = JSON.parse(localStorage.getItem('donorData') || '{}')
       try {
         const baseURL = 'https://blood-bank-eqyr.onrender.com/api'
         const res = await axios.post(`${baseURL}/chatbot/screen`, {
@@ -474,258 +558,126 @@ function Chatbot() {
         setLoading(false)
         setEligible(res.data.eligible)
         if (res.data.eligible) {
-          const stored = JSON.parse(localStorage.getItem('donorData'))
+          const stored = JSON.parse(localStorage.getItem('donorData') || '{}')
           stored.is_eligible = true
           localStorage.setItem('donorData', JSON.stringify(stored))
         }
         const resultText = res.data.eligible
-          ? 'You are cleared to donate blood. Your vitals and responses meet our criteria. Proceed to the donation center when ready.'
-          : 'You are not eligible to donate at this time. Your responses indicate a temporary restriction. Please take care of yourself and return when you recover.'
+          ? 'Excellent news! You\'ve passed all screening criteria and are cleared to donate blood. Your health profile meets our safety standards.'
+          : 'Thank you for your honesty. Based on your responses, we need to restrict your donation at this time. Please take care and return when you\'re fully recovered.'
         setMessages(prev => [...prev, { from: 'bot', text: resultText }])
-      } catch {
+      } catch (error) {
         setLoading(false)
-        setMessages(prev => [...prev, { from: 'bot', text: 'A system error occurred. Please try again.' }])
+        setMessages(prev => [...prev, { from: 'bot', text: 'We encountered a system error. Please try again later.' }])
       }
       setDone(true)
     }
   }
 
+  const progressPercent = Math.round((step / SCREENING_QUESTIONS.length) * 100)
+
   return (
-    <div className="cb-root">
+    <div className="prem-root">
       <AnimatedBackgroundOrbs />
 
-      {/* Left Panel */}
+      {/* Centered Container */}
       <motion.div
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
+        className="prem-container prem-glass-deep"
+        initial={{ opacity: 0, scale: 0.92, y: 40 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}
-        className="cb-left-panel"
-        style={{
-          width: 'clamp(280px,30vw,360px)',
-          flexShrink: 0,
-          borderRight: '1px solid rgba(180,180,180,.15)',
-          padding: 'clamp(24px,3vw,32px)',
-          background: 'rgba(255,255,255,.35)',
-          position: 'relative',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
-        }}
       >
+        {/* Header Section */}
         <motion.div
+          className="prem-header"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.6 }}
-          style={{ marginBottom: 24 }}
-        >
-          <h1 style={{
-            fontFamily: "'Fraunces',serif",
-            fontSize: 'clamp(24px,3vw,32px)',
-            fontWeight: 900,
-            color: '#dc2626',
-            margin: '0 0 6px',
-            lineHeight: 1.1,
-          }}>
-            Health Screening
-          </h1>
-          <p style={{
-            fontSize: '9px',
-            color: 'rgba(56,1,1,.5)',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '.08em',
-            margin: 0,
-          }}>
-            Donor Eligibility Assessment
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}
         >
-          <AnimatedHeartPulse size={70} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          <HealthIndicator step={step} total={questions.length} done={done} eligible={eligible} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="cb-glass"
-          style={{
-            borderRadius: 14,
-            padding: 'clamp(12px,1.5vw,16px)',
-            flex: 1,
-          }}
-        >
-          <div style={{
-            fontSize: '8px',
-            fontWeight: 700,
-            color: 'rgba(56,1,1,.35)',
-            textTransform: 'uppercase',
-            letterSpacing: '.1em',
-            marginBottom: 10,
-          }}>
-            Question Status
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 16 }}>
+            <EnhancedHeartPulse size={48} />
+            <div className="prem-header-title">Blood Screening</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {questions.map((q, i) => {
-              const isRecorded = i < step || done
-              const isActive = i === step && !done
-              return (
+          <p className="prem-header-subtitle">Eligibility Assessment</p>
+
+          {!done && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              style={{ marginTop: 18 }}
+            >
+              <motion.div
+                className="prem-status-badge"
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
+                style={{ justifyContent: 'center', marginBottom: 14 }}
+              >
+                <div className="prem-dot-pulse" />
+                <span>Question {step + 1} of {SCREENING_QUESTIONS.length}</span>
+              </motion.div>
+
+              <div className="prem-progress">
                 <motion.div
-                  key={i}
-                  animate={{ opacity: isActive ? 1 : isRecorded ? 0.65 : 0.28 }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                >
-                  <motion.div
-                    animate={{
-                      scale: isActive ? 1.3 : 1,
-                    }}
-                    style={{
-                      width: 3,
-                      height: 3,
-                      borderRadius: '50%',
-                      background: isRecorded ? '#22c55e' : isActive ? '#dc2626' : 'rgba(220,38,38,.1)',
-                      flexShrink: 0,
-                      boxShadow: isActive ? '0 0 8px rgba(220,38,38,.5)' : 'none',
-                    }}
-                  />
-                  <span style={{
-                    fontSize: '8px',
-                    color: isRecorded ? '#22c55e' : isActive ? '#dc2626' : 'rgba(56,1,1,.4)',
-                    fontWeight: 700,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {isRecorded ? 'Done' : isActive ? 'Current' : 'Pending'}
-                  </span>
-                </motion.div>
-              )
-            })}
-          </div>
-        </motion.div>
-      </motion.div>
+                  className="prem-progress-fill"
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+            </motion.div>
+          )}
 
-      {/* Right Panel */}
-      <div
-        className="cb-right-panel"
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-          background: 'rgba(255,255,255,.35)',
-          position: 'relative',
-          zIndex: 10,
-        }}
-      >
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="cb-glass"
-          style={{
-            padding: 'clamp(16px,2vw,22px) clamp(20px,2.5vw,32px)',
-            borderRadius: 0,
-            borderBottom: '1px solid rgba(180,180,180,.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            <h2 style={{
-              fontFamily: "'Fraunces',serif",
-              fontSize: 'clamp(18px,2vw,24px)',
-              fontWeight: 900,
-              color: '#dc2626',
-              margin: '0 0 4px',
-              lineHeight: 1.1,
-            }}>
-              Assessment Chat
-            </h2>
-            <p style={{
-              fontSize: '9px',
-              color: 'rgba(56,1,1,.5)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '.08em',
-              margin: 0,
-            }}>
-              {!done && `Q${Math.min(step + 1, questions.length)} of ${questions.length}`}
-              {done && 'Complete'}
-            </p>
-          </div>
-
-          <motion.div
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ duration: 2.5, repeat: Infinity }}
-            className="cb-status-badge"
-          >
-            <div className="cb-dot-pulse" />
-            <span>{done ? (eligible ? 'Cleared' : 'Restricted') : 'Active'}</span>
-          </motion.div>
+          {done && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className={eligible ? 'prem-result-badge prem-result-success' : 'prem-result-badge prem-result-restriction'}>
+                <motion.div
+                  className={eligible ? 'prem-dot-indicator prem-dot-success' : 'prem-dot-indicator prem-dot-restriction'}
+                />
+                <span>{eligible ? 'Cleared to Donate' : 'Temporary Restriction'}</span>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
-        {/* Messages */}
-        <div
-          className="cb-scroll"
-          style={{
-            flex: 1,
-            padding: 'clamp(18px,2.5vw,28px) clamp(18px,2.5vw,28px)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-            minHeight: 0,
-          }}
-        >
+        {/* Messages Section */}
+        <div className="prem-messages">
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12, x: msg.from === 'user' ? 12 : -12 }}
+                initial={{ opacity: 0, y: 16, x: msg.from === 'user' ? 20 : -20 }}
                 animate={{ opacity: 1, y: 0, x: 0 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 style={{
                   display: 'flex',
                   justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start',
-                  alignItems: 'flex-end',
-                  gap: 10,
+                  alignItems: 'flex-start',
+                  gap: 12,
                 }}
               >
                 {msg.from === 'bot' && (
                   <motion.div
-                    initial={{ scale: 0, rotate: -20 }}
+                    initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 180 }}
-                    style={{ flexShrink: 0 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                    style={{ flexShrink: 0, marginTop: 2 }}
                   >
                     <div style={{
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg,rgba(220,38,38,.15),rgba(220,38,38,.08))',
-                      border: '1px solid rgba(220,38,38,.2)',
+                      background: 'linear-gradient(135deg, rgba(220,38,38,.2), rgba(220,38,38,.1))',
+                      border: '1.5px solid rgba(220,38,38,.3)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      boxShadow: '0 6px 20px rgba(220,38,38,.15)',
                     }}>
-                      <svg viewBox="0 0 24 24" style={{ width: 12, height: 12 }}>
+                      <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
                         <path
                           d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
                           fill="#dc2626"
@@ -735,36 +687,42 @@ function Chatbot() {
                   </motion.div>
                 )}
 
-                <div
-                  className={msg.from === 'bot' ? 'cb-bubble-bot' : 'cb-bubble-user'}
-                  style={{
-                    maxWidth: 'min(70%, 420px)',
-                    fontSize: 'clamp(12px,1vw,13px)',
-                    lineHeight: 1.5,
-                    color: msg.from === 'bot' ? 'rgba(56,1,1,.7)' : 'rgba(56,1,1,.75)',
-                  }}
-                >
-                  {msg.text}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <div className={msg.from === 'bot' ? 'prem-bubble-bot' : 'prem-bubble-user'}>
+                    <div className="prem-bubble-text">{msg.text}</div>
+                    {msg.hint && msg.from === 'bot' && (
+                      <motion.div
+                        className="prem-bubble-hint"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                      >
+                        {msg.hint}
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
 
                 {msg.from === 'user' && (
                   <motion.div
-                    initial={{ scale: 0, rotate: 20 }}
+                    initial={{ scale: 0, rotate: 30 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 180 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
                     style={{
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg,rgba(220,38,38,.2),rgba(220,38,38,.1))',
-                      border: '1px solid rgba(220,38,38,.25)',
+                      background: 'linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12))',
+                      border: '1.5px solid rgba(220,38,38,.35)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
+                      boxShadow: '0 6px 18px rgba(220,38,38,.15)',
+                      marginTop: 2,
                     }}
                   >
-                    <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: '#dc2626' }}>
+                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: '#dc2626' }}>
                       <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                     </svg>
                   </motion.div>
@@ -773,26 +731,26 @@ function Chatbot() {
             ))}
           </AnimatePresence>
 
-          {/* Loading state */}
+          {/* Loading State */}
           <AnimatePresence>
             {loading && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 style={{
                   display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 10,
+                  alignItems: 'flex-start',
+                  gap: 12,
                 }}
               >
                 <motion.div
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg,rgba(220,38,38,.15),rgba(220,38,38,.08))',
-                    border: '1px solid rgba(220,38,38,.2)',
+                    background: 'linear-gradient(135deg, rgba(220,38,38,.2), rgba(220,38,38,.1))',
+                    border: '1.5px solid rgba(220,38,38,.3)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -801,31 +759,26 @@ function Chatbot() {
                 >
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
                     style={{
-                      width: 12,
-                      height: 12,
+                      width: 16,
+                      height: 16,
                       borderRadius: '50%',
-                      borderRight: '2px solid #dc2626',
-                      borderTop: '2px solid #dc2626',
-                      borderLeft: '2px solid transparent',
-                      borderBottom: '2px solid transparent',
+                      borderRight: '3px solid #dc2626',
+                      borderTop: '3px solid #dc2626',
+                      borderLeft: '3px solid transparent',
+                      borderBottom: '3px solid transparent',
                     }}
                   />
                 </motion.div>
-                <div className="cb-bubble-bot" style={{ padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <div className="prem-bubble-bot" style={{ padding: '12px 16px' }}>
+                  <div className="prem-loader">
                     {[0, 1, 2].map(i => (
                       <motion.div
                         key={i}
-                        animate={{ y: [0, -6, 0] }}
-                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                        style={{
-                          width: 3,
-                          height: 3,
-                          borderRadius: '50%',
-                          background: '#dc2626',
-                        }}
+                        className="prem-loader-dot"
+                        animate={{ y: [0, -8, 0] }}
+                        transition={{ duration: 1.3, repeat: Infinity, delay: i * 0.22 }}
                       />
                     ))}
                   </div>
@@ -834,68 +787,39 @@ function Chatbot() {
             )}
           </AnimatePresence>
 
-          <div ref={bottomRef} />
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Action Footer */}
+        {/* Footer Section */}
         <motion.div
+          className="prem-footer"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="cb-glass"
-          style={{
-            padding: 'clamp(16px,2vw,20px) clamp(18px,2.5vw,28px)',
-            borderRadius: 0,
-            borderTop: '1px solid rgba(180,180,180,.15)',
-            flexShrink: 0,
-          }}
         >
           <AnimatePresence mode="wait">
-            {/* Yes / No Buttons */}
             {!done && !loading && (
               <motion.div
-                key="yn"
+                key="buttons"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.35 }}
               >
-                <div style={{ marginBottom: 12 }}>
-                  <span style={{
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: 'rgba(56,1,1,.5)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '.08em',
-                  }}>
-                    Question {step + 1} of {questions.length}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div className="prem-button-group">
                   <motion.button
-                    className="cb-btn cb-btn-yes"
+                    className="prem-btn prem-btn-yes"
                     onClick={() => handleAnswer('yes')}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    style={{
-                      flex: 1,
-                      padding: 'clamp(12px,1.4vw,14px)',
-                      fontSize: 'clamp(12px,1vw,13px)',
-                    }}
+                    whileHover={{ scale: 1.04, y: -3 }}
+                    whileTap={{ scale: 0.94 }}
                   >
                     Yes
                   </motion.button>
-
                   <motion.button
-                    className="cb-btn cb-btn-no"
+                    className="prem-btn prem-btn-no"
                     onClick={() => handleAnswer('no')}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    style={{
-                      flex: 1,
-                      padding: 'clamp(12px,1.4vw,14px)',
-                      fontSize: 'clamp(12px,1vw,13px)',
-                    }}
+                    whileHover={{ scale: 1.04, y: -3 }}
+                    whileTap={{ scale: 0.94 }}
                   >
                     No
                   </motion.button>
@@ -903,129 +827,46 @@ function Chatbot() {
               </motion.div>
             )}
 
-            {/* Eligible Result */}
             {done && eligible && (
               <motion.div
                 key="eligible"
-                initial={{ opacity: 0, scale: 0.93, y: 8 }}
+                initial={{ opacity: 0, scale: 0.93, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 130 }}
+                transition={{ type: 'spring', stiffness: 140 }}
               >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 12,
-                  padding: '10px 12px',
-                  background: 'rgba(34,197,94,.08)',
-                  border: '1px solid rgba(34,197,94,.25)',
-                  borderRadius: 10,
-                }}>
-                  <motion.div
-                    animate={{ scale: [1, 1.18, 1] }}
-                    transition={{ duration: 2.2, repeat: Infinity }}
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: '#22c55e',
-                      boxShadow: '0 0 12px rgba(34,197,94,.7)',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: '#16a34a',
-                    textTransform: 'uppercase',
-                    letterSpacing: '.08em',
-                  }}>
-                    Cleared to Donate
-                  </span>
-                </div>
-
                 <motion.button
-                  className="cb-btn cb-btn-cta"
+                  className="prem-btn prem-btn-cta"
                   onClick={() => navigate('/donor/dashboard')}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  style={{
-                    width: '100%',
-                    padding: 'clamp(12px,1.4vw,14px)',
-                    fontSize: 'clamp(12px,1vw,13px)',
-                    fontWeight: 700,
-                  }}
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.93 }}
                 >
-                  Proceed to Dashboard
+                  Go to Dashboard
                 </motion.button>
               </motion.div>
             )}
 
-            {/* Not Eligible Result */}
             {done && !eligible && (
               <motion.div
-                key="noteligible"
-                initial={{ opacity: 0, scale: 0.93, y: 8 }}
+                key="restricted"
+                initial={{ opacity: 0, scale: 0.93, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 130 }}
+                transition={{ type: 'spring', stiffness: 140 }}
               >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 12,
-                  padding: '10px 12px',
-                  background: 'rgba(220,38,38,.08)',
-                  border: '1px solid rgba(220,38,38,.25)',
-                  borderRadius: 10,
-                }}>
-                  <motion.div
-                    animate={{ scale: [1, 1.18, 1] }}
-                    transition={{ duration: 2.2, repeat: Infinity }}
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: '#dc2626',
-                      boxShadow: '0 0 12px rgba(220,38,38,.7)',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: '#dc2626',
-                    textTransform: 'uppercase',
-                    letterSpacing: '.08em',
-                  }}>
-                    Temporary Restriction
-                  </span>
-                </div>
-
                 <motion.button
-                  className="cb-btn cb-btn-cta"
+                  className="prem-btn prem-btn-cta"
                   onClick={() => navigate('/')}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  style={{
-                    width: '100%',
-                    padding: 'clamp(12px,1.4vw,14px)',
-                    fontSize: 'clamp(12px,1vw,13px)',
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg,rgba(220,38,38,.2),rgba(220,38,38,.1))',
-                    color: '#dc2626',
-                    border: '1.5px solid rgba(220,38,38,.4)',
-                  }}
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.93 }}
                 >
-                  Return to Home
+                  Return Home
                 </motion.button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
-export default Chatbot
+export default PremiumChatbot
