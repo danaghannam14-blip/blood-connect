@@ -119,14 +119,9 @@ function HospitalDashboard() {
   const navigate = useNavigate()
   const [hospital, setHospital] = useState(null)
   const [requests, setRequests] = useState([])
-  const [bloodStock, setBloodStock] = useState({})
-  const [transfusions, setTransfusions] = useState([])
   const [emergencyDonations, setEmergencyDonations] = useState([])
   const [message, setMessage] = useState('')
   const [form, setForm] = useState({ blood_type: '', quantity_needed: '', urgency: 'urgent' })
-  const [stockMessage, setStockMessage] = useState('')
-  const [transfusionMessage, setTransfusionMessage] = useState('')
-  const [transfusionForm, setTransfusionForm] = useState({ blood_type: '', units: 1 })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('post')
@@ -159,18 +154,6 @@ function HospitalDashboard() {
     try {
       const reqRes = await axios.get(`${API}/api/blood-requests/hospital-list/${hospital.id}`)
       setRequests(reqRes.data || [])
-
-      const stockRes = await axios.get(`${API}/api/hospitals/stock/${hospital.id}`)
-      const stockMap = {}
-      if (stockRes.data && Array.isArray(stockRes.data)) {
-        stockRes.data.forEach(s => {
-          stockMap[s.blood_type] = s.units_available
-        })
-      }
-      setBloodStock(stockMap)
-
-      const transfusionRes = await axios.get(`${API}/api/hospitals/transfusions/${hospital.id}`)
-      setTransfusions(transfusionRes.data || [])
 
       const emergencyRes = await axios.get(`${API}/api/blood-requests/hospital/${hospital.id}`)
       const donations = emergencyRes.data || []
@@ -233,14 +216,12 @@ function HospitalDashboard() {
     }
   }
 
-  // ✅ FIXED: Mark request as 'ns' - delete all responding donations + update blood_requests
   const handleDidntShowUp = async (requestId) => {
     if (!window.confirm('Mark as not shown? This will remove all responding donors and appear in admin Hospital Supply.')) return
     setConfirmingId(requestId)
     try {
       console.log('[handleDidntShowUp] Marking request as not shown:', requestId)
       
-      // ✅ Find the request to get blood_type
       const request = requests.find(r => r.id === requestId)
       if (!request) {
         console.error('[handleDidntShowUp] Request not found:', requestId)
@@ -252,10 +233,6 @@ function HospitalDashboard() {
       console.log('[handleDidntShowUp] Found request:', request)
       console.log('[handleDidntShowUp] Hospital ID:', hospital.id, 'Blood Type:', request.blood_type)
       
-      // ✅ Call endpoint with requestId, hospitalId, and bloodType
-      // Backend will: 
-      // 1. Delete ALL emergency_donations for this hospital_id + blood_type + status='awaiting_confirmation'
-      // 2. Update blood_requests status to 'ns'
       await axios.post(`${API}/api/blood-requests/hospital-no-show`, { 
         requestId: requestId,
         hospitalId: hospital.id,
@@ -286,7 +263,6 @@ function HospitalDashboard() {
     }
   }
 
-  // ✅ NEW: When status = 'supply_coming', hospital clicks this to finalize
   const handleSupplyConfirmedReceived = async (requestId) => {
     setConfirmingSupplyId(requestId)
     try {
@@ -304,22 +280,22 @@ function HospitalDashboard() {
   }
 
   const handleConfirmDonation = async (donationId) => {
-setConfirmingId(donationId)
-try {
-const donation = awaitingDonations.find(d => d.id === donationId)
-if (!donation) {
-  alert('Donation not found')
-  setConfirmingId(null)
-  return
-}
+    setConfirmingId(donationId)
+    try {
+      const donation = awaitingDonations.find(d => d.id === donationId)
+      if (!donation) {
+        alert('Donation not found')
+        setConfirmingId(null)
+        return
+      }
 
-await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
-  request_id: donationId,
-  hospitalId: hospital.id,
-  bloodType: donation.blood_type,
-  patientEmail: donation.patient_email,
-  donorEmail: donation.donor_email
-})
+      await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
+        request_id: donationId,
+        hospitalId: hospital.id,
+        bloodType: donation.blood_type,
+        patientEmail: donation.patient_email,
+        donorEmail: donation.donor_email
+      })
       
       alert('✅ Donation confirmed! Removed from all dashboards.')
       loadData()
@@ -328,40 +304,6 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
       alert(`Error: ${err.response?.data?.message || err.message}`)
     } finally {
       setConfirmingId(null)
-    }
-  }
-
-  const handleSaveStock = async () => {
-    setStockMessage('')
-    try {
-      await Promise.all(
-        Object.entries(bloodStock).map(([bt, units]) =>
-          axios.put(`${API}/api/hospitals/stock/${hospital.id}`, {
-            blood_type: bt,
-            units_available: parseInt(units)
-          })
-        )
-      )
-      setStockMessage('✅ Stock updated successfully.')
-    } catch (err) {
-      setStockMessage(`Error: ${err.message}`)
-    }
-  }
-
-  const handleRecordTransfusion = async () => {
-    if (!transfusionForm.blood_type) {
-      setTransfusionMessage('Select blood type')
-      return
-    }
-
-    setTransfusionMessage('')
-    try {
-      const res = await axios.post(`${API}/api/hospitals/transfusion/${hospital.id}`, transfusionForm)
-      setTransfusionMessage(`✅ Recorded. ${res.data.remaining} units remaining.`)
-      setTransfusionForm({ blood_type: '', units: 1 })
-      loadData()
-    } catch (err) {
-      setTransfusionMessage(`Error: ${err.response?.data?.message || err.message}`)
     }
   }
 
@@ -463,13 +405,13 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
             overflowX: 'auto',
           }}
         >
-          {['post', 'emergency', 'stock', 'transfusions'].map((t) => (
+          {['post', 'emergency'].map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
               className={`hospital-tab-btn ${activeTab === t ? 'active' : ''}`}
             >
-              {t === 'post' ? 'Post Request' : t === 'stock' ? 'Blood Stock' : t === 'transfusions' ? 'Blood Used' : 'Emergency Donations'}
+              {t === 'post' ? 'Post Request' : 'Emergency Donations'}
             </button>
           ))}
         </motion.div>
@@ -632,7 +574,6 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
                       )
                     }
                     
-                    // ✅ NEW: Show "Supply Coming" status with button
                     if (r.status === 'supply_coming') {
                       return (
                         <motion.div
@@ -692,7 +633,6 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
                       )
                     }
 
-                    // ✅ Request with status 'ns' (not shown) - stays in dashboard waiting
                     if (r.status === 'ns') {
                       return (
                         <motion.div
@@ -925,165 +865,6 @@ await axios.post(`${API}/api/blood-requests/hospital-confirm`, {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {!loading && activeTab === 'stock' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="hospital-glass-deep"
-            style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}
-          >
-            <h2 className="hospital-card-title">Current Blood Stock</h2>
-
-            {stockMessage && (
-              <div className={`hospital-message ${stockMessage.includes('✅') || stockMessage.includes('successfully') ? 'success' : 'error'}`}>
-                {stockMessage}
-              </div>
-            )}
-
-            <motion.div
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 20 }}
-            >
-              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bt) => {
-                const units = bloodStock[bt] ?? 0
-                const dotColor = units === 0 ? '#DC2626' : units <= 5 ? '#EA580C' : '#22C55E'
-                const bgColor = units === 0 ? 'rgba(220,38,38,.15)' : units <= 5 ? 'rgba(234,88,12,.15)' : 'rgba(34,197,94,.15)'
-                
-                return (
-                  <div
-                    key={bt}
-                    style={{
-                      borderRadius: 16,
-                      padding: 14,
-                      border: `2px solid ${dotColor}40`,
-                      background: bgColor,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        background: dotColor,
-                        boxShadow: `0 0 12px ${dotColor}80`
-                      }} />
-                      <span style={{ fontSize: 16, fontWeight: 900, color: dotColor }}>{bt}</span>
-                    </div>
-                    <input
-                      type="number"
-                      min="0"
-                      value={units}
-                      onChange={e => setBloodStock(prev => ({ ...prev, [bt]: parseInt(e.target.value) || 0 }))}
-                      className="hospital-input"
-                    />
-                    <span style={{ fontSize: 9, color: 'rgba(211,47,47,.4)', fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '.1em' }}>units</span>
-                  </div>
-                )
-              })}
-            </motion.div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSaveStock}
-              className="hospital-btn hospital-btn-primary"
-              style={{ width: '100%', padding: 14 }}
-            >
-              Save Blood Stock
-            </motion.button>
-          </motion.div>
-        )}
-
-        {!loading && activeTab === 'transfusions' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="hospital-glass-deep"
-            style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}
-          >
-            <h2 className="hospital-card-title">Record Blood Usage</h2>
-
-            {transfusionMessage && (
-              <div className={`hospital-message ${transfusionMessage.includes('✅') || transfusionMessage.includes('Recorded') ? 'success' : 'error'}`}>
-                {transfusionMessage}
-              </div>
-            )}
-
-            <div style={{ background: 'rgba(255,235,238,.4)', border: '2px solid rgba(211,47,47,.15)', borderRadius: 18, padding: 18, marginBottom: 24 }}>
-              <p style={{ fontSize: 13, fontWeight: 900, color: '#dc2626', margin: '0 0 14px 0', textTransform: 'uppercase', letterSpacing: '.1em' }}>Record New Transfusion</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <label className="hospital-label">Blood Type Used</label>
-                  <select
-                    value={transfusionForm.blood_type}
-                    onChange={e => setTransfusionForm({ ...transfusionForm, blood_type: e.target.value })}
-                    className="hospital-input"
-                  >
-                    <option value="">Select blood type</option>
-                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => (
-                      <option key={bt} value={bt}>{bt} - {bloodStock[bt] ?? 0} units available</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="hospital-label">Units Used</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={transfusionForm.units}
-                    onChange={e => setTransfusionForm({ ...transfusionForm, units: parseInt(e.target.value) || 1 })}
-                    className="hospital-input"
-                  />
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleRecordTransfusion}
-                  disabled={!transfusionForm.blood_type}
-                  className="hospital-btn hospital-btn-primary"
-                  style={{
-                    padding: 12,
-                    opacity: !transfusionForm.blood_type ? 0.5 : 1,
-                    pointerEvents: !transfusionForm.blood_type ? 'none' : 'auto'
-                  }}
-                >
-                  Record Blood Usage
-                </motion.button>
-              </div>
-            </div>
-
-            <p style={{ fontSize: 13, fontWeight: 900, color: '#dc2626', margin: '0 0 14px 0', textTransform: 'uppercase', letterSpacing: '.1em' }}>Recent Transfusions</p>
-            {transfusions.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'rgba(211,47,47,.4)', fontSize: 13, padding: '24px 16px' }}>No transfusions recorded yet.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {transfusions.map((t) => (
-                  <div
-                    key={t.id}
-                    style={{
-                      borderRadius: 14,
-                      padding: 12,
-                      background: 'rgba(255,235,238,.4)',
-                      border: '2px solid rgba(211,47,47,.2)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div>
-                      <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 13 }}>{t.blood_type}</span>
-                      <span style={{ color: 'rgba(211,47,47,.5)', fontSize: 11, marginLeft: 12, fontWeight: 700 }}>{t.units} unit(s) used</span>
-                    </div>
-                    <span style={{ fontSize: 10, color: 'rgba(211,47,47,.4)', fontWeight: 700 }}>{new Date(t.created_at).toLocaleDateString('en-GB')}</span>
-                  </div>
-                ))}
               </div>
             )}
           </motion.div>
