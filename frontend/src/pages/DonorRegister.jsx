@@ -648,25 +648,7 @@ function DonorRegister() {
                       </div>
                     </div>
 
-                    <div>
-                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Phone Number</label>
-                      <div style={{ position:'relative' }}>
-                        <input
-                          name="phone"
-                          type="tel"
-                          inputMode="numeric"
-                          placeholder="+961 XXXX XXXX"
-                          value={form.phone}
-                          onChange={handlePhoneChange}
-                          className="dr-input"
-                        />
-                        {form.phone && (
-                          <span style={{ position:'absolute', right:'clamp(12px,1.5vw,16px)', top:'50%', transform:'translateY(-50%)', fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', fontWeight:700 }}>
-                            {form.phone.replace(/\D/g, '').length}/11
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                  
                   </motion.div>
                 )}
 
