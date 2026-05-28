@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 router.post('/register', (req, res) => {
-  const { full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate } = req.body
+  const { full_name, email, password, blood_type, date_of_birth, gender, address, governorate } = req.body
   const today = new Date()
   const dob = new Date(date_of_birth)
   let age = today.getFullYear() - dob.getFullYear()
@@ -18,8 +18,8 @@ router.post('/register', (req, res) => {
   const isEligible = validBloodTypes.includes(blood_type) && validGovernorages.includes(governorate) ? 1 : 0
   
   const hashedPassword = bcrypt.hashSync(password, 10)
-  const sql = `INSERT INTO donors (full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate, is_eligible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  db.query(sql, [full_name, email, hashedPassword, phone, blood_type, date_of_birth, gender, address, governorate, isEligible], (err, result) => {
+  const sql = `INSERT INTO donors (full_name, email, password, blood_type, date_of_birth, gender, address, governorate, is_eligible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  db.query(sql, [full_name, email, hashedPassword, blood_type, date_of_birth, gender, address, governorate, isEligible], (err, result) => {
     if (err) return res.status(500).json({ message: 'Registration failed', error: err.message })
     res.status(201).json({ message: 'Donor registered successfully', id: result.insertId })
   })
@@ -34,7 +34,6 @@ router.post('/login', (req, res) => {
     const isMatch = bcrypt.compareSync(password, donor.password)
     if (!isMatch) return res.status(401).json({ message: 'Incorrect password' })
 
-    // ✅ REMOVED THE RESET - no longer setting is_eligible = 0
     const token = jwt.sign(
       { id: donor.id, email: donor.email },
       process.env.JWT_SECRET || 'bloodbank_secret',
@@ -50,7 +49,6 @@ router.post('/login', (req, res) => {
         email: donor.email,
         blood_type: donor.blood_type,
         governorate: donor.governorate,
-        phone: donor.phone,
         is_eligible: donor.is_eligible
       }
     })
@@ -101,7 +99,6 @@ router.get('/history/:donor_id', (req, res) => {
   })
 })
 
-// IMPORTANT: /notifications/duplicate must come BEFORE /notifications/:donor_id
 router.post('/notifications/duplicate', (req, res) => {
   const { donor_id, hospital_id, blood_type } = req.body
   db.query(
