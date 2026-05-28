@@ -10,9 +10,16 @@ router.post('/register', (req, res) => {
   const dob = new Date(date_of_birth)
   let age = today.getFullYear() - dob.getFullYear()
   if (age < 18) return res.status(400).json({ message: 'You must be at least 18 years old to donate' })
+  
+  // ✅ Check eligibility based on blood type and governorate
+  const validBloodTypes = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+  const validGovernorages = ['Akkar', 'Baalbek-Hermel', 'Beirut', 'Beqaa', 'Keserwan-Jbeil', 'Mount Lebanon', 'Nabatiyeh', 'North Lebanon', 'South Lebanon']
+  
+  const isEligible = validBloodTypes.includes(blood_type) && validGovernorages.includes(governorate) ? 1 : 0
+  
   const hashedPassword = bcrypt.hashSync(password, 10)
-  const sql = `INSERT INTO donors (full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  db.query(sql, [full_name, email, hashedPassword, phone, blood_type, date_of_birth, gender, address, governorate], (err, result) => {
+  const sql = `INSERT INTO donors (full_name, email, password, phone, blood_type, date_of_birth, gender, address, governorate, is_eligible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  db.query(sql, [full_name, email, hashedPassword, phone, blood_type, date_of_birth, gender, address, governorate, isEligible], (err, result) => {
     if (err) return res.status(500).json({ message: 'Registration failed', error: err.message })
     res.status(201).json({ message: 'Donor registered successfully', id: result.insertId })
   })
