@@ -1282,20 +1282,21 @@ export default function Home() {
     whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
   >
     <iframe
-      width="100%"
-      height="100%"
-src="https://www.youtube.com/embed/MGsZUvVrOtg?vq=hd1440&autoplay=1&mute=1"      title="BloodConnect"
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowFullScreen
-      style={{ 
-        borderRadius: '12px', 
-        display: 'block',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-      }}
-    />
+  width="100%"
+  height="100%"
+  src="https://www.youtube.com/embed/MGsZUvVrOtg?vq=hd1440&modestbranding=1&rel=0"
+  title="BloodConnect"
+  frameBorder="0"
+  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  style={{ 
+    borderRadius: '12px', 
+    display: 'block',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  }}
+/>
   </motion.div>
 </section>
 
