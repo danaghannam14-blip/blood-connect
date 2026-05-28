@@ -59,7 +59,6 @@ const PREMIUM_STYLES = `
   @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
   @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
   @keyframes glow-pulse { 0%,100% { box-shadow: 0 20px 60px rgba(220,38,38,.2), inset 0 1px 1px rgba(255,255,255,.3); } 50% { box-shadow: 0 30px 80px rgba(220,38,38,.3), inset 0 1px 1px rgba(255,255,255,.3); } }
-  @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
   .prem-root {
     min-height:100vh;
@@ -73,7 +72,7 @@ const PREMIUM_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(20px, 3vw, 40px);
+    padding: clamp(8px, 1.5vw, 16px);
   }
 
   .prem-float-orb {
@@ -88,12 +87,12 @@ const PREMIUM_STYLES = `
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 720px;
-    height: 90vh;
-    max-height: 900px;
+    max-width: 400px;
+    height: auto;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
-    border-radius: 32px;
+    border-radius: 18px;
   }
 
   .prem-glass-deep {
@@ -106,7 +105,7 @@ const PREMIUM_STYLES = `
   }
 
   .prem-header {
-    padding: clamp(28px, 4vw, 40px);
+    padding: clamp(14px, 2vw, 18px);
     border-bottom: 1.5px solid rgba(180,180,180,.2);
     text-align: center;
     flex-shrink: 0;
@@ -114,37 +113,38 @@ const PREMIUM_STYLES = `
 
   .prem-header-title {
     font-family: 'Fraunces', serif;
-    font-size: clamp(28px, 5vw, 40px);
+    font-size: clamp(18px, 3.2vw, 24px);
     font-weight: 900;
     background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin: 0 0 6px;
-    letter-spacing: -0.5px;
+    margin: 0 0 2px;
+    letter-spacing: -0.3px;
   }
 
   .prem-header-subtitle {
-    font-size: 11px;
+    font-size: 8px;
     color: rgba(56,1,1,.55);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .15em;
+    letter-spacing: .07em;
     margin: 0;
   }
 
   .prem-messages {
     flex: 1;
     overflow-y: auto;
-    padding: clamp(24px, 3vw, 36px);
+    padding: clamp(12px, 1.8vw, 16px);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
     scroll-behavior: smooth;
+    min-height: 160px;
   }
 
   .prem-messages::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   .prem-messages::-webkit-scrollbar-track {
@@ -153,54 +153,60 @@ const PREMIUM_STYLES = `
 
   .prem-messages::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, rgba(220,38,38,.3), rgba(220,38,38,.15));
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   .prem-bubble-bot {
     background: rgba(255,255,255,.65);
     border: 1.5px solid rgba(180,180,180,.25);
-    border-radius: 24px 24px 24px 4px;
-    padding: clamp(14px, 2vw, 18px) clamp(18px, 2.5vw, 24px);
-    box-shadow: 0 8px 32px rgba(0,0,0,.1);
+    border-radius: 20px 20px 20px 4px;
+    padding: clamp(12px, 2vw, 16px) clamp(16px, 2vw, 20px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
     max-width: 85%;
     word-wrap: break-word;
   }
 
   .prem-bubble-user {
-    background: linear-gradient(135deg, rgba(220,38,38,.18), rgba(220,38,38,.09));
-    border: 1.5px solid rgba(220,38,38,.3);
-    border-radius: 24px 24px 4px 24px;
-    padding: clamp(14px, 2vw, 18px) clamp(18px, 2.5vw, 24px);
-    box-shadow: 0 8px 28px rgba(220,38,38,.12);
+    background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(34,197,94,.12));
+    border: 1.5px solid rgba(34,197,94,.4);
+    border-radius: 16px 16px 4px 16px;
+    padding: clamp(10px, 1.8vw, 14px) clamp(14px, 1.8vw, 18px);
+    box-shadow: 0 6px 20px rgba(34,197,94,.1);
     max-width: 85%;
     word-wrap: break-word;
+    color: #16a34a;
+    font-weight: 600;
   }
 
   .prem-bubble-text {
-    font-size: clamp(14px, 1.2vw, 16px);
-    line-height: 1.6;
+    font-size: clamp(12px, 1vw, 14px);
+    line-height: 1.5;
     color: rgba(56,1,1,.78);
   }
 
+  .prem-bubble-user .prem-bubble-text {
+    color: #16a34a;
+  }
+
   .prem-bubble-hint {
-    margin-top: 10px;
-    font-size: 12px;
+    margin-top: 8px;
+    font-size: 11px;
     color: rgba(56,1,1,.55);
     font-style: italic;
     border-left: 2.5px solid rgba(220,38,38,.25);
-    padding-left: 12px;
+    padding-left: 10px;
     opacity: 0.9;
   }
 
   .prem-footer {
-    padding: clamp(24px, 3vw, 32px);
+    padding: clamp(12px, 1.8vw, 16px);
     border-top: 1.5px solid rgba(180,180,180,.2);
     flex-shrink: 0;
   }
 
   .prem-button-group {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     width: 100%;
   }
 
@@ -212,11 +218,11 @@ const PREMIUM_STYLES = `
     outline: none;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 800;
-    border-radius: 16px;
+    border-radius: 14px;
     transition: all .3s cubic-bezier(.34,1.56,.64,1);
-    font-size: clamp(14px, 1.2vw, 16px);
+    font-size: clamp(12px, 1.1vw, 14px);
     flex: 1;
-    padding: clamp(14px, 1.8vw, 18px);
+    padding: clamp(12px, 1.5vw, 14px);
     text-transform: uppercase;
     letter-spacing: .05em;
   }
@@ -238,95 +244,95 @@ const PREMIUM_STYLES = `
     background: linear-gradient(135deg, rgba(34,197,94,.3), rgba(34,197,94,.15));
     border: 2px solid rgba(34,197,94,.5);
     color: #16a34a;
-    box-shadow: 0 12px 40px rgba(34,197,94,.2);
+    box-shadow: 0 10px 30px rgba(34,197,94,.15);
   }
 
   .prem-btn-yes:hover {
     background: linear-gradient(135deg, rgba(34,197,94,.4), rgba(34,197,94,.25));
     border-color: rgba(34,197,94,.7);
-    transform: translateY(-4px) scale(1.06);
-    box-shadow: 0 16px 50px rgba(34,197,94,.35);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 14px 40px rgba(34,197,94,.25);
   }
 
   .prem-btn-no {
     background: linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12));
     border: 2px solid rgba(220,38,38,.5);
     color: #dc2626;
-    box-shadow: 0 12px 40px rgba(220,38,38,.2);
+    box-shadow: 0 10px 30px rgba(220,38,38,.15);
   }
 
   .prem-btn-no:hover {
     background: linear-gradient(135deg, rgba(220,38,38,.35), rgba(220,38,38,.2));
     border-color: rgba(220,38,38,.7);
-    transform: translateY(-4px) scale(1.06);
-    box-shadow: 0 16px 50px rgba(220,38,38,.35);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 14px 40px rgba(220,38,38,.25);
   }
 
   .prem-btn-cta {
     background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
     border: 1.5px solid rgba(255,255,255,.2);
     color: #faf7f7;
-    box-shadow: 0 16px 50px rgba(220,38,38,.4);
+    box-shadow: 0 12px 40px rgba(220,38,38,.3);
   }
 
   .prem-btn-cta:hover {
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 24px 70px rgba(220,38,38,.6);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 18px 50px rgba(220,38,38,.4);
   }
 
   .prem-status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 20px;
+    gap: 8px;
+    padding: 10px 16px;
     background: rgba(255,255,255,.7);
     border: 1.5px solid rgba(220,38,38,.3);
-    border-radius: 14px;
-    font-size: 11px;
+    border-radius: 12px;
+    font-size: 10px;
     font-weight: 800;
     color: #dc2626;
-    letter-spacing: .12em;
+    letter-spacing: .1em;
     text-transform: uppercase;
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px rgba(220,38,38,.15);
+    box-shadow: 0 6px 20px rgba(220,38,38,.1);
   }
 
   .prem-dot-pulse {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #dc2626;
     animation: pulse 1.5s ease-in-out infinite;
-    box-shadow: 0 0 14px rgba(220,38,38,.7);
+    box-shadow: 0 0 10px rgba(220,38,38,.5);
   }
 
   @keyframes pulse { 0%,100% { opacity: .6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
 
   .prem-progress {
     width: 100%;
-    height: 6px;
+    height: 4px;
     background: rgba(220,38,38,.12);
     border-radius: 9999px;
     overflow: hidden;
-    margin-top: 16px;
+    margin-top: 12px;
   }
 
   .prem-progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #dc2626, #991b1b);
-    box-shadow: 0 0 20px rgba(220,38,38,.6);
+    box-shadow: 0 0 16px rgba(220,38,38,.5);
   }
 
   .prem-loader {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     align-items: center;
     justify-content: center;
   }
 
   .prem-loader-dot {
-    width: 4px;
-    height: 4px;
+    width: 3px;
+    height: 3px;
     border-radius: 50%;
     background: #dc2626;
   }
@@ -334,11 +340,11 @@ const PREMIUM_STYLES = `
   .prem-result-badge {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    margin-bottom: 16px;
-    font-size: 11px;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .1em;
@@ -357,31 +363,45 @@ const PREMIUM_STYLES = `
   }
 
   .prem-dot-indicator {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
   }
 
   .prem-dot-success {
     background: #22c55e;
-    box-shadow: 0 0 14px rgba(34,197,94,.7);
+    box-shadow: 0 0 10px rgba(34,197,94,.5);
   }
 
   .prem-dot-restriction {
     background: #dc2626;
-    box-shadow: 0 0 14px rgba(220,38,38,.7);
+    box-shadow: 0 0 10px rgba(220,38,38,.5);
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
     .prem-container {
       max-width: 100%;
-      height: 100vh;
+      max-height: none;
       border-radius: 20px;
     }
-    
-    .prem-btn {
-      padding: 14px 12px;
+
+    .prem-header {
+      padding: clamp(16px, 2vw, 20px);
+    }
+
+    .prem-messages {
+      max-height: 50vh;
+      gap: 12px;
+    }
+
+    .prem-footer {
+      padding: clamp(14px, 2vw, 20px);
+    }
+
+    .prem-bubble-bot,
+    .prem-bubble-user {
+      max-width: 90%;
     }
   }
 `
@@ -393,13 +413,12 @@ if (typeof document !== 'undefined' && !document.getElementById('prem-styles')) 
   document.head.appendChild(s)
 }
 
-/* ─── Animated Background Orbs ───────────────────────── */
 function AnimatedBackgroundOrbs() {
   const orbs = [
-    { size: 'min(400px,50vw)', color: 'rgba(220,38,38,.12)', top: '-15%', left: '-10%', duration: 10 },
-    { size: 'min(350px,45vw)', color: 'rgba(180,180,180,.1)', top: '10%', right: '-12%', duration: 13 },
-    { size: 'min(380px,48vw)', color: 'rgba(220,38,38,.1)', bottom: '-15%', left: '5%', duration: 15 },
-    { size: 'min(320px,40vw)', color: 'rgba(180,180,180,.08)', bottom: '10%', right: '-8%', duration: 11 },
+    { size: 'min(300px,40vw)', color: 'rgba(220,38,38,.12)', top: '-15%', left: '-10%', duration: 10 },
+    { size: 'min(250px,35vw)', color: 'rgba(180,180,180,.1)', top: '10%', right: '-12%', duration: 13 },
+    { size: 'min(280px,38vw)', color: 'rgba(220,38,38,.1)', bottom: '-15%', left: '5%', duration: 15 },
+    { size: 'min(240px,32vw)', color: 'rgba(180,180,180,.08)', bottom: '10%', right: '-8%', duration: 11 },
   ]
 
   return (
@@ -425,8 +444,7 @@ function AnimatedBackgroundOrbs() {
   )
 }
 
-/* ─── Enhanced Heart Pulse ───────────────────────────── */
-function EnhancedHeartPulse({ size = 72 }) {
+function EnhancedHeartPulse({ size = 56 }) {
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <motion.div
@@ -436,7 +454,7 @@ function EnhancedHeartPulse({ size = 72 }) {
           position: 'absolute',
           inset: '-15%',
           borderRadius: '50%',
-          border: '2.5px solid rgba(220,38,38,.35)',
+          border: '2px solid rgba(220,38,38,.3)',
           pointerEvents: 'none',
         }}
       />
@@ -488,7 +506,7 @@ function EnhancedHeartPulse({ size = 72 }) {
           <path
             d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
             fill="url(#heartGrad)"
-            filter="drop-shadow(0 10px 24px rgba(220,38,38,.45))"
+            filter="drop-shadow(0 8px 20px rgba(220,38,38,.35))"
           />
         </svg>
       </motion.div>
@@ -501,7 +519,7 @@ function EnhancedHeartPulse({ size = 72 }) {
           inset: '-20%',
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(220,38,38,.35), transparent)',
-          filter: 'blur(20px)',
+          filter: 'blur(18px)',
           pointerEvents: 'none',
         }}
       />
@@ -509,7 +527,6 @@ function EnhancedHeartPulse({ size = 72 }) {
   )
 }
 
-/* ─── Main Premium Centered Chatbot ───────────────────────────────────────── */
 function PremiumChatbot() {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([
@@ -544,7 +561,7 @@ function PremiumChatbot() {
       setTimeout(() => {
         const nextQ = SCREENING_QUESTIONS[step + 1]
         setMessages(prev => [...prev, { from: 'bot', text: nextQ.text, hint: nextQ.hint }])
-      }, 700)
+      }, 600)
     } else {
       setLoading(true)
       const donorData = JSON.parse(localStorage.getItem('donorData') || '{}')
@@ -554,7 +571,7 @@ function PremiumChatbot() {
           donor_id: donorData.id,
           answers: newAnswers,
         })
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 1800))
         setLoading(false)
         setEligible(res.data.eligible)
         if (res.data.eligible) {
@@ -580,22 +597,20 @@ function PremiumChatbot() {
     <div className="prem-root">
       <AnimatedBackgroundOrbs />
 
-      {/* Centered Container */}
       <motion.div
         className="prem-container prem-glass-deep"
-        initial={{ opacity: 0, scale: 0.92, y: 40 }}
+        initial={{ opacity: 0, scale: 0.92, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}
+        transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
       >
-        {/* Header Section */}
         <motion.div
           className="prem-header"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 16 }}>
-            <EnhancedHeartPulse size={48} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
+            <EnhancedHeartPulse size={40} />
             <div className="prem-header-title">Blood Screening</div>
           </div>
           <p className="prem-header-subtitle">Eligibility Assessment</p>
@@ -604,24 +619,24 @@ function PremiumChatbot() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              style={{ marginTop: 18 }}
+              transition={{ delay: 0.3 }}
+              style={{ marginTop: 14 }}
             >
               <motion.div
                 className="prem-status-badge"
-                animate={{ scale: [1, 1.08, 1] }}
+                animate={{ scale: [1, 1.06, 1] }}
                 transition={{ duration: 2.5, repeat: Infinity }}
-                style={{ justifyContent: 'center', marginBottom: 14 }}
+                style={{ justifyContent: 'center', marginBottom: 10 }}
               >
                 <div className="prem-dot-pulse" />
-                <span>Question {step + 1} of {SCREENING_QUESTIONS.length}</span>
+                <span>Q {step + 1} of {SCREENING_QUESTIONS.length}</span>
               </motion.div>
 
               <div className="prem-progress">
                 <motion.div
                   className="prem-progress-fill"
                   animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 />
               </div>
             </motion.div>
@@ -631,7 +646,7 @@ function PremiumChatbot() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
             >
               <div className={eligible ? 'prem-result-badge prem-result-success' : 'prem-result-badge prem-result-restriction'}>
                 <motion.div
@@ -643,41 +658,40 @@ function PremiumChatbot() {
           )}
         </motion.div>
 
-        {/* Messages Section */}
         <div className="prem-messages">
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 16, x: msg.from === 'user' ? 20 : -20 }}
+                initial={{ opacity: 0, y: 12, x: msg.from === 'user' ? 15 : -15 }}
                 animate={{ opacity: 1, y: 0, x: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 style={{
                   display: 'flex',
                   justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start',
                   alignItems: 'flex-start',
-                  gap: 12,
+                  gap: 10,
                 }}
               >
                 {msg.from === 'bot' && (
                   <motion.div
-                    initial={{ scale: 0, rotate: -30 }}
+                    initial={{ scale: 0, rotate: -25 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 200 }}
-                    style={{ flexShrink: 0, marginTop: 2 }}
+                    style={{ flexShrink: 0, marginTop: 1 }}
                   >
                     <div style={{
-                      width: 36,
-                      height: 36,
+                      width: 30,
+                      height: 30,
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, rgba(220,38,38,.2), rgba(220,38,38,.1))',
                       border: '1.5px solid rgba(220,38,38,.3)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 6px 20px rgba(220,38,38,.15)',
+                      boxShadow: '0 4px 14px rgba(220,38,38,.12)',
                     }}>
-                      <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }}>
+                      <svg viewBox="0 0 24 24" style={{ width: 14, height: 14 }}>
                         <path
                           d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
                           fill="#dc2626"
@@ -693,9 +707,9 @@ function PremiumChatbot() {
                     {msg.hint && msg.from === 'bot' && (
                       <motion.div
                         className="prem-bubble-hint"
-                        initial={{ opacity: 0, y: 4 }}
+                        initial={{ opacity: 0, y: 3 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
+                        transition={{ delay: 0.25, duration: 0.3 }}
                       >
                         {msg.hint}
                       </motion.div>
@@ -705,12 +719,12 @@ function PremiumChatbot() {
 
                 {msg.from === 'user' && (
                   <motion.div
-                    initial={{ scale: 0, rotate: 30 }}
+                    initial={{ scale: 0, rotate: 25 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 200 }}
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 30,
+                      height: 30,
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, rgba(220,38,38,.25), rgba(220,38,38,.12))',
                       border: '1.5px solid rgba(220,38,38,.35)',
@@ -718,11 +732,11 @@ function PremiumChatbot() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      boxShadow: '0 6px 18px rgba(220,38,38,.15)',
-                      marginTop: 2,
+                      boxShadow: '0 4px 12px rgba(220,38,38,.1)',
+                      marginTop: 1,
                     }}
                   >
-                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: '#dc2626' }}>
+                    <svg viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#dc2626' }}>
                       <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
                     </svg>
                   </motion.div>
@@ -731,23 +745,22 @@ function PremiumChatbot() {
             ))}
           </AnimatePresence>
 
-          {/* Loading State */}
           <AnimatePresence>
             {loading && (
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: 12,
+                  gap: 10,
                 }}
               >
                 <motion.div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 30,
+                    height: 30,
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, rgba(220,38,38,.2), rgba(220,38,38,.1))',
                     border: '1.5px solid rgba(220,38,38,.3)',
@@ -759,26 +772,26 @@ function PremiumChatbot() {
                 >
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
                     style={{
-                      width: 16,
-                      height: 16,
+                      width: 14,
+                      height: 14,
                       borderRadius: '50%',
-                      borderRight: '3px solid #dc2626',
-                      borderTop: '3px solid #dc2626',
-                      borderLeft: '3px solid transparent',
-                      borderBottom: '3px solid transparent',
+                      borderRight: '2px solid #dc2626',
+                      borderTop: '2px solid #dc2626',
+                      borderLeft: '2px solid transparent',
+                      borderBottom: '2px solid transparent',
                     }}
                   />
                 </motion.div>
-                <div className="prem-bubble-bot" style={{ padding: '12px 16px' }}>
+                <div className="prem-bubble-bot" style={{ padding: '10px 14px' }}>
                   <div className="prem-loader">
                     {[0, 1, 2].map(i => (
                       <motion.div
                         key={i}
                         className="prem-loader-dot"
-                        animate={{ y: [0, -8, 0] }}
-                        transition={{ duration: 1.3, repeat: Infinity, delay: i * 0.22 }}
+                        animate={{ y: [0, -6, 0] }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
                       />
                     ))}
                   </div>
@@ -790,36 +803,35 @@ function PremiumChatbot() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Footer Section */}
         <motion.div
           className="prem-footer"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
         >
           <AnimatePresence mode="wait">
             {!done && !loading && (
               <motion.div
                 key="buttons"
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
               >
                 <div className="prem-button-group">
                   <motion.button
                     className="prem-btn prem-btn-yes"
                     onClick={() => handleAnswer('yes')}
-                    whileHover={{ scale: 1.04, y: -3 }}
-                    whileTap={{ scale: 0.94 }}
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                   >
                     Yes
                   </motion.button>
                   <motion.button
                     className="prem-btn prem-btn-no"
                     onClick={() => handleAnswer('no')}
-                    whileHover={{ scale: 1.04, y: -3 }}
-                    whileTap={{ scale: 0.94 }}
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
                   >
                     No
                   </motion.button>
@@ -830,14 +842,14 @@ function PremiumChatbot() {
             {done && eligible && (
               <motion.div
                 key="eligible"
-                initial={{ opacity: 0, scale: 0.93, y: 12 }}
+                initial={{ opacity: 0, scale: 0.92, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 140 }}
+                transition={{ type: 'spring', stiffness: 130 }}
               >
                 <motion.button
                   className="prem-btn prem-btn-cta"
                   onClick={() => navigate('/donor/dashboard')}
-                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.93 }}
                 >
                   Go to Dashboard
@@ -848,14 +860,14 @@ function PremiumChatbot() {
             {done && !eligible && (
               <motion.div
                 key="restricted"
-                initial={{ opacity: 0, scale: 0.93, y: 12 }}
+                initial={{ opacity: 0, scale: 0.92, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 140 }}
+                transition={{ type: 'spring', stiffness: 130 }}
               >
                 <motion.button
                   className="prem-btn prem-btn-cta"
                   onClick={() => navigate('/')}
-                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.93 }}
                 >
                   Return Home
