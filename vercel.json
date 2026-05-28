@@ -1,7 +1,4 @@
-cat > vercel.json << EOF
-{
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
-  "rootDirectory": "frontend"
+﻿{
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist"
 }
-EOF
