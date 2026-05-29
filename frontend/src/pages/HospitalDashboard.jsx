@@ -896,7 +896,7 @@ function HospitalDashboard() {
                                 textTransform: 'uppercase',
                                 letterSpacing: '.1em'
                               }}>
-                                COMING
+                                BCC Hamra is Coming for Supply
                               </span>
                             </div>
                             <p style={{ fontSize: 12, color: '#1e40af', margin: '0 0 4px 0', fontWeight: 600 }}>{r.quantity_needed} units</p>
@@ -1006,7 +1006,7 @@ function HospitalDashboard() {
                             className="hospital-btn hospital-btn-success"
                             style={{ flex: '1 1 auto', minWidth: '70px', fontSize: 10 }}
                           >
-                            OK
+                            Confirm
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -1027,7 +1027,7 @@ function HospitalDashboard() {
                               opacity: confirmingId === r.id ? 0.6 : 1
                             }}
                           >
-                            No Show
+                            Donor Didn't Show Up
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
