@@ -1236,188 +1236,289 @@ export default function Home() {
           )}
         </section>
 
-        {/* Analytics Section - CHART VERSION */}
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <motion.div
-            className="bc-network-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-              alignItems: 'stretch',
-              height: 'auto',
-              minHeight: '340px',
+       {/* Analytics Section - CHART VERSION */}
+<section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+  <motion.div
+    className="bc-network-grid"
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 20,
+      alignItems: 'stretch',
+      height: 'clamp(420px,34vw,520px)',
+    }}
+    initial={{ opacity: 0 }}
+    whileInView={{ opacity: 1 }}
+    transition={{ duration: 0.8 }}
+    viewport={{ once: true }}
+  >
+    {/* Lebanon Map */}
+    <motion.div
+      className="bc-glass-deep bc-card-hover"
+      style={{
+        borderRadius: 20,
+        overflow: 'hidden',
+        border: '1px solid rgba(91,115,151,.12)',
+        aspectRatio: '1 / 1',
+        height: '100%',
+      }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7 }}
+      viewport={{ once: true }}
+      whileHover={{
+        boxShadow: '0 32px 80px rgba(220,38,38,.2)',
+      }}
+    >
+      <img
+        src={lebanonMap}
+        alt="Lebanon Blood Network Map"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          filter: 'brightness(0.95) contrast(1.08)',
+        }}
+      />
+    </motion.div>
+
+    {/* Chart */}
+    <motion.div
+      className="bc-glass-deep bc-card-hover"
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: 14,
+        padding: 'clamp(18px,2.5vw,28px)',
+        borderRadius: 20,
+        border: '1px solid rgba(91,115,151,.12)',
+        aspectRatio: '1 / 1',
+        height: '100%',
+      }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7 }}
+      viewport={{ once: true }}
+      whileHover={{
+        boxShadow: '0 32px 80px rgba(220,38,38,.2)',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <motion.span
+          style={{
+            fontSize: 10,
+            fontWeight: 900,
+            color: '#dc2626',
+            textTransform: 'uppercase',
+            letterSpacing: '.15em',
+          }}
+          animate={{
+            letterSpacing: ['.15em', '.2em', '.15em'],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+          }}
+        >
+          Real-Time Analytics
+        </motion.span>
+      </div>
+
+      <div
+        style={{
+          flex: 1,
+          width: '100%',
+          minHeight: 0,
+        }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{
+              top: 8,
+              right: 0,
+              left: -18,
+              bottom: 0,
             }}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
-            {/* Lebanon Map */}
-            <motion.div
-              className="bc-glass-deep bc-card-hover"
-              style={{
-                borderRadius: 20,
-                overflow: 'hidden',
-                border: '1px solid rgba(91,115,151,.12)',
-                minHeight: '340px',
-              }}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
-              whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
-            >
-              <img src={lebanonMap} alt="Lebanon Blood Network Map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.95) contrast(1.08)' }} />
-            </motion.div>
-
-            {/* Chart Card */}
-            <motion.div
-              className="bc-glass-deep bc-card-hover"
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 18,
-                padding: 'clamp(18px,2.5vw,28px)',
-                borderRadius: 20,
-                border: '1px solid rgba(91,115,151,.12)',
-                minHeight: '340px',
-              }}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
-              whileHover={{ boxShadow: '0 32px 80px rgba(220,38,38,.2)' }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <motion.span
-                  style={{ fontSize: 10, fontWeight: 900, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.15em' }}
-                  animate={{ letterSpacing: ['.15em', '.2em', '.15em'] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  Real-Time Analytics
-                </motion.span>
-              </div>
-
-              {/* Chart Container */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
-                <ResponsiveContainer width="100%" height={160}>
-                  <AreaChart data={chartData} margin={{ top: 8, right: 0, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorDonors" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
-                      </linearGradient>
-                      <linearGradient id="colorEmergencies" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#991b1b" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#991b1b" stopOpacity={0.1}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(220,38,38,.1)" vertical={false} />
-                    <XAxis dataKey="time" stroke="rgba(71,85,105,.5)" style={{ fontSize: 10 }} />
-                    <YAxis stroke="rgba(71,85,105,.5)" style={{ fontSize: 10 }} width={28} />
-                    <Tooltip 
-                      contentStyle={{
-                        background: 'rgba(255,255,255,.95)',
-                        border: '1px solid rgba(220,38,38,.3)',
-                        borderRadius: 8,
-                        boxShadow: '0 4px 20px rgba(0,0,0,.1)',
-                      }}
-                      labelStyle={{ color: '#380101', fontWeight: 700, fontSize: 11 }}
-                      cursor={{ stroke: 'rgba(220,38,38,.2)', strokeWidth: 2 }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="donors"
-                      stroke="#dc2626"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorDonors)"
-                      name="Donors"
-                      isAnimationActive
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="emergencies"
-                      stroke="#991b1b"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorEmergencies)"
-                      name="Emergencies"
-                      isAnimationActive
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Stats Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {[
-                  { label: 'Active Donors', value: analytics.donors},
-                  { label: 'Emergencies', value: analytics.emergencies },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    className="bc-glass"
-                    style={{
-                      padding: 12,
-                      borderRadius: 10,
-                      textAlign: 'center',
-                      border: '1px solid rgba(220,38,38,.2)',
-                    }}
-                    whileHover={{ scale: 1.05, boxShadow: '0 8px 24px rgba(220,38,38,.15)' }}
-                  >
-                    <div style={{ fontSize: 18, marginBottom: 4 }}>{stat.icon}</div>
-                    <motion.div
-                      style={{ fontSize: 20, fontWeight: 900, color: '#dc2626' }}
-                      key={stat.value}
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 100 }}
-                    >
-                      {stat.value}
-                    </motion.div>
-                    <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(71,85,105,.6)', textTransform: 'uppercase', letterSpacing: '.08em', marginTop: 4 }}>
-                      {stat.label}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              <motion.a
-                href="https://www.google.com/maps/place/BloodConnect/@33.896303,35.4830185,17z/data=!3m1!4b1!4m6!3m5!1s0x151f1700556b765f:0x7b13b4102e84e328!8m2!3d33.896303!4d35.4830185!16s%2Fg%2F11njy2j9_g?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDUxNy4wIKXMDSoASAFQAw%3D%3D"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bc-btn bc-btn-primary"
-                whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  width: '100%',
-                  padding: 12,
-                  borderRadius: 12,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  textDecoration: 'none',
-                  cursor: 'pointer',
-                }}
+            <defs>
+              <linearGradient
+                id="colorDonors"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
               >
-                <span>Visit Our Center in Hamra</span>
-                <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                  →
-                </motion.span>
-              </motion.a>
+                <stop
+                  offset="5%"
+                  stopColor="#dc2626"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="#dc2626"
+                  stopOpacity={0.08}
+                />
+              </linearGradient>
+
+              <linearGradient
+                id="colorEmergencies"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="#991b1b"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="#991b1b"
+                  stopOpacity={0.08}
+                />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(220,38,38,.1)"
+              vertical={false}
+            />
+
+            <XAxis
+              dataKey="time"
+              stroke="rgba(71,85,105,.5)"
+              style={{ fontSize: 10 }}
+            />
+
+            <YAxis
+              stroke="rgba(71,85,105,.5)"
+              style={{ fontSize: 10 }}
+              width={28}
+            />
+
+            <Tooltip
+              contentStyle={{
+                background: 'rgba(255,255,255,.95)',
+                border:
+                  '1px solid rgba(220,38,38,.3)',
+                borderRadius: 8,
+                boxShadow:
+                  '0 4px 20px rgba(0,0,0,.1)',
+              }}
+              labelStyle={{
+                color: '#380101',
+                fontWeight: 700,
+                fontSize: 11,
+              }}
+            />
+
+            <Area
+              type="monotone"
+              dataKey="donors"
+              stroke="#dc2626"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorDonors)"
+            />
+
+            <Area
+              type="monotone"
+              dataKey="emergencies"
+              stroke="#991b1b"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorEmergencies)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 12,
+        }}
+      >
+        {[
+          {
+            label: 'Active Donors',
+            value: analytics.donors,
+          },
+          {
+            label: 'Emergencies',
+            value: analytics.emergencies,
+          },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            className="bc-glass"
+            style={{
+              padding: 12,
+              borderRadius: 10,
+              textAlign: 'center',
+              border:
+                '1px solid rgba(220,38,38,.2)',
+            }}
+          >
+            <motion.div
+              style={{
+                fontSize: 20,
+                fontWeight: 900,
+                color: '#dc2626',
+              }}
+            >
+              {stat.value}
             </motion.div>
+
+            <div
+              style={{
+                fontSize: 8,
+                fontWeight: 700,
+                color: 'rgba(71,85,105,.6)',
+                textTransform: 'uppercase',
+                letterSpacing: '.08em',
+                marginTop: 4,
+              }}
+            >
+              {stat.label}
+            </div>
           </motion.div>
-        </section>
+        ))}
+      </div>
+
+      <motion.a
+        href="https://www.google.com/maps/place/BloodConnect/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bc-btn bc-btn-primary"
+        style={{
+          width: '100%',
+          padding: 12,
+          borderRadius: 12,
+          fontSize: 11,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          textDecoration: 'none',
+        }}
+      >
+        Visit Our Center in Hamra →
+      </motion.a>
+    </motion.div>
+  </motion.div>
+</section>
 
         {/* Compatibility Matrix */}
-        <section style={{ marginTop: '80px' }}>
+        <section style={{ marginTop: '180px' }}>
           <CompatibilityMatrix />
         </section>
 
