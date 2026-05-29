@@ -315,10 +315,6 @@ router.post('/change-password', async (req, res) => {
     return res.status(400).json({ message: 'User ID, type, current password, and new password are required' });
   }
 
-  if (newPassword.length < 6) {
-    return res.status(400).json({ message: 'New password must be at least 6 characters long' });
-  }
-
   try {
     let table = 'donors';
     if (userType === 'admin') table = 'admins';

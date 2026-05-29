@@ -42,6 +42,13 @@ let inventoryRoutes, chatbotRoutes, idcheckRoutes, adminRoutes;
 let passwordResetRoutes, analyticsRoutes;
 
 try {
+  requestsRoute = require('./routes/requests');
+  console.log('✅ Loaded: requests');
+} catch (e) {
+  console.warn('⚠️  Missing: routes/requests.js');
+}
+
+try {
   bloodRequestsRoute = require('./routes/blood-requests');
   console.log('✅ Loaded: blood-requests');
 } catch (e) {

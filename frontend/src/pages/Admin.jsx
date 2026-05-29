@@ -485,13 +485,7 @@ function Admin() {
 
   const handleChangePassword = async () => {
     setPasswordMessage('')
-
-     console.log('=== DEBUG ===')
-  console.log('admin object:', admin)
-  console.log('admin.id:', admin?.id)
-  console.log('passwordForm:', passwordForm)
-  console.log('=============')
-  
+    
     if (!passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
       setPasswordMessage('All fields required')
       return
@@ -503,47 +497,46 @@ function Admin() {
     }
     
     try {
-     await axios.put(`${API}/api/admin/change-password`, {
-  userId: admin.id,                          // ← ADD THIS
-  userType: 'admin',                         // ← ADD THIS
-  currentPassword: passwordForm.old_password, // ← Change name
-  newPassword: passwordForm.new_password      // ← Change name
-})
-      setPasswordMessage('Password changed!')
+      await axios.post(`${API}/api/password/change-password`, {
+        userId: admin.id,
+        userType: 'admin',
+        currentPassword: passwordForm.old_password,
+        newPassword: passwordForm.new_password
+      })
+      setPasswordMessage('Password changed successfully!')
       setPasswordForm({ old_password: '', new_password: '', confirm_password: '' })
     } catch (err) {
-      setPasswordMessage(`Error: ${err.response?.data?.error || err.message}`)
+      setPasswordMessage(`Error: ${err.response?.data?.message || err.message}`)
     }
   }
 
- const handleConfirmBccDonation = async (donationId) => {
-  setConfirmingId(donationId)
-  try {
-    const donation = bccDonations.find(d => d.id === donationId)
-    
-    if (!donation || !donation.patient_email) {
-      alert('Donation or patient email missing')
+  const handleConfirmBccDonation = async (donationId) => {
+    setConfirmingId(donationId)
+    try {
+      const donation = bccDonations.find(d => d.id === donationId)
+      
+      if (!donation || !donation.patient_email) {
+        alert('Donation or patient email missing')
+        setConfirmingId(null)
+        return
+      }
+      
+      await axios.post(`${API}/api/blood-requests/admin-confirm`, {
+        donationId: donationId,
+        bloodType: donation.blood_type,
+        patientEmail: donation.patient_email,
+        donorEmail: donation.donor_email
+      })
+      
+      alert('✅ Donation confirmed! Patient and donor notified.')
+      loadData()
+    } catch (err) {
+      alert(`Error: ${err.response?.data?.error || err.message}`)
+    } finally {
       setConfirmingId(null)
-      return
     }
-    
-    await axios.post(`${API}/api/blood-requests/admin-confirm`, {
-      donationId: donationId,
-      bloodType: donation.blood_type,
-      patientEmail: donation.patient_email,
-      donorEmail: donation.donor_email  // ✅ ADDED: Pass donor email for thank you
-    })
-    
-    alert('✅ Donation confirmed! Patient and donor notified.')
-    loadData()
-  } catch (err) {
-    alert(`Error: ${err.response?.data?.error || err.message}`)
-  } finally {
-    setConfirmingId(null)
   }
-}
 
-  // ✅ Confirm hospital supply - updates request to 'supply_coming'
   const handleConfirmHospitalSupply = async (requestId) => {
     setConfirmingNoShowId(requestId)
     try {
@@ -557,12 +550,10 @@ function Admin() {
       
       console.log('[Admin] 🩸 Confirming hospital supply for request:', requestId)
       
-      // ✅ Update the request status to 'supply_coming' using PUT endpoint
       await axios.put(`${API}/api/blood-requests/${requestId}`, { status: 'supply_coming' })
       
       alert(`✅ Supply confirmed for ${request.hospital_name}!\n🩸 ${request.blood_type} - ${request.quantity_needed} units\n\nHospital will see "✈️ Coming for Supply from BCC Hamra" on their dashboard.`)
       
-      // ✅ Reload data to refresh the list
       loadData()
     } catch (err) {
       console.error('[Admin] Error confirming supply:', err)
