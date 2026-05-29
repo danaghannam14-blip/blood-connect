@@ -242,10 +242,9 @@ const MODERN_STYLES = `
 
   /* chart */
   .bc-network-grid > div:nth-child(2) {
-    min-height: 420px !important;
-    height: 420px !important;
-    aspect-ratio: auto !important;
-  }
+  min-height: 340px !important;
+  height: auto !important;
+}
 }
     .bc-btn-primary, .bc-btn-secondary { 
       width: auto;
