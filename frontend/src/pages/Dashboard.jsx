@@ -699,53 +699,7 @@ function Dashboard() {
           </div>
 
           {/* ✅ NEW: Manual Refresh Button for BOTH tabs */}
-          {(activeTab === 'emergency' || activeTab === 'hospitals') && (
-            <motion.button
-              onClick={handleManualRefresh}
-              disabled={manualRefreshLoading}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
-                borderRadius: '6px',
-                fontSize: 'clamp(10px, 1vw, 11px)',
-                fontWeight: 700,
-                background: 'rgba(220,38,38,.1)',
-                border: '1px solid rgba(220,38,38,.2)',
-                color: '#dc2626',
-                cursor: manualRefreshLoading ? 'not-allowed' : 'pointer',
-                opacity: manualRefreshLoading ? 0.6 : 1,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                flexShrink: 0,
-              }}
-            >
-              {manualRefreshLoading ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      border: '2px solid rgba(220,38,38,.3)',
-                      borderTopColor: '#dc2626',
-                      borderRadius: '50%',
-                    }}
-                  />
-                  Refreshing...
-                </>
-              ) : (
-                <>
-                  <span></span>
-                  Refresh
-                </>
-              )}
-            </motion.button>
-          )}
+          
         </motion.div>
 
         {/* Tab Content: Emergency Patient Requests */}

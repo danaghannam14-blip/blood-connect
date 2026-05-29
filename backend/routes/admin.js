@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
+// ✅ FIXED: Use SHA2 instead of bcrypt to match database hashes
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -10,19 +11,25 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
-  db.query('SELECT * FROM admins WHERE email = ?', [email], async (err, results) => {
+  db.query('SELECT * FROM admins WHERE email = ?', [email], (err, results) => {
     if (err) return res.status(500).json({ message: err.message });
     if (results.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
 
     const admin = results[0];
-    const match = await bcrypt.compare(password, admin.password);
-    if (!match) return res.status(401).json({ message: 'Invalid credentials' });
+    // ✅ Hash incoming password with SHA2-256 (same as database)
+    const incomingHash = crypto.createHash('sha256').update(password).digest('hex');
+    
+    console.log('[Admin Login]', email, '- Hash match:', incomingHash === admin.password);
+    
+    if (incomingHash !== admin.password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     res.json({ message: 'Login successful', admin: { id: admin.id, username: admin.username, email: admin.email } });
   });
 });
 
-router.post('/add-admin', async (req, res) => {
+router.post('/add-admin', (req, res) => {
   const { email, password } = req.body;
 
   if (!email.endsWith('@bloodconnect.com')) {
@@ -30,7 +37,8 @@ router.post('/add-admin', async (req, res) => {
   }
 
   const username = email.split('@')[0];
-  const hashed = await bcrypt.hash(password, 10);
+  // ✅ Hash password with SHA2-256 (same as database)
+  const hashed = crypto.createHash('sha256').update(password).digest('hex');
 
   db.query('INSERT INTO admins (username, email, password) VALUES (?, ?, ?)',
     [username, email, hashed], (err) => {
@@ -61,7 +69,7 @@ router.delete('/admins/:id', (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 // ✅ CHANGE PASSWORD - For logged-in users (Admin, Hospital, Donors)
 // ════════════════════════════════════════════════════════════════════════════
-router.put('/change-password', async (req, res) => {
+router.put('/change-password', (req, res) => {
   const { userId, userType, currentPassword, newPassword } = req.body;
 
   // ✅ VALIDATE ALL REQUIRED FIELDS
@@ -84,7 +92,7 @@ router.put('/change-password', async (req, res) => {
     console.log(`[change-password] Changing password for ${userType} ID: ${userId}`);
 
     // ✅ GET USER FROM DATABASE
-    db.query(`SELECT password FROM ${table} WHERE id = ?`, [userId], async (err, results) => {
+    db.query(`SELECT password FROM ${table} WHERE id = ?`, [userId], (err, results) => {
       if (err) {
         console.error('[change-password] ❌ Database error:', err);
         return res.status(500).json({ message: err.message });
@@ -99,8 +107,10 @@ router.put('/change-password', async (req, res) => {
 
       // ✅ VERIFY CURRENT PASSWORD
       try {
-        const passwordMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!passwordMatch) {
+        // ✅ Hash incoming password with SHA2-256
+        const currentPasswordHash = crypto.createHash('sha256').update(currentPassword).digest('hex');
+        
+        if (currentPasswordHash !== user.password) {
           console.log(`[change-password] ❌ Incorrect current password for ${userType} ${userId}`);
           return res.status(401).json({ message: 'Current password is incorrect' });
         }
@@ -109,9 +119,9 @@ router.put('/change-password', async (req, res) => {
         return res.status(500).json({ message: 'Failed to verify password' });
       }
 
-      // ✅ HASH NEW PASSWORD
+      // ✅ HASH NEW PASSWORD WITH SHA2-256
       try {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
 
         // ✅ UPDATE PASSWORD IN DATABASE
         db.query(`UPDATE ${table} SET password = ? WHERE id = ?`, [hashedPassword, userId], (updateErr) => {
@@ -174,14 +184,16 @@ router.delete('/requests/:id', (req, res) => {
   });
 });
 
-router.post('/add-hospital', async (req, res) => {
+router.post('/add-hospital', (req, res) => {
   const { name, email, password, address, latitude, longitude } = req.body;
 
   if (!email.endsWith('@hospital.com')) {
     return res.status(400).json({ message: 'Hospital email must end with @hospital.com' });
   }
 
-  const hashed = await bcrypt.hash(password, 10);
+  // ✅ Hash password with SHA2-256
+  const hashed = crypto.createHash('sha256').update(password).digest('hex');
+  
   db.query(
     'INSERT INTO hospitals (name, email, password, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)',
     [name, email, hashed, address, latitude, longitude],

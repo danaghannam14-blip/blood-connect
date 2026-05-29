@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
 const API = process.env.FRONTEND_URL || 'https://blood-connect-lb.vercel.app';
@@ -276,14 +276,14 @@ router.post('/forgot', (req, res) => {
   });
 });
 
-router.post('/reset', async (req, res) => {
+router.post('/reset', (req, res) => {
   const { token, new_password } = req.body;
 
   if (!token || !new_password) {
     return res.status(400).json({ message: 'Token and password are required' });
   }
 
-  db.query('SELECT * FROM password_resets WHERE token = ?', [token], async (err, results) => {
+  db.query('SELECT * FROM password_resets WHERE token = ?', [token], (err, results) => {
     if (err) return res.status(500).json({ message: err.message });
     if (results.length === 0) return res.status(400).json({ message: 'Invalid or expired reset link.' });
 
@@ -293,7 +293,8 @@ router.post('/reset', async (req, res) => {
     }
 
     try {
-      const hashed = bcrypt.hashSync(new_password, 10);
+      // ✅ SHA2 hashing instead of bcrypt
+      const hashed = crypto.createHash('sha256').update(new_password).digest('hex');
       db.query('UPDATE donors SET password = ? WHERE email = ?', [hashed, reset.email], (err) => {
         if (err) return res.status(500).json({ message: err.message });
         db.query('DELETE FROM password_resets WHERE token = ?', [token], () => {
@@ -308,7 +309,7 @@ router.post('/reset', async (req, res) => {
   });
 });
 
-router.post('/change-password', async (req, res) => {
+router.post('/change-password', (req, res) => {
   const { userId, userType, currentPassword, newPassword } = req.body;
 
   if (!userId || !userType || !currentPassword || !newPassword) {
@@ -322,7 +323,7 @@ router.post('/change-password', async (req, res) => {
 
     console.log(`[change-password] Changing password for ${userType} ID: ${userId}`);
 
-    db.query(`SELECT password FROM ${table} WHERE id = ?`, [userId], async (err, results) => {
+    db.query(`SELECT password FROM ${table} WHERE id = ?`, [userId], (err, results) => {
       if (err) {
         console.error('[change-password] ❌ Database error:', err);
         return res.status(500).json({ message: err.message });
@@ -334,14 +335,19 @@ router.post('/change-password', async (req, res) => {
       }
 
       const user = results[0];
-      const passwordMatch = bcrypt.compareSync(currentPassword, user.password);
-      if (!passwordMatch) {
+      // ✅ SHA2 hashing instead of bcrypt
+      const currentPasswordHash = crypto.createHash('sha256').update(currentPassword).digest('hex');
+      
+      console.log('[change-password] Current hash:', currentPasswordHash);
+      console.log('[change-password] Stored hash:', user.password);
+      
+      if (currentPasswordHash !== user.password) {
         console.log(`[change-password] ❌ Incorrect current password for ${userType} ${userId}`);
         return res.status(401).json({ message: 'Current password is incorrect' });
       }
 
       try {
-        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
 
         db.query(`UPDATE ${table} SET password = ? WHERE id = ?`, [hashedPassword, userId], (err) => {
           if (err) {
