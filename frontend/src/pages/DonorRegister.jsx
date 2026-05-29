@@ -585,7 +585,7 @@ function DonorRegister() {
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#6e2016', margin:0, lineHeight:1.1 }}>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
               Join as a Hero
             </h1>
             <p style={{ fontSize:'clamp(12px,1.2vw,14px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(8px,1vw,12px)', letterSpacing:'.06em', textTransform:'uppercase' }}>
@@ -745,7 +745,6 @@ function DonorRegister() {
                         <input
                           type="file"
                           accept="image/*"
-                          capture="environment"
                           style={{ display:'none' }}
                           onChange={handleFrontFileChange}
                           disabled={uploadingFront}
@@ -857,7 +856,6 @@ function DonorRegister() {
                         <input
                           type="file"
                           accept="image/*"
-                          capture="environment"
                           style={{ display:'none' }}
                           onChange={handleBackFileChange}
                           disabled={uploadingBack}
