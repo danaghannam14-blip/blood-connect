@@ -1038,7 +1038,7 @@ export default function Home() {
                   position: 'absolute',
                   inset: 0,
                   borderRadius: 24,
-                  overflow: 'hidden',
+                 overflow: 'visible',
                   border: '1px solid rgba(91,115,151,.12)',
                 }}
                 whileHover={{ boxShadow: '0 40px 100px rgba(220,38,38,.25)', y: -8 }}
@@ -1047,23 +1047,37 @@ export default function Home() {
               </motion.div>
 
               {/* Biometric sync card - HIDDEN ON MOBILE */}
-              <motion.div
-                className="bc-glass-deep bc-card-hover glow-pulse"
-                style={{
-                  position: 'absolute',
-                  top: '-8%',
-                  right: '-8%',
-                  zIndex: 20,
-                  borderRadius: 20,
-                  padding: 18,
-                  minWidth: 'min(220px,26vw)',
-                }}
-                initial={{ opacity: 0, y: -30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -16, scale: 1.05 }}
-              >
+            <motion.div
+  className="bc-glass-deep bc-card-hover glow-pulse"
+  style={{
+    position: 'absolute',
+
+    // FIX: keep it fully inside the hero card
+    top: -15,
+    right: -19,
+
+    zIndex: 20,
+    borderRadius: 20,
+    padding: 18,
+    minWidth: 'min(220px,26vw)',
+
+    // FIX: make border visible all around
+    border: '1px solid rgba(180,180,180,.22)',
+
+    // FIX: prevents clipping on edges
+    boxSizing: 'border-box',
+    overflow: 'visible',
+
+    // optional: cleaner shadow
+    boxShadow:
+      '0 16px 48px rgba(0,0,0,.10), inset 0 1px 1px rgba(255,255,255,.25)',
+  }}
+  initial={{ opacity: 0, y: -30 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.7, delay: 0.2 }}
+  viewport={{ once: true }}
+  whileHover={{ y: -10, scale: 1.03 }}
+>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <motion.div

@@ -7,55 +7,277 @@ import { API_BASE_URL as API } from '../config/apiConfig'
 const MODERN_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { overflow-x: hidden; }
+  body { overflow-x: hidden; -webkit-font-smoothing: antialiased; -webkit-touch-callout: none; }
   @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
   @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-  .hospital-root { min-height:100vh; background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); background-size:400% 400%; animation:gradient-shift 15s ease infinite; font-family:'Plus Jakarta Sans',sans-serif; overflow-x:hidden; position:relative; color:#380101; }
+  
+  .hospital-root { 
+    min-height:100vh; 
+    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%); 
+    background-size:400% 400%; 
+    animation:gradient-shift 15s ease infinite; 
+    font-family:'Plus Jakarta Sans',sans-serif; 
+    overflow-x:hidden; 
+    position:relative; 
+    color:#380101;
+  }
+  
   .hospital-float-orb { position:absolute;border-radius:50%;filter:blur(80px); pointer-events:none;animation:float-orb 6s ease-in-out infinite; }
-  .hospital-glass { background:rgba(255,255,255,.6);backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%); border:1px solid rgba(180,180,180,.2);box-shadow:0 8px 32px rgba(0,0,0,.08); }
-  .hospital-glass-deep { background:rgba(255,255,255,.65);backdrop-filter:blur(30px) saturate(200%); -webkit-backdrop-filter:blur(30px) saturate(200%); border:1px solid rgba(180,180,180,.25); box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4); }
-  .hospital-nav { position:sticky;top:0;z-index:40; background:rgba(248,248,248,.85);backdrop-filter:blur(20px) saturate(200%); -webkit-backdrop-filter:blur(20px) saturate(200%); border-bottom:1px solid rgba(180,180,180,.15);box-shadow:0 4px 30px rgba(0,0,0,.08); }
-  .hospital-nav-inner { max-width:1360px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:14px clamp(16px,3.5vw,44px);gap:clamp(16px,2.5vw,32px); }
-  .hospital-btn { position:relative;overflow:hidden;cursor:pointer;border:none;outline:none; transition:all .35s cubic-bezier(.25,1,.5,1); font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;border-radius:10px; letter-spacing:.5px;font-size:13px; }
-  .hospital-btn::before { content:'';position:absolute;top:0;left:-100%;width:100%;height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s; }
+  
+  .hospital-glass { 
+    background:rgba(255,255,255,.6);
+    backdrop-filter:blur(20px) saturate(180%); 
+    -webkit-backdrop-filter:blur(20px) saturate(180%); 
+    border:1px solid rgba(180,180,180,.2);
+    box-shadow:0 8px 32px rgba(0,0,0,.08); 
+  }
+  
+  .hospital-glass-deep { 
+    background:rgba(255,255,255,.65);
+    backdrop-filter:blur(30px) saturate(200%); 
+    -webkit-backdrop-filter:blur(30px) saturate(200%); 
+    border:1px solid rgba(180,180,180,.25); 
+    box-shadow:0 16px 48px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.4); 
+  }
+  
+  .hospital-nav { 
+    position:sticky;
+    top:0;
+    z-index:40; 
+    background:rgba(248,248,248,.92);
+    backdrop-filter:blur(20px) saturate(200%); 
+    -webkit-backdrop-filter:blur(20px) saturate(200%); 
+    border-bottom:1px solid rgba(180,180,180,.15);
+    box-shadow:0 4px 30px rgba(0,0,0,.08);
+    width: 100%;
+  }
+  
+  .hospital-nav-inner { 
+    max-width:1360px;
+    margin:0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:clamp(10px, 2.5vw, 16px) clamp(12px, 3.5vw, 44px);
+    gap:clamp(8px, 2vw, 32px);
+  }
+  
+  .hospital-btn { 
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    border:none;
+    outline:none;
+    -webkit-user-select: none;
+    user-select: none;
+    transition:all .35s cubic-bezier(.25,1,.5,1); 
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:700;
+    border-radius:10px;
+    letter-spacing:.5px;
+    font-size:clamp(11px, 2vw, 13px);
+    min-height: 44px;
+    padding:clamp(9px, 2vw, 12px) clamp(16px, 3vw, 24px);
+  }
+  
+  .hospital-btn::before { 
+    content:'';
+    position:absolute;
+    top:0;
+    left:-100%;
+    width:100%;
+    height:100%; 
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+    transition:left .5s; 
+  }
+  
   .hospital-btn:hover::before { left:100%; }
-  .hospital-btn-primary { background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%); color:#ffffff;box-shadow:0 6px 18px rgba(220,38,38,.22);padding:10px 24px; }
-  .hospital-btn-primary:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(220,38,38,.28); }
-  .hospital-btn-success { background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%); color:#ffffff;box-shadow:0 6px 18px rgba(34,197,94,.22);padding:9px 18px; }
-  .hospital-btn-success:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(34,197,94,.28); }
-  .hospital-tab-btn { padding:10px 18px;font-size:13px;font-weight:700;border:none; background:transparent;cursor:pointer;color:rgba(61,61,61,.6); transition:all .3s ease;border-bottom:2px solid transparent; letter-spacing:.3px;text-transform:uppercase; }
-  .hospital-tab-btn.active { color:#dc2626;border-bottom-color:#dc2626; background:rgba(255,255,255,.5);border-radius:8px;border-bottom:none; }
-  .hospital-input { width:100%;padding:10px 16px; border:1px solid rgba(150,150,150,.25);border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif;font-size:13px; background:rgba(255,255,255,.7);color:#dc2626;transition:all .3s ease; }
-  .hospital-input:focus { outline:none;border-color:rgba(220,38,38,.4); background:rgba(255,255,255,.95);box-shadow:0 0 0 3px rgba(220,38,38,.1); }
-  .hospital-label { font-size:10px;font-weight:900;color:rgba(45,45,45,.6); text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:block; }
-  .hospital-card-title { font-family:'Fraunces',serif;font-size:18px;font-weight:900; color:#6e2016;margin:0 0 12px 0; }
-  .hospital-message { border-radius:12px;padding:12px 16px;text-align:center; color:#dc2626;font-weight:700;font-size:13px;margin-bottom:20px; }
-  .hospital-message.success { background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e; }
-  .hospital-message.error { background:rgba(255,235,238,.8);border:1px solid rgba(220,38,38,.3);color:#dc2626; }
-
-  @media (max-width:1024px) {
-    .hospital-root { font-size: 0.9em; }
+  
+  .hospital-btn-primary { 
+    background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%); 
+    color:#ffffff;
+    box-shadow:0 6px 18px rgba(220,38,38,.22);
+  }
+  
+  .hospital-btn-primary:active { transform:scale(0.98); }
+  
+  .hospital-btn-success { 
+    background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%); 
+    color:#ffffff;
+    box-shadow:0 6px 18px rgba(34,197,94,.22);
+  }
+  
+  .hospital-btn-success:active { transform:scale(0.98); }
+  
+  .hospital-tab-btn { 
+    padding:clamp(8px, 2vw, 10px) clamp(12px, 2vw, 18px);
+    font-size:clamp(10px, 1.8vw, 13px);
+    font-weight:700;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    color:rgba(61,61,61,.6); 
+    transition:all .3s ease;
+    border-bottom:2px solid transparent;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    -webkit-user-select: none;
+    user-select: none;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .hospital-tab-btn.active { 
+    color:#dc2626;
+    border-bottom-color:#dc2626; 
+    background:rgba(255,255,255,.5);
+    border-radius:8px;
+    border-bottom:none; 
+  }
+  
+  .hospital-input { 
+    width:100%;
+    padding:clamp(10px, 2vw, 12px) clamp(12px, 2vw, 16px); 
+    border:1.5px solid rgba(150,150,150,.25);
+    border-radius:10px;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:clamp(13px, 2vw, 15px);
+    background:rgba(255,255,255,.7);
+    color:#dc2626;
+    transition:all .3s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 44px;
+  }
+  
+  .hospital-input:focus { 
+    outline:none;
+    border-color:rgba(220,38,38,.4); 
+    background:rgba(255,255,255,.95);
+    box-shadow:0 0 0 3px rgba(220,38,38,.1);
+  }
+  
+  .hospital-label { 
+    font-size:clamp(9px, 1.8vw, 10px);
+    font-weight:900;
+    color:rgba(45,45,45,.6);
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    margin-bottom:clamp(6px, 1vw, 8px);
+    display:block; 
+  }
+  
+  .hospital-card-title { 
+    font-family:'Fraunces',serif;
+    font-size:clamp(16px, 4vw, 20px);
+    font-weight:900;
+    color:#6e2016;
+    margin:0 0 clamp(10px, 1.5vw, 16px) 0;
+  }
+  
+  .hospital-message { 
+    border-radius:12px;
+    padding:clamp(10px, 2vw, 14px) clamp(12px, 2vw, 16px);
+    text-align:center;
+    color:#dc2626;
+    font-weight:700;
+    font-size:clamp(11px, 1.8vw, 13px);
+    margin-bottom:20px;
+    word-break: break-word;
+  }
+  
+  .hospital-message.success { 
+    background:rgba(34,197,94,.15);
+    border:1px solid rgba(34,197,94,.3);
+    color:#22c55e; 
+  }
+  
+  .hospital-message.error { 
+    background:rgba(255,235,238,.8);
+    border:1px solid rgba(220,38,38,.3);
+    color:#dc2626; 
   }
 
-  @media (max-width:768px) {
-    .hospital-root { font-size: 1em; }
-    .hospital-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: wrap; }
-    main { padding: 20px clamp(12px, 2vw, 30px) !important; gap: 24px !important; }
-    h1 { font-size: clamp(18px, 5vw, 28px) !important; }
-    p { font-size: clamp(12px, 1.2vw, 14px) !important; }
-    .hospital-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 8px clamp(12px, 2vw, 18px) !important; }
-    .hospital-card-title { font-size: clamp(14px, 4vw, 18px) !important; }
+  /* Tablet */
+  @media (max-width: 1024px) and (min-width: 769px) {
+    main { 
+      padding: clamp(20px, 3vw, 40px) !important;
+      gap: 24px !important;
+    }
   }
 
-  @media (max-width:480px) {
-    .hospital-root { font-size: 1em; }
-    main { padding: 16px 12px !important; gap: 16px !important; }
-    .hospital-nav-inner { padding: 10px 12px; gap: 6px; }
-    .hospital-card-title { font-size: clamp(14px, 4vw, 18px) !important; }
-    .hospital-tab-btn { padding: 8px clamp(10px, 1.5vw, 14px) !important; font-size: clamp(10px, 0.9vw, 11px) !important; }
-    .hospital-input { font-size: clamp(12px, 1vw, 13px) !important; padding: 8px 12px !important; }
+  /* iPad */
+  @media (max-width: 768px) and (min-width: 601px) {
+    main { 
+      padding: clamp(16px, 2.5vw, 28px) !important;
+      gap: 20px !important;
+    }
+    
+    .hospital-card-title { font-size: clamp(16px, 4vw, 18px) !important; }
+  }
+
+  /* Large phone */
+  @media (max-width: 600px) {
+    main { 
+      padding: 14px 12px !important;
+      gap: 16px !important;
+    }
+    
+    .hospital-nav-inner { 
+      padding: clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 14px);
+      gap: 4px;
+    }
+  }
+
+  /* iPhone */
+  @media (max-width: 480px) {
+    main { 
+      padding: 12px 12px !important;
+      gap: 14px !important;
+    }
+    
+    .hospital-nav-inner { 
+      padding: 8px 10px;
+      gap: 3px;
+    }
+    
+    .hospital-card-title { 
+      font-size: clamp(14px, 5vw, 18px) !important;
+      margin-bottom: 12px;
+    }
+    
+    .hospital-tab-btn { 
+      padding: clamp(8px, 1.5vw, 10px) clamp(10px, 1.5vw, 12px) !important;
+      font-size: clamp(9px, 1.5vw, 11px) !important;
+    }
+    
+    .hospital-input { 
+      font-size: clamp(13px, 1.8vw, 14px) !important;
+      padding: clamp(10px, 1.5vw, 12px) clamp(10px, 1.5vw, 12px) !important;
+    }
+    
+    .hospital-label {
+      font-size: clamp(8px, 1.5vw, 9px) !important;
+      margin-bottom: clamp(4px, 1vw, 6px) !important;
+    }
+  }
+
+  /* iPhone SE */
+  @media (max-width: 375px) {
+    .hospital-nav-inner { 
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px;
+    }
+    
+    .hospital-card-title { 
+      font-size: clamp(13px, 4vw, 16px) !important;
+      margin-bottom: 10px;
+    }
   }
 `
 
@@ -393,7 +615,7 @@ function HospitalDashboard() {
             </motion.div>
             <div>
               <motion.div 
-                style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+                style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', margin: 0 }} 
                 animate={{ letterSpacing: [0, 1, 0] }} 
                 transition={{ duration: 3, repeat: Infinity }}
               >
@@ -401,7 +623,7 @@ function HospitalDashboard() {
               </motion.div>
               <motion.div
                 style={{ 
-                  fontSize: 'clamp(9px, 1vw, 12px)', 
+                  fontSize: 11, 
                   fontWeight: 500, 
                   color: 'rgba(71, 85, 105, 0.7)',
                   margin: '2px 0 0 0',
@@ -411,7 +633,8 @@ function HospitalDashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
               >
-Hospital Page              </motion.div>
+                Hospital Page
+              </motion.div>
             </div>
           </motion.div>
 
@@ -422,43 +645,36 @@ Hospital Page              </motion.div>
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
             className="hospital-btn hospital-btn-primary"
-            style={{
-              padding: '13px 26px',
-              borderRadius: 24,
-              fontSize: 13,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-            }}
+            style={{ whiteSpace: 'nowrap' }}
           >
             Logout
           </motion.button>
         </div>
       </motion.div>
 
-      <main style={{ maxWidth: 1360, margin: '0 auto', padding: '32px clamp(20px,3vw,50px)', position: 'relative', zIndex: 10 }}>
+      <main style={{ maxWidth: 1360, margin: '0 auto', padding: 20, position: 'relative', zIndex: 10 }}>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: visible ? 1 : 0 }}
           transition={{ staggerChildren: 0.1 }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 32 }}
         >
-          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
-            <p style={{ fontSize: 28, fontWeight: 900, color: '#EA580C', margin: 0 }}>{pendingCount}</p>
-            <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Active Requests</p>
+          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 20, border: '2px solid rgba(211,47,47,.2)' }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: '#EA580C', margin: 0 }}>{pendingCount}</p>
+            <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Active</p>
           </motion.div>
-          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
-            <p style={{ fontSize: 28, fontWeight: 900, color: '#22C55E', margin: 0 }}>{fulfilledCount}</p>
-            <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Fulfilled</p>
+          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 20, border: '2px solid rgba(211,47,47,.2)' }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: '#22C55E', margin: 0 }}>{fulfilledCount}</p>
+            <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Fulfilled</p>
           </motion.div>
-          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
-            <p style={{ fontSize: 28, fontWeight: 900, color: '#3b82f6', margin: 0 }}>{supplyComingCount}</p>
-            <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Supply Coming</p>
+          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 20, border: '2px solid rgba(211,47,47,.2)' }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: '#3b82f6', margin: 0 }}>{supplyComingCount}</p>
+            <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Coming</p>
           </motion.div>
-          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 24, border: '2px solid rgba(211,47,47,.2)' }}>
-            <p style={{ fontSize: 28, fontWeight: 900, color: '#DC2626', margin: 0 }}>{awaitingCount}</p>
-            <p style={{ fontSize: 10, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Emergency Awaiting</p>
+          <motion.div className="hospital-glass" style={{ borderRadius: 20, padding: 20, border: '2px solid rgba(211,47,47,.2)' }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: '#DC2626', margin: 0 }}>{awaitingCount}</p>
+            <p style={{ fontSize: 9, fontWeight: 900, color: 'rgba(211,47,47,.4)', textTransform: 'uppercase', margin: '6px 0 0', lineHeight: 1 }}>Emergency</p>
           </motion.div>
         </motion.div>
 
@@ -474,6 +690,7 @@ Hospital Page              </motion.div>
             borderRadius: 16,
             padding: 0,
             overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch'
           }}
         >
           {['post', 'emergency'].map((t) => (
@@ -482,7 +699,7 @@ Hospital Page              </motion.div>
               onClick={() => setActiveTab(t)}
               className={`hospital-tab-btn ${activeTab === t ? 'active' : ''}`}
             >
-              {t === 'post' ? 'Post Request' : 'Emergency Donations'}
+              {t === 'post' ? 'Post Request' : 'Emergency'}
             </button>
           ))}
         </motion.div>
@@ -500,14 +717,14 @@ Hospital Page              </motion.div>
             style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: 24 
+              gap: 24
             }}
           >
             <motion.div
               className="hospital-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}
+              style={{ borderRadius: 28, padding: 28, border: '2px solid rgba(211,47,47,.2)' }}
             >
-              <h2 className="hospital-card-title">Post Blood Request</h2>
+              <h2 className="hospital-card-title">Post Request</h2>
 
               {message && (
                 <div className={`hospital-message ${message.includes('✅') || message.includes('successfully') ? 'success' : 'error'}`}>
@@ -545,7 +762,7 @@ Hospital Page              </motion.div>
                 </div>
 
                 <div>
-                  <label className="hospital-label">Urgency Level</label>
+                  <label className="hospital-label">Urgency</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                     {Object.entries(URGENCY_CONFIG).map(([key, val]) => (
                       <motion.button
@@ -555,17 +772,21 @@ Hospital Page              </motion.div>
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setForm({ ...form, urgency: key })}
                         style={{
-                          padding: 12,
+                          padding: 10,
                           borderRadius: 14,
                           border: `2px solid ${form.urgency === key ? val.color : 'rgba(211,47,47,.15)'}`,
                           background: form.urgency === key ? `linear-gradient(135deg, ${val.color}, ${val.color}40)` : undefined,
                           color: form.urgency === key ? '#fff' : val.color,
                           fontWeight: 900,
-                          fontSize: 11,
+                          fontSize: 10,
                           textAlign: 'center',
                           textTransform: 'uppercase',
                           letterSpacing: '.1em',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
                         {val.label}
@@ -581,22 +802,21 @@ Hospital Page              </motion.div>
                   whileTap={{ scale: 0.98 }}
                   className="hospital-btn hospital-btn-primary"
                   style={{
-                    padding: 14,
                     width: '100%',
                     marginTop: 8,
                     opacity: submitting ? 0.6 : 1
                   }}
                 >
-                  {submitting ? 'Posting...' : 'Post Request and Notify Donors'}
+                  {submitting ? 'Posting...' : 'Post & Notify'}
                 </motion.button>
               </form>
             </motion.div>
 
             <motion.div
               className="hospital-glass-deep"
-              style={{ borderRadius: 28, padding: 32, border: '2px solid rgba(211,47,47,.2)' }}
+              style={{ borderRadius: 28, padding: 28, border: '2px solid rgba(211,47,47,.2)' }}
             >
-              <h2 className="hospital-card-title">Your Posted Requests ({requests.length})</h2>
+              <h2 className="hospital-card-title">Requests ({requests.length})</h2>
 
               {requests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -613,19 +833,19 @@ Hospital Page              </motion.div>
                           key={r.id}
                           style={{
                             borderRadius: 18,
-                            padding: 18,
+                            padding: 16,
                             border: '1px solid rgba(34,197,94,.3)',
                             background: 'rgba(240,253,244,.6)',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 12
+                            gap: 10
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 20, fontWeight: 900, color: '#059669' }}>{r.blood_type}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 18, fontWeight: 900, color: '#059669' }}>{r.blood_type}</span>
                               <span style={{
-                                fontSize: 9,
+                                fontSize: 8,
                                 fontWeight: 900,
                                 padding: '4px 10px',
                                 borderRadius: 8,
@@ -637,13 +857,10 @@ Hospital Page              </motion.div>
                                 CONFIRMED
                               </span>
                             </div>
-                            <p style={{ fontSize: 12, color: '#047857', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
-                            <p style={{ fontSize: 11, color: 'rgba(5,102,82,.6)', margin: 0, fontWeight: 500 }}>
+                            <p style={{ fontSize: 12, color: '#047857', margin: '0 0 4px 0', fontWeight: 600 }}>{r.quantity_needed} units</p>
+                            <p style={{ fontSize: 10, color: 'rgba(5,102,82,.6)', margin: 0, fontWeight: 500 }}>
                               {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
-                          </div>
-                          <div style={{ padding: '12px', background: 'rgba(34,197,94,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#047857', fontSize: 13 }}>
-                            Confirmed and Ready
                           </div>
                         </div>
                       )
@@ -657,20 +874,20 @@ Hospital Page              </motion.div>
                           animate={{ opacity: 1, scale: 1 }}
                           style={{
                             borderRadius: 18,
-                            padding: 18,
+                            padding: 16,
                             border: '1px solid rgba(96,165,250,.3)',
                             background: 'rgba(240,249,255,.6)',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 12,
+                            gap: 10,
                             boxShadow: '0 4px 12px rgba(59,130,246,.08)'
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 20, fontWeight: 900, color: '#1d4ed8' }}>{r.blood_type}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 18, fontWeight: 900, color: '#1d4ed8' }}>{r.blood_type}</span>
                               <span style={{
-                                fontSize: 9,
+                                fontSize: 8,
                                 fontWeight: 900,
                                 padding: '4px 10px',
                                 borderRadius: 8,
@@ -682,13 +899,10 @@ Hospital Page              </motion.div>
                                 COMING
                               </span>
                             </div>
-                            <p style={{ fontSize: 12, color: '#1e40af', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
-                            <p style={{ fontSize: 11, color: 'rgba(30,64,175,.6)', margin: 0, fontWeight: 500 }}>
+                            <p style={{ fontSize: 12, color: '#1e40af', margin: '0 0 4px 0', fontWeight: 600 }}>{r.quantity_needed} units</p>
+                            <p style={{ fontSize: 10, color: 'rgba(30,64,175,.6)', margin: 0, fontWeight: 500 }}>
                               {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
-                          </div>
-                          <div style={{ padding: '12px', background: 'rgba(96,165,250,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#1e40af', fontSize: 13 }}>
-                            Coming for Supply from BCC Hamra
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -702,7 +916,7 @@ Hospital Page              </motion.div>
                               opacity: confirmingSupplyId === r.id ? 0.6 : 1
                             }}
                           >
-                            {confirmingSupplyId === r.id ? 'Confirming Received...' : 'Supply Confirmation'}
+                            {confirmingSupplyId === r.id ? 'Confirming...' : 'Confirm Supply'}
                           </motion.button>
                         </motion.div>
                       )
@@ -716,20 +930,20 @@ Hospital Page              </motion.div>
                           animate={{ opacity: 1, scale: 1 }}
                           style={{
                             borderRadius: 18,
-                            padding: 18,
+                            padding: 16,
                             border: '2px solid rgba(220,88,38,.3)',
                             background: 'rgba(255,240,230,.7)',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 12,
+                            gap: 10,
                             boxShadow: '0 4px 12px rgba(220,88,38,.08)'
                           }}
                         >
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 20, fontWeight: 900, color: '#c2410c' }}>{r.blood_type}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 18, fontWeight: 900, color: '#c2410c' }}>{r.blood_type}</span>
                               <span style={{
-                                fontSize: 9,
+                                fontSize: 8,
                                 fontWeight: 900,
                                 padding: '4px 10px',
                                 borderRadius: 8,
@@ -741,13 +955,10 @@ Hospital Page              </motion.div>
                                 NOT SHOWN
                               </span>
                             </div>
-                            <p style={{ fontSize: 12, color: '#c2410c', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
-                            <p style={{ fontSize: 11, color: 'rgba(194,65,12,.6)', margin: 0, fontWeight: 500 }}>
+                            <p style={{ fontSize: 12, color: '#c2410c', margin: '0 0 4px 0', fontWeight: 600 }}>{r.quantity_needed} units</p>
+                            <p style={{ fontSize: 10, color: 'rgba(194,65,12,.6)', margin: 0, fontWeight: 500 }}>
                               {new Date(r.created_at).toLocaleDateString('en-GB')}
                             </p>
-                          </div>
-                          <div style={{ padding: '12px', background: 'rgba(220,88,38,.08)', borderRadius: 10, textAlign: 'center', fontWeight: 700, color: '#c2410c', fontSize: 13 }}>
-                            ⏳ Waiting for admin to confirm supply
                           </div>
                         </motion.div>
                       )
@@ -758,19 +969,19 @@ Hospital Page              </motion.div>
                         key={r.id}
                         style={{
                           borderRadius: 18,
-                          padding: 18,
+                          padding: 16,
                           border: '1px solid rgba(200,150,120,.2)',
                           background: 'rgba(250,240,230,.5)',
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: 12
+                          gap: 10
                         }}
                       >
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: '#7c2d12' }}>{r.blood_type}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 18, fontWeight: 900, color: '#7c2d12' }}>{r.blood_type}</span>
                             <span style={{
-                              fontSize: 9,
+                              fontSize: 8,
                               fontWeight: 900,
                               padding: '4px 10px',
                               borderRadius: 8,
@@ -782,8 +993,8 @@ Hospital Page              </motion.div>
                               {URGENCY_CONFIG[r.urgency]?.label}
                             </span>
                           </div>
-                          <p style={{ fontSize: 12, color: '#78350f', margin: '0 0 6px 0', fontWeight: 600 }}>{r.quantity_needed} units needed</p>
-                          <p style={{ fontSize: 11, color: 'rgba(120,53,15,.6)', margin: 0, fontWeight: 500 }}>
+                          <p style={{ fontSize: 12, color: '#78350f', margin: '0 0 4px 0', fontWeight: 600 }}>{r.quantity_needed} units</p>
+                          <p style={{ fontSize: 10, color: 'rgba(120,53,15,.6)', margin: 0, fontWeight: 500 }}>
                             {new Date(r.created_at).toLocaleDateString('en-GB')}
                           </p>
                         </div>
@@ -793,9 +1004,9 @@ Hospital Page              </motion.div>
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleConfirmReceived(r.id)}
                             className="hospital-btn hospital-btn-success"
-                            style={{ flex: '1 1 auto', minWidth: '80px', padding: '8px 12px', fontSize: 11 }}
+                            style={{ flex: '1 1 auto', minWidth: '70px', fontSize: 10 }}
                           >
-                            Confirmed
+                            OK
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -805,19 +1016,18 @@ Hospital Page              </motion.div>
                             className="hospital-btn"
                             style={{
                               flex: '1 1 auto',
-                              minWidth: '80px',
-                              fontSize: 11,
+                              minWidth: '70px',
+                              fontSize: 10,
                               fontWeight: 900,
                               color: '#fff',
                               background: '#c2410c',
-                              padding: '8px 12px',
                               borderRadius: 10,
                               border: 'none',
                               cursor: 'pointer',
                               opacity: confirmingId === r.id ? 0.6 : 1
                             }}
                           >
-                            {confirmingId === r.id ? 'Marking...' : 'Did Not Show Up'}
+                            No Show
                           </motion.button>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -826,11 +1036,10 @@ Hospital Page              </motion.div>
                             style={{
                               flex: '1 1 auto',
                               minWidth: '60px',
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: 900,
                               color: '#fff',
                               background: '#b4451f',
-                              padding: '8px 12px',
                               borderRadius: 10,
                               border: 'none',
                               cursor: 'pointer'
@@ -855,22 +1064,22 @@ Hospital Page              </motion.div>
             className="hospital-glass-deep"
             style={{
               borderRadius: 28,
-              padding: 32,
+              padding: 28,
               border: '2px solid #dc2626',
               background: 'linear-gradient(135deg, rgba(220,38,38,.08), rgba(255,107,107,.04))'
             }}
           >
-            <h2 className="hospital-card-title">Emergency Donations From Donors</h2>
+            <h2 className="hospital-card-title">Emergency Donations</h2>
             
             {emergencyDonations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-                <p style={{ fontSize: 13, color: 'rgba(45,45,45,.7)', fontWeight: 700 }}>No emergency donations yet.</p>
+                <p style={{ fontSize: 13, color: 'rgba(45,45,45,.7)', fontWeight: 700 }}>No donations yet.</p>
               </div>
             ) : (
               <div>
                 {awaitingDonations.length > 0 && (
                   <div style={{ marginBottom: 32 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 900, color: '#dc2626', margin: '0 0 16px 0' }}>Awaiting Confirmation ({awaitingDonations.length})</h3>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 16px 0' }}>Awaiting ({awaitingDonations.length})</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {awaitingDonations.map((donation) => (
                         <div
@@ -878,7 +1087,7 @@ Hospital Page              </motion.div>
                           style={{
                             background: 'rgba(254,226,226,.5)',
                             borderRadius: 18,
-                            padding: 18,
+                            padding: 14,
                             border: '2px solid rgba(220,38,38,.3)',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -888,11 +1097,11 @@ Hospital Page              </motion.div>
                           }}
                         >
                           <div>
-                            <p style={{ fontSize: 14, fontWeight: 900, color: '#dc2626', margin: '0 0 6px 0' }}>
+                            <p style={{ fontSize: 12, fontWeight: 900, color: '#dc2626', margin: '0 0 4px 0' }}>
                               {donation.blood_type} - {donation.donor_name || 'Anonymous'}
                             </p>
-                            <p style={{ fontSize: 11, color: 'rgba(211,47,47,.65)', margin: '0', fontWeight: 700 }}>
-                              Awaiting confirmation - {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                            <p style={{ fontSize: 10, color: 'rgba(211,47,47,.65)', margin: '0', fontWeight: 700 }}>
+                              {new Date(donation.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
                           <motion.button
@@ -903,7 +1112,7 @@ Hospital Page              </motion.div>
                             className="hospital-btn hospital-btn-success"
                             style={{ opacity: confirmingId === donation.id ? 0.7 : 1, whiteSpace: 'nowrap' }}
                           >
-                            {confirmingId === donation.id ? 'Confirming...' : 'Confirm'}
+                            {confirmingId === donation.id ? '...' : 'Confirm'}
                           </motion.button>
                         </div>
                       ))}
@@ -913,7 +1122,7 @@ Hospital Page              </motion.div>
 
                 {okDonations.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 900, color: '#22c55e', margin: '0 0 16px 0' }}>Confirmed ({okDonations.length})</h3>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#22c55e', margin: '0 0 16px 0' }}>Confirmed ({okDonations.length})</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {okDonations.map((donation) => (
                         <div
@@ -921,7 +1130,7 @@ Hospital Page              </motion.div>
                           style={{
                             background: 'rgba(236,253,245,.5)',
                             borderRadius: 18,
-                            padding: 18,
+                            padding: 14,
                             border: '2px solid rgba(34,197,94,.3)',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -931,14 +1140,14 @@ Hospital Page              </motion.div>
                           }}
                         >
                           <div>
-                            <p style={{ fontSize: 14, fontWeight: 900, color: '#22c55e', margin: '0 0 6px 0' }}>
+                            <p style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', margin: '0 0 4px 0' }}>
                               {donation.blood_type} - {donation.donor_name || 'Anonymous'}
                             </p>
-                            <p style={{ fontSize: 11, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
-                              Confirmed - {new Date(donation.created_at).toLocaleDateString('en-GB')}
+                            <p style={{ fontSize: 10, color: 'rgba(34,197,94,.65)', margin: '0', fontWeight: 700 }}>
+                              {new Date(donation.created_at).toLocaleDateString('en-GB')}
                             </p>
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 900, color: '#22c55e', padding: '8px 16px', background: 'rgba(34,197,94,.15)', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: '#22c55e', padding: '6px 14px', background: 'rgba(34,197,94,.15)', borderRadius: 10, whiteSpace: 'nowrap' }}>
                             Ready
                           </span>
                         </div>
