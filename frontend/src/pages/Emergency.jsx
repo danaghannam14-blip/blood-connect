@@ -816,7 +816,7 @@ function Emergency() {
             </div>
 
             {!showMap ? (
-              <div style={{ maxHeight: 'calc(100vh - 280px)', overflowY: 'auto', paddingRight: 'clamp(4px,0.5vw,6px)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(12px,2vw,16px)', minHeight: 'calc(100vh - 280px)', paddingBottom: 'clamp(24px,3vw,32px)' }}>
                 {loadingHospitals ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(32px,5vw,48px) 0', gap: 'clamp(12px,1.5vw,16px)' }}>
                     <div style={{ width: 'clamp(40px,5vw,48px)', height: 'clamp(40px,5vw,48px)', border: '3px solid rgba(220,38,38,.15)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'rotate 1s linear infinite' }} />
@@ -834,7 +834,9 @@ function Emergency() {
                     </p>
                   </motion.div>
                 ) : (
-                  filteredHospitals.map((h, i) => <HospitalCard key={h.id} h={h} index={i} />)
+                  <>
+                    {filteredHospitals.map((h, i) => <HospitalCard key={h.id} h={h} index={i} />)}
+                  </>
                 )}
               </div>
             ) : (
@@ -871,8 +873,8 @@ function Emergency() {
             )}
           </motion.div>
         </div>
-        </div>
       </div>
+    </div>
   )
 }
 
