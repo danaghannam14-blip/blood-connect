@@ -881,6 +881,7 @@ function Admin() {
                     <div style={{ borderTop: '1px solid rgba(220,38,38,.1)', paddingTop: 'clamp(8px, 1vw, 10px)' }}>
                       <p className="admin-card-text">{donor.blood_type}</p>
                       <p className="admin-card-text">{donor.governorate}</p>
+                      <p className="admin-card-text" style={{ marginBottom: 'clamp(8px, 1vw, 12px)' }}>{donor.phone}</p>
                     </div>
                   </motion.div>
                 ))}
