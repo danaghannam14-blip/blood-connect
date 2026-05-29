@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import lebanonMap from '../assets/bcc.png'
 import CompatibilityMatrix from "../components/CompatibilityMatrix"
 
@@ -68,8 +69,8 @@ const MODERN_STYLES = `
   .bc-nav-inner {
     max-width:1360px;margin:0 auto;
     display:flex;justify-content:space-between;align-items:center;
-    padding:14px clamp(16px,3.5vw,44px);
-    gap:clamp(16px,2.5vw,32px);
+    padding:11px clamp(12px,2vw,28px);
+    gap:clamp(12px,2vw,24px);
   }
 
   .bc-btn {
@@ -123,7 +124,7 @@ const MODERN_STYLES = `
   }
 
   .bc-fab-wrap {
-    position:fixed;bottom:clamp(20px,2vw,32px);right:clamp(20px,2vw,32px);z-index:60;
+    position:fixed;bottom:clamp(16px,2vw,24px);right:clamp(16px,2vw,24px);z-index:60;
   }
 
   .bc-fab-ring {
@@ -133,7 +134,7 @@ const MODERN_STYLES = `
 
   .bc-fab {
     position:relative;
-    width:clamp(56px,4vw,64px);height:clamp(56px,4vw,64px);
+    width:clamp(48px,3.5vw,56px);height:clamp(48px,3.5vw,56px);
     border-radius:50%;
     background:linear-gradient(135deg,#dc2626,#991b1b);
     color:#faf7f7;border:none;
@@ -142,7 +143,7 @@ const MODERN_STYLES = `
     cursor:pointer;outline:none;
     animation:float 3s ease-in-out infinite;
     transition:all .3s;
-    font-size:clamp(24px,2.8vw,28px);
+    font-size:clamp(20px,2.4vw,24px);
     font-weight:900;
   }
 
@@ -172,6 +173,10 @@ const MODERN_STYLES = `
     border-top:1px solid rgba(140,140,140,.1);
   }
 
+  .recharts-surface { border-radius: 0; }
+  .recharts-cartesian-axis-tick text { font-size: 11px; fill: rgba(71,85,105,.7); }
+  .recharts-wrapper { outline: none; }
+
   @media (max-width:1024px) {
     .bc-root { font-size: 0.9em; }
     .bc-hero-grid { grid-template-columns:1fr !important; }
@@ -181,38 +186,38 @@ const MODERN_STYLES = `
 
   @media (max-width:768px) {
     .bc-root { font-size: 1em; }
-    .bc-nav-inner { padding: 12px clamp(12px, 2vw, 20px); gap: 8px; flex-wrap: nowrap; }
-    main { padding: 20px clamp(14px, 2vw, 28px) !important; gap: 36px !important; }
-    h1 { font-size: clamp(28px, 6vw, 45px) !important; }
-    p { font-size: clamp(13px, 1.3vw, 16px) !important; }
-    .bc-btn { font-size: clamp(11px, 1vw, 13px) !important; padding: 11px clamp(14px, 2vw, 22px) !important; }
+    .bc-nav-inner { padding: 10px clamp(10px, 1.5vw, 16px); gap: 6px; flex-wrap: nowrap; }
+    main { padding: 16px clamp(12px, 1.5vw, 20px) !important; gap: 24px !important; }
+    h1 { font-size: clamp(24px, 5vw, 38px) !important; }
+    p { font-size: clamp(13px, 1.2vw, 15px) !important; }
+    .bc-btn { font-size: clamp(11px, 0.9vw, 12px) !important; padding: 9px clamp(12px, 1.5vw, 18px) !important; }
     section { overflow-x: hidden; }
   }
 
   @media (max-width:640px) {
     .bc-root { font-size: 1em; }
-    main { padding: 18px 14px !important; gap: 28px !important; }
-    h1 { font-size: clamp(26px, 5.5vw, 40px) !important; line-height: 1.15 !important; }
-    p { font-size: clamp(12.5px, 1.25vw, 15px) !important; line-height: 1.6 !important; }
-    .bc-btn { font-size: clamp(11px, 1vw, 12px) !important; padding: 10px clamp(14px, 2.5vw, 20px) !important; }
-    .bc-network-grid { gap: 20px !important; height: auto !important; }
-    .bc-network-grid > div { min-height: 280px !important; }
+    main { padding: 14px 12px !important; gap: 20px !important; }
+    h1 { font-size: clamp(22px, 5vw, 34px) !important; line-height: 1.1 !important; }
+    p { font-size: clamp(12px, 1.15vw, 14px) !important; line-height: 1.5 !important; }
+    .bc-btn { font-size: clamp(10px, 0.8vw, 11px) !important; padding: 8px clamp(12px, 2vw, 16px) !important; }
+    .bc-network-grid { gap: 16px !important; height: auto !important; }
+    .bc-network-grid > div { min-height: 240px !important; }
   }
 
   @media (max-width:480px) {
     .bc-root { font-size: 1em; overflow-x: hidden; }
-    main { padding: 16px 14px !important; gap: 24px !important; max-width: 100vw !important; }
-    .bc-nav-inner { padding: 11px 14px; gap: 6px; justify-content: flex-start; }
+    main { padding: 12px 10px !important; gap: 18px !important; max-width: 100vw !important; }
+    .bc-nav-inner { padding: 9px 10px; gap: 4px; justify-content: flex-start; }
     .bc-nav-inner > div:nth-child(2) { display: none !important; }
     
-    h1 { font-size: clamp(22px, 5.5vw, 32px) !important; line-height: 1.2 !important; margin-bottom: 12px !important; }
-    h2 { font-size: clamp(18px, 4.5vw, 26px) !important; }
-    p { font-size: clamp(12px, 1.2vw, 13.5px) !important; line-height: 1.6 !important; }
+    h1 { font-size: clamp(20px, 5vw, 28px) !important; line-height: 1.15 !important; margin-bottom: 10px !important; }
+    h2 { font-size: clamp(16px, 4vw, 22px) !important; }
+    p { font-size: clamp(11.5px, 1.1vw, 12.5px) !important; line-height: 1.5 !important; }
     
     .bc-btn { 
-      font-size: clamp(11px, 1vw, 12px) !important; 
-      padding: 10px clamp(12px, 2vw, 16px) !important; 
-      min-height: 44px;
+      font-size: clamp(10px, 0.9vw, 11px) !important; 
+      padding: 8px clamp(10px, 1.5vw, 14px) !important; 
+      min-height: 40px;
       justify-content: center;
       white-space: nowrap;
     }
@@ -223,21 +228,19 @@ const MODERN_STYLES = `
       min-width: auto;
     }
     
-    section { margin-top: 20px !important; overflow-x: hidden; }
+    section { margin-top: 16px !important; overflow-x: hidden; }
     
-    /* Navigation buttons stack on small screens */
     .bc-nav-inner > div:last-child {
       width: 100% !important;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       display: flex !important;
-      gap: 8px;
+      gap: 6px;
     }
     
-    /* Analytics grid optimization */
     .bc-network-grid { 
       grid-template-columns: 1fr !important; 
-      gap: 18px !important; 
+      gap: 14px !important; 
       height: auto !important; 
     }
     
@@ -247,42 +250,36 @@ const MODERN_STYLES = `
     }
     
     .bc-network-grid > div:first-child {
-      height: 280px;
+      height: 240px;
     }
     
     .bc-network-grid > div:last-child {
-      min-height: 320px;
+      min-height: 280px;
     }
     
-    /* Hide biometric sync card on mobile - takes too much space */
     .glow-pulse { display: none !important; }
     .glow-pulse-lg { display: none !important; }
     
-    /* Reduce animations on mobile for better performance */
     .float-orb { animation: none !important; opacity: 0.03 !important; }
     .bc-float-orb { animation-play-state: paused !important; opacity: 0.05 !important; }
     
-    /* Video responsive */
-    iframe { border-radius: 16px !important; }
+    iframe { border-radius: 12px !important; }
     
-    /* Footer responsive */
-    footer { margin-top: 40px !important; }
-    footer > div { padding: 32px clamp(14px, 3vw, 32px) !important; }
+    footer { margin-top: 30px !important; }
+    footer > div { padding: 24px clamp(10px, 2.5vw, 24px) !important; }
     
-    /* Ensure no horizontal scroll */
     * { max-width: 100vw; }
     body { overflow-x: hidden; }
     
-    /* Better touch targets */
-    a, button { min-height: 44px; min-width: 44px; }
+    a, button { min-height: 40px; min-width: 40px; }
   }
 
   @media (max-width:380px) {
-    h1 { font-size: clamp(20px, 5vw, 28px) !important; }
-    p { font-size: clamp(11.5px, 1.1vw, 13px) !important; }
-    main { padding: 12px 12px !important; gap: 20px !important; }
-    .bc-btn { padding: 9px clamp(10px, 1.5vw, 14px) !important; font-size: clamp(10px, 0.9vw, 11px) !important; }
-    section { margin-top: 16px !important; }
+    h1 { font-size: clamp(18px, 5vw, 24px) !important; }
+    p { font-size: clamp(11px, 1vw, 12px) !important; }
+    main { padding: 10px 10px !important; gap: 16px !important; }
+    .bc-btn { padding: 7px clamp(8px, 1.2vw, 12px) !important; font-size: clamp(9px, 0.8vw, 10px) !important; }
+    section { margin-top: 14px !important; }
   }
 `
 
@@ -667,6 +664,14 @@ export default function Home() {
   const [analytics, setAnalytics] = useState({ donors: 0, emergencies: 0 })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 480)
 
+  // Chart data that updates based on analytics
+  const [chartData, setChartData] = useState([
+    { time: '00:00', donors: 0, emergencies: 0 },
+    { time: '06:00', donors: 5, emergencies: 2 },
+    { time: '12:00', donors: 12, emergencies: 8 },
+    { time: '18:00', donors: 18, emergencies: 15 },
+  ])
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 480)
@@ -682,7 +687,19 @@ export default function Home() {
         const res = await fetch(`${baseURL}/analytics/dashboard`)
         if (res.ok) {
           const data = await res.json()
-          setAnalytics({ donors: data.donors || 0, emergencies: data.emergencies || 0 })
+          const donors = data.donors || 0
+          const emergencies = data.emergencies || 0
+          setAnalytics({ donors, emergencies })
+          
+          // Update chart data with latest values
+          setChartData(prev => [
+            ...prev.slice(0, -1),
+            { 
+              time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }), 
+              donors, 
+              emergencies 
+            }
+          ])
         }
       } catch (err) {
         console.log('Analytics fetch failed')
@@ -735,16 +752,16 @@ export default function Home() {
       initial={{ opacity: 0, x: -30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6 }}
-      style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
       onClick={() => go('/')}
       whileHover={{ x: 3 }}
     >
       <motion.div
         style={{
-          width: 50,
-          height: 50,
+          width: 42,
+          height: 42,
           background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-          borderRadius: 14,
+          borderRadius: 10,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -756,7 +773,7 @@ export default function Home() {
         animate={{ rotateY: [0, 360] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
       >
-        <svg viewBox="0 0 100 130" style={{ width: 28, height: 38 }}>
+        <svg viewBox="0 0 100 130" style={{ width: 24, height: 32 }}>
           <defs>
             <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ff6b6b" />
@@ -770,7 +787,7 @@ export default function Home() {
       </motion.div>
       <div>
         <motion.div 
-          style={{ fontSize: 22, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+          style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }} 
           animate={{ letterSpacing: [0, 1, 0] }} 
           transition={{ duration: 3, repeat: Infinity }}
         >
@@ -778,11 +795,11 @@ export default function Home() {
         </motion.div>
         <motion.div
           style={{ 
-            fontSize: 'clamp(9px, 1vw, 12px)', 
+            fontSize: 'clamp(7px, 0.8vw, 10px)', 
             fontWeight: 500, 
             color: 'rgba(71, 85, 105, 0.7)',
-            margin: '2px 0 0 0',
-            letterSpacing: '0.5px'
+            margin: '1px 0 0 0',
+            letterSpacing: '0.3px'
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -794,7 +811,7 @@ export default function Home() {
     </motion.div>
 
     <div style={{ flex: 1 }} />
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -804,12 +821,12 @@ export default function Home() {
         whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
         whileTap={{ scale: 0.92 }}
         style={{
-          padding: '13px 26px',
-          borderRadius: 24,
-          fontSize: 13,
+          padding: '10px 18px',
+          borderRadius: 20,
+          fontSize: 11,
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 8,
         }}
       >
         <motion.span
@@ -830,13 +847,13 @@ export default function Home() {
         whileHover={{ scale: 1.06, y: -2 }}
         whileTap={{ scale: 0.92 }}
         style={{
-          padding: '13px 24px',
-          borderRadius: 24,
-          fontSize: 13,
+          padding: '10px 18px',
+          borderRadius: 20,
+          fontSize: 11,
           fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
         }}
       >
          How It Works
@@ -851,13 +868,13 @@ export default function Home() {
         whileHover={{ scale: 1.06, y: -2 }}
         whileTap={{ scale: 0.92 }}
         style={{
-          padding: '13px 24px',
-          borderRadius: 24,
-          fontSize: 13,
+          padding: '10px 18px',
+          borderRadius: 20,
+          fontSize: 11,
           fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 6,
         }}
       >
         Donor Guide
@@ -871,15 +888,15 @@ export default function Home() {
         zIndex: 10,
         maxWidth: 1360,
         margin: '0 auto',
-        padding: '40px clamp(20px,3vw,50px)',
+        padding: '24px clamp(14px,2vw,32px)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '60px',
+        gap: '36px',
       }}>
 
         {/* Hero Section */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 36, alignItems: 'center', minHeight: 'auto' }} className="bc-hero-grid">
-          <motion.div style={{ display: 'flex', flexDirection: 'column', gap: 20 }} variants={container} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        <section style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 24, alignItems: 'center', minHeight: 'auto' }} className="bc-hero-grid">
+          <motion.div style={{ display: 'flex', flexDirection: 'column', gap: 14 }} variants={container} initial="hidden" whileInView="show" viewport={{ once: true }}>
 
             <motion.div variants={item}>
               <motion.div
@@ -887,8 +904,8 @@ export default function Home() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 11,
-                  padding: '9px 22px',
+                  gap: 8,
+                  padding: '7px 16px',
                   borderRadius: 9999,
                   width: 'fit-content',
                 }}
@@ -899,8 +916,8 @@ export default function Home() {
                 <span style={{
                   position: 'relative',
                   display: 'inline-flex',
-                  width: 10,
-                  height: 10,
+                  width: 8,
+                  height: 8,
                 }}>
                   <span style={{
                     position: 'absolute',
@@ -913,14 +930,14 @@ export default function Home() {
                   <span style={{
                     position: 'relative',
                     display: 'inline-flex',
-                    width: 10,
-                    height: 10,
+                    width: 8,
+                    height: 8,
                     borderRadius: '50%',
                     background: '#dc2626',
                     boxShadow: '0 0 16px #dc2626',
                   }} />
                 </span>
-                <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase' }}>
+                <span style={{ color: '#dc2626', fontWeight: 900, fontSize: 10, letterSpacing: '.15em', textTransform: 'uppercase' }}>
                   Live System
                 </span>
               </motion.div>
@@ -929,7 +946,7 @@ export default function Home() {
             <motion.div variants={item}>
               <h1 style={{
                 fontFamily: "'Fraunces',serif",
-                fontSize: 'clamp(40px,5vw,60px)',
+                fontSize: 'clamp(32px,4.5vw,48px)',
                 lineHeight: 1.1,
                 fontWeight: 900,
                 color: '#6e2016',
@@ -954,30 +971,30 @@ export default function Home() {
 
             <motion.div variants={item}>
               <p style={{
-                fontSize: 'clamp(15px,1.4vw,18px)',
+                fontSize: 'clamp(13px,1.2vw,15px)',
                 color: 'rgba(42,42,42,.65)',
                 fontWeight: 500,
                 maxWidth: 520,
-                lineHeight: 1.8,
+                lineHeight: 1.7,
                 margin: 0,
               }}>
                 Born from Lebanon's recent crises, this platform transforms compassion into action by connecting lifesaving blood donors with patients in urgent need.
               </p>
             </motion.div>
 
-            <motion.div variants={item} style={{ display: 'flex', gap: 16, flexWrap: 'wrap', paddingTop: 8 }}>
+            <motion.div variants={item} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', paddingTop: 4 }}>
               <motion.button
                 className="bc-btn bc-btn-primary"
                 onClick={() => go('/donor/register')}
                 whileHover={{ scale: 1.06, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
                 whileTap={{ scale: 0.93 }}
                 style={{
-                  padding: '15px 32px',
-                  borderRadius: 24,
-                  fontSize: 14,
+                  padding: '12px 24px',
+                  borderRadius: 20,
+                  fontSize: 12,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
+                  gap: 6,
                 }}
               >
                 Register as Donor
@@ -992,9 +1009,9 @@ export default function Home() {
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.93 }}
                 style={{
-                  padding: '15px 32px',
-                  borderRadius: 24,
-                  fontSize: 14,
+                  padding: '12px 24px',
+                  borderRadius: 20,
+                  fontSize: 12,
                 }}
               >
                 Sign In
@@ -1008,7 +1025,7 @@ export default function Home() {
               className="bc-hero-visual"
               style={{
                 position: 'relative',
-                height: 'clamp(360px,32vw,500px)',
+                height: 'clamp(300px,28vw,400px)',
               }}
               initial={{ opacity: 0, x: 60 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1020,7 +1037,7 @@ export default function Home() {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  borderRadius: 32,
+                  borderRadius: 24,
                   overflow: 'hidden',
                   border: '1px solid rgba(91,115,151,.12)',
                 }}
@@ -1037,9 +1054,9 @@ export default function Home() {
                   top: '-8%',
                   right: '-8%',
                   zIndex: 20,
-                  borderRadius: 24,
-                  padding: 24,
-                  minWidth: 'min(260px,30vw)',
+                  borderRadius: 20,
+                  padding: 18,
+                  minWidth: 'min(220px,26vw)',
                 }}
                 initial={{ opacity: 0, y: -30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -1047,14 +1064,14 @@ export default function Home() {
                 viewport={{ once: true }}
                 whileHover={{ y: -16, scale: 1.05 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <motion.div
                       style={{
-                        width: 50,
-                        height: 50,
+                        width: 42,
+                        height: 42,
                         background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-                        borderRadius: 12,
+                        borderRadius: 10,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1065,8 +1082,8 @@ export default function Home() {
                     >
                       <motion.div
                         style={{
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           background: '#fff',
                           borderRadius: '50%',
                           position: 'relative',
@@ -1119,18 +1136,18 @@ export default function Home() {
                     </motion.div>
                     
                     <div>
-                      <p style={{ fontSize: 6, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 4 }}>DONATION STATUS</p>
+                      <p style={{ fontSize: 5, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 2 }}>STATUS</p>
                       <motion.p 
-                        style={{ fontSize: 26, fontWeight: 900, color: '#dc2626', margin: 0 }}
+                        style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', margin: 0 }}
                         animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
                         transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        Ready to Help
+                        Ready
                       </motion.p>
                     </div>
                   </div>
 
-                  <div style={{ height: 40, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                  <div style={{ height: 32, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <svg
                       style={{ width: '100%', height: '100%', position: 'absolute' }}
                       viewBox="0 0 300 40"
@@ -1165,11 +1182,11 @@ export default function Home() {
                     </svg>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <motion.div
                       style={{
-                        width: 8,
-                        height: 8,
+                        width: 6,
+                        height: 6,
                         borderRadius: '50%',
                         background: '#4ade80',
                         boxShadow: '0 0 8px rgba(74,222,128,.6)'
@@ -1177,8 +1194,8 @@ export default function Home() {
                       animate={{ scale: [1, 1.4, 1] }}
                       transition={{ duration: 1.2, repeat: Infinity }}
                     />
-                    <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
-                     · Blood Requests Online
+                    <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
+                     · Requests Live
                     </p>
                   </div>
                 </div>
@@ -1190,8 +1207,8 @@ export default function Home() {
                   position: 'absolute',
                   bottom: '-8%',
                   left: '-10%',
-                  width: 'clamp(120px,14vw,180px)',
-                  height: 'clamp(120px,14vw,180px)',
+                  width: 'clamp(100px,12vw,150px)',
+                  height: 'clamp(100px,12vw,150px)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -1206,41 +1223,44 @@ export default function Home() {
               >
                 <div style={{ textAlign: 'center' }}>
                   <motion.div
-                    style={{ fontSize: 32, fontWeight: 900, color: '#ff6b6b' }}
+                    style={{ fontSize: 28, fontWeight: 900, color: '#ff6b6b' }}
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     24/7
                   </motion.div>
-                  <div style={{ fontSize: 9, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 4 }}>RESPONSE</div>
+                  <div style={{ fontSize: 8, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 3 }}>RESPONSE</div>
                 </div>
               </motion.div>
             </motion.div>
           )}
         </section>
 
-        {/* Analytics Section */}
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        {/* Analytics Section - CHART VERSION */}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <motion.div
             className="bc-network-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: 32,
+              gap: 20,
               alignItems: 'stretch',
-              height: '400px',
+              height: 'auto',
+              minHeight: '340px',
             }}
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
+            {/* Lebanon Map */}
             <motion.div
               className="bc-glass-deep bc-card-hover"
               style={{
-                borderRadius: 28,
+                borderRadius: 20,
                 overflow: 'hidden',
                 border: '1px solid rgba(91,115,151,.12)',
+                minHeight: '340px',
               }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1251,6 +1271,7 @@ export default function Home() {
               <img src={lebanonMap} alt="Lebanon Blood Network Map" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.95) contrast(1.08)' }} />
             </motion.div>
 
+            {/* Chart Card */}
             <motion.div
               className="bc-glass-deep bc-card-hover"
               style={{
@@ -1258,10 +1279,11 @@ export default function Home() {
                 zIndex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 28,
-                padding: 'clamp(28px,3.5vw,44px)',
-                borderRadius: 28,
+                gap: 18,
+                padding: 'clamp(18px,2.5vw,28px)',
+                borderRadius: 20,
                 border: '1px solid rgba(91,115,151,.12)',
+                minHeight: '340px',
               }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1271,7 +1293,7 @@ export default function Home() {
             >
               <div style={{ textAlign: 'center' }}>
                 <motion.span
-                  style={{ fontSize: 12, fontWeight: 900, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.15em' }}
+                  style={{ fontSize: 10, fontWeight: 900, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.15em' }}
                   animate={{ letterSpacing: ['.15em', '.2em', '.15em'] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
@@ -1279,111 +1301,132 @@ export default function Home() {
                 </motion.span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 'clamp(36px,7vw,64px)', flex: 1 }}>
+              {/* Chart Container */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+                <ResponsiveContainer width="100%" height={160}>
+                  <AreaChart data={chartData} margin={{ top: 8, right: 0, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorDonors" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
+                      </linearGradient>
+                      <linearGradient id="colorEmergencies" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#991b1b" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#991b1b" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(220,38,38,.1)" vertical={false} />
+                    <XAxis dataKey="time" stroke="rgba(71,85,105,.5)" style={{ fontSize: 10 }} />
+                    <YAxis stroke="rgba(71,85,105,.5)" style={{ fontSize: 10 }} width={28} />
+                    <Tooltip 
+                      contentStyle={{
+                        background: 'rgba(255,255,255,.95)',
+                        border: '1px solid rgba(220,38,38,.3)',
+                        borderRadius: 8,
+                        boxShadow: '0 4px 20px rgba(0,0,0,.1)',
+                      }}
+                      labelStyle={{ color: '#380101', fontWeight: 700, fontSize: 11 }}
+                      cursor={{ stroke: 'rgba(220,38,38,.2)', strokeWidth: 2 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="donors"
+                      stroke="#dc2626"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorDonors)"
+                      name="Donors"
+                      isAnimationActive
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="emergencies"
+                      stroke="#991b1b"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorEmergencies)"
+                      name="Emergencies"
+                      isAnimationActive
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Stats Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {[
-                  { label: 'Donors', value: analytics.donors, color: 'rgba(220,38,38,.2)', textColor: '#dc2626' },
-                  { label: 'Emergencies', value: analytics.emergencies, color: 'rgba(220,38,38,.2)', textColor: '#dc2626' },
-                ].map((stat, i) => {
-                  const maxVal = Math.max(analytics.donors, analytics.emergencies, 20)
-                  const heightPercent = maxVal > 0 ? (stat.value / maxVal) * 100 : 0
-
-                  return (
+                  { label: 'Active Donors', value: analytics.donors},
+                  { label: 'Emergencies', value: analytics.emergencies },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    className="bc-glass"
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      textAlign: 'center',
+                      border: '1px solid rgba(220,38,38,.2)',
+                    }}
+                    whileHover={{ scale: 1.05, boxShadow: '0 8px 24px rgba(220,38,38,.15)' }}
+                  >
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{stat.icon}</div>
                     <motion.div
-                      key={i}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, flex: 1 }}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: i * 0.2 }}
-                      viewport={{ once: true }}
-                      whileHover={{ y: -6, scale: 1.05 }}
+                      style={{ fontSize: 20, fontWeight: 900, color: '#dc2626' }}
+                      key={stat.value}
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 100 }}
                     >
-                      <motion.span
-                        style={{ fontSize: 'clamp(32px,5vw,52px)', fontWeight: 900, color: stat.textColor, textShadow: `0 4px 20px ${stat.color}` }}
-                        key={stat.value}
-                        initial={{ scale: 0.5 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 100 }}
-                      >
-                        {stat.value}
-                      </motion.span>
-
-                      <div style={{
-                        width: 'clamp(60px,8vw,90px)',
-                        flex: 1,
-                        background: stat.color,
-                        borderRadius: 12,
-                        overflow: 'hidden',
-                        border: `1px solid ${stat.color}`,
-                        position: 'relative',
-                        minHeight: 'clamp(100px,30vh,180px)',
-                      }}>
-                        <motion.div
-                          animate={{ height: `${heightPercent}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut' }}
-                          style={{
-                            width: '100%',
-                            background: 'linear-gradient(180deg,#dc2626,#991b1b)',
-                            borderRadius: 12,
-                            boxShadow: `0 6px 20px ${stat.color}`,
-                            position: 'absolute',
-                            bottom: 0,
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, animation: 'float 3s ease-in-out infinite' }}></div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(71,85,105,.6)', textTransform: 'uppercase', letterSpacing: '.08em', marginTop: 6 }}>
-                          {stat.label}
-                        </div>
-                      </div>
+                      {stat.value}
                     </motion.div>
-                  )
-                })}
+                    <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(71,85,105,.6)', textTransform: 'uppercase', letterSpacing: '.08em', marginTop: 4 }}>
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
 
-              <div style={{ marginTop: 12, paddingTop: 20, borderTop: '1px solid rgba(91,115,151,.1)' }}>
-                <motion.a
-                  href="https://www.google.com/maps/place/BloodConnect/@33.896303,35.4830185,17z/data=!3m1!4b1!4m6!3m5!1s0x151f1700556b765f:0x7b13b4102e84e328!8m2!3d33.896303!4d35.4830185!16s%2Fg%2F11njy2j9_g?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDUxNy4wIKXMDSoASAFQAw%3D%3D"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bc-btn bc-btn-primary"
-                  whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
-                  whileTap={{ scale: 0.95 }}
-                  style={{
-                    width: '100%',
-                    padding: 16,
-                    borderRadius: 16,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    textDecoration: 'none',
-                  }}
-                >
-                  <span>Visit Our Center in Hamra</span>
-                  <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                    →
-                  </motion.span>
-                </motion.a>
-              </div>
+              <motion.a
+                href="https://www.google.com/maps/place/BloodConnect/@33.896303,35.4830185,17z/data=!3m1!4b1!4m6!3m5!1s0x151f1700556b765f:0x7b13b4102e84e328!8m2!3d33.896303!4d35.4830185!16s%2Fg%2F11njy2j9_g?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDUxNy4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bc-btn bc-btn-primary"
+                whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(220,38,38,.5)' }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <span>Visit Our Center in Hamra</span>
+                <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                  →
+                </motion.span>
+              </motion.a>
             </motion.div>
           </motion.div>
         </section>
 
         {/* Compatibility Matrix */}
-        <section style={{ marginTop: '150px' }}>
+        <section style={{ marginTop: '80px' }}>
           <CompatibilityMatrix />
         </section>
 
         {/* Video Section */}
-        <section style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <section style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <motion.div
             className="bc-glass-deep bc-card-hover"
             style={{
-              borderRadius: 28,
+              borderRadius: 20,
               overflow: 'hidden',
               border: '1px solid rgba(91,115,151,.12)',
               position: 'relative',
@@ -1421,7 +1464,7 @@ export default function Home() {
       <motion.footer
         className="bc-glass"
         style={{
-          marginTop: 'clamp(60px,8vw,120px)',
+          marginTop: 'clamp(40px,5vw,80px)',
           borderTop: '1px solid rgba(180,180,180,.15)',
           background: 'rgba(255,255,255,.3)',
         }}
@@ -1430,40 +1473,40 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
       >
-        <div style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(44px,5vw,72px) clamp(16px,3.5vw,44px)' }}>
+        <div style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(32px,4vw,48px) clamp(14px,2.5vw,32px)' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))',
-            gap: 'clamp(32px,4vw,60px)',
-            marginBottom: 'clamp(36px,4vw,60px)',
+            gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))',
+            gap: 'clamp(20px,3vw,40px)',
+            marginBottom: 'clamp(24px,3vw,40px)',
           }}>
             <motion.div whileHover={{ x: 5 }}>
               <div style={{
                 fontFamily: "'Fraunces',serif",
                 color: '#dc2626',
-                fontSize: 'clamp(20px,2.5vw,28px)',
+                fontSize: 'clamp(16px,2vw,22px)',
                 fontWeight: 900,
-                marginBottom: 16,
+                marginBottom: 12,
               }}>
-                BloodConnect: Smart Donor Matching System
+                BloodConnect
               </div>
               <p style={{
                 color: 'rgba(71,85,105,.7)',
                 fontWeight: 500,
-                lineHeight: 1.7,
+                lineHeight: 1.6,
                 fontStyle: 'italic',
-                fontSize: 'clamp(12px,1.2vw,14px)',
+                fontSize: 'clamp(11px,1vw,12px)',
                 margin: 0,
               }}>
-               Building a smarter blood donation network through innovation and connection.
+               Building a smarter blood donation network.
               </p>
             </motion.div>
           </div>
 
-          <div style={{ paddingTop: 24, borderTop: '1px solid rgba(91,115,151,.1)' }}>
+          <div style={{ paddingTop: 16, borderTop: '1px solid rgba(91,115,151,.1)' }}>
             <p style={{
               color: 'rgba(71,85,105,.55)',
-              fontSize: 'clamp(9px,.9vw,11px)',
+              fontSize: 'clamp(8px,.8vw,10px)',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '.18em',
