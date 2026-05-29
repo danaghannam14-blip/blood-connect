@@ -194,15 +194,15 @@ const MODERN_STYLES = `
     section { overflow-x: hidden; }
   }
 
-  @media (max-width:640px) {
-    .bc-root { font-size: 1em; }
-    main { padding: 14px 12px !important; gap: 20px !important; }
-    h1 { font-size: clamp(22px, 5vw, 34px) !important; line-height: 1.1 !important; }
-    p { font-size: clamp(12px, 1.15vw, 14px) !important; line-height: 1.5 !important; }
-    .bc-btn { font-size: clamp(10px, 0.8vw, 11px) !important; padding: 8px clamp(12px, 2vw, 16px) !important; }
-    .bc-network-grid { gap: 16px !important; height: auto !important; }
-    .bc-network-grid > div { min-height: 240px !important; }
-  }
+ @media (max-width:640px) {
+  .bc-root { font-size: 1em; }
+  main { padding: 14px 12px !important; gap: 20px !important; }
+  h1 { font-size: clamp(22px, 5vw, 34px) !important; line-height: 1.1 !important; }
+  p { font-size: clamp(12px, 1.15vw, 14px) !important; line-height: 1.5 !important; }
+  .bc-btn { font-size: clamp(10px, 0.8vw, 11px) !important; padding: 8px clamp(12px, 2vw, 16px) !important; }
+  .bc-network-grid { gap: 16px !important; height: auto !important; grid-template-columns: 1fr !important; }
+  .bc-network-grid > div { min-height: auto !important; height: auto !important; aspect-ratio: auto !important; }
+}
 
   @media (max-width:480px) {
     .bc-root { font-size: 1em; overflow-x: hidden; }
