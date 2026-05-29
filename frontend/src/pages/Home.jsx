@@ -227,7 +227,14 @@ const MODERN_STYLES = `
     gap: 14px !important;
     height: auto !important;
   }
-
+@media (max-width:480px) {
+  .bc-center-btn {
+    padding: 10px 12px !important;
+    min-height: 48px !important;
+    font-size: 10px !important;
+    margin-top: 8px !important;
+  }
+}
   /* map */
   .bc-network-grid > div:first-child {
     height: 240px !important;
@@ -1525,26 +1532,28 @@ export default function Home() {
         ))}
       </div>
 
-      <motion.a
-        href="https://www.google.com/maps/place/BloodConnect/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bc-btn bc-btn-primary"
-        style={{
-          width: '100%',
-          padding: 12,
-          borderRadius: 12,
-          fontSize: 11,
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          textDecoration: 'none',
-        }}
-      >
-        Visit Our Center in Hamra →
-      </motion.a>
+<motion.a
+  href="https://www.google.com/maps/place/BloodConnect/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bc-btn bc-btn-primary bc-center-btn"
+  style={{
+    width: '100%',
+    padding: isMobile ? '10px 12px' : 12,
+    borderRadius: 12,
+    fontSize: isMobile ? 10 : 11,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    textDecoration: 'none',
+    minHeight: isMobile ? '48px' : '56px',
+    flexShrink: 0,
+  }}
+>
+  Visit Our Center in Hamra →
+</motion.a>
     </motion.div>
   </motion.div>
 </section>
