@@ -226,7 +226,7 @@ router.post('/forgot', (req, res) => {
         </div>
 
         <div class="section">
-          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 24px 0;">Reset Your Password</a>
+          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 24px auto; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Reset Your Password</a>
         </div>
 
         <div class="section">
@@ -265,10 +265,10 @@ router.post('/forgot', (req, res) => {
             });
 
             const data = await result.json();
-            console.log('Email sent successfully');
+            console.log('✅ Email sent successfully');
             res.json({ message: 'Password reset link sent to your email.' });
           } catch (err) {
-            console.error('Email send error:', err.message);
+            console.error('❌ Email send error:', err.message);
             res.status(500).json({ message: 'Failed to send reset email', error: err.message });
           }
         });
@@ -297,12 +297,12 @@ router.post('/reset', async (req, res) => {
       db.query('UPDATE donors SET password = ? WHERE email = ?', [hashed, reset.email], (err) => {
         if (err) return res.status(500).json({ message: err.message });
         db.query('DELETE FROM password_resets WHERE token = ?', [token], () => {
-          console.log(`Password reset successfully for: ${reset.email}`);
+          console.log(`✅ Password reset successfully for: ${reset.email}`);
           res.json({ message: 'Password reset successfully! You can now login.' });
         });
       });
     } catch (err) {
-      console.error('Password hash error:', err.message);
+      console.error('❌ Password hash error:', err.message);
       res.status(500).json({ message: 'Failed to reset password', error: err.message });
     }
   });
@@ -334,7 +334,6 @@ router.post('/change-password', async (req, res) => {
       }
 
       const user = results[0];
-
       const passwordMatch = bcrypt.compareSync(currentPassword, user.password);
       if (!passwordMatch) {
         console.log(`[change-password] ❌ Incorrect current password for ${userType} ${userId}`);
