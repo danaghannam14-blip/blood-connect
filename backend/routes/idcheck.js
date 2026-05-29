@@ -34,9 +34,38 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
     let prompt = '';
     
     if (side === 'front') {
-      prompt = `You are analyzing the FRONT side of a national ID card from ANY country. Extract ONLY the date of birth. Look for "DOB", "Date of Birth", "تاريخ الميلاد", etc. Convert to YYYY-MM-DD format. Return ONLY: {"date_of_birth": "YYYY-MM-DD"}`;
+      prompt = `You are analyzing a national ID card (from ANY country). Your task is to extract ONLY the date of birth.
+
+Look for any of these:
+- "Date of Birth" or "DOB"
+- "تاريخ الميلاد" (Arabic)
+- Any date field
+- Birth year, birth date format
+
+The date might be in formats like: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, or written out.
+
+If you can see a date that looks like a birth date, extract it and convert to YYYY-MM-DD format.
+
+If the image is blurry, at an angle, or hard to read, do your best to extract what you can see. Even partial information helps.
+
+Return ONLY valid JSON: {"date_of_birth": "YYYY-MM-DD"} or {"date_of_birth": null} if completely unreadable.`;
     } else {
-      prompt = `You are analyzing the BACK side of a national ID card from ANY country. Extract ONLY the blood type (A+, A-, B+, B-, AB+, AB-, O+, O-). Return ONLY: {"blood_type": "O+" or null if not found}`;
+      prompt = `You are analyzing the back of a national ID card (from ANY country). Your task is to extract ONLY the blood type.
+
+Look for any of these blood type values anywhere on the ID:
+- A+, A-, B+, B-, AB+, AB-, O+, O-
+
+The blood type might be:
+- In a specific blood type field
+- Written as "Blood Type:", "BT:", "Type:", etc.
+- In Arabic as "فصيلة الدم"
+- Just written as the letters/symbols
+
+If you can see a blood type value, extract it exactly.
+
+If the image is blurry or at an angle, look for any visible blood type indication.
+
+Return ONLY valid JSON: {"blood_type": "O+"} or {"blood_type": null} if not found or unreadable.`;
     }
 
     const completion = await groq.chat.completions.create({
@@ -58,8 +87,8 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
           ]
         }
       ],
-      temperature: 0.1,
-      max_completion_tokens: 200
+      temperature: 0.2,
+      max_completion_tokens: 300
     });
 
     let text = completion.choices[0].message.content.trim();
@@ -72,46 +101,61 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
       result = JSON.parse(text);
     } catch (parseErr) {
       console.error('❌ JSON parse error:', text);
-      return res.status(400).json({ message: `Could not read ID ${side}. Please provide a clearer photo.` });
+      return res.status(400).json({ message: `Could not read ID ${side}. Please provide a clearer photo with better lighting.` });
     }
 
     if (side === 'front') {
-      if (!result.date_of_birth) {
-        return res.status(400).json({ message: 'Could not read date of birth. Please upload a clearer photo.' });
+      if (!result.date_of_birth || result.date_of_birth === 'null') {
+        return res.status(400).json({ 
+          message: 'Could not read date of birth clearly. Tips: Make sure the ID is well-lit and the date field is visible.' 
+        });
       }
 
       result.date_of_birth = fixDate(result.date_of_birth);
 
-      const dob = new Date(result.date_of_birth);
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const monthDiff = today.getMonth() - dob.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-        age--;
-      }
+      try {
+        const dob = new Date(result.date_of_birth);
+        if (isNaN(dob.getTime())) {
+          return res.status(400).json({ message: 'Invalid date format. Please try again with a clearer photo.' });
+        }
 
-      if (age < 18) {
-        return res.status(400).json({
-          eligible: false,
-          message: 'You must be at least 18 years old to donate blood.',
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+          age--;
+        }
+
+        if (age < 18) {
+          return res.status(400).json({
+            eligible: false,
+            message: 'You must be at least 18 years old to donate blood.',
+            date_of_birth: result.date_of_birth,
+            age
+          });
+        }
+
+        return res.json({
+          eligible: true,
+          message: 'Age verified successfully!',
           date_of_birth: result.date_of_birth,
           age
         });
+      } catch (dateErr) {
+        console.error('Date parsing error:', dateErr);
+        return res.status(400).json({ message: 'Could not parse the date. Please try a clearer photo.' });
       }
-
-      return res.json({
-        eligible: true,
-        message: 'Age verified successfully!',
-        date_of_birth: result.date_of_birth,
-        age
-      });
     }
 
     if (side === 'back') {
       let blood_type = null;
       
-      if (result.blood_type) {
+      if (result.blood_type && result.blood_type !== 'null' && result.blood_type !== null) {
         blood_type = result.blood_type.toUpperCase().trim();
+        
+        // Remove any extra characters
+        blood_type = blood_type.replace(/[^A-Z+\-]/g, '');
+        
         if (!VALID_BLOOD_TYPES.includes(blood_type)) {
           blood_type = null;
         }
@@ -120,7 +164,7 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
       if (!blood_type) {
         return res.status(400).json({
           detected: false,
-          message: 'Blood type not detected. Please upload a clearer photo of the ID back.',
+          message: 'Blood type not clearly visible. Tips: Make sure the ID back is well-lit and flat.',
           blood_type: null
         });
       }
@@ -134,7 +178,14 @@ router.post('/scan', upload.single('id_photo'), async (req, res) => {
 
   } catch (error) {
     console.error('❌ Scan error:', error.message);
-    return res.status(500).json({ message: 'Failed to scan ID. Please try again with a clearer photo.' });
+    
+    if (error.status === 429) {
+      return res.status(429).json({ message: 'Too many requests. Please wait a moment and try again.' });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Failed to scan ID. Please ensure the photo is clear, well-lit, and shows the full ID.' 
+    });
   }
 });
 

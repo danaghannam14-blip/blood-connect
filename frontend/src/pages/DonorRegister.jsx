@@ -26,7 +26,24 @@ const STYLES = `
     overflow-x:hidden;
     position:relative;
     color:#380101;
-    zoom: 0.82;
+  }
+
+  @media (max-width: 640px) {
+    .dr-root {
+      zoom: 1;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .dr-root {
+      zoom: 0.85;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .dr-root {
+      zoom: 0.82;
+    }
   }
 
   .dr-glass {
@@ -112,6 +129,7 @@ const STYLES = `
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;
     border-radius:clamp(12px,1.5vw,16px);
+    min-height:44px;
   }
 
   .dr-btn::before {
@@ -213,20 +231,11 @@ const STYLES = `
     transition:width .5s cubic-bezier(.34,1.56,.64,1);
   }
 
-  @media (max-width:1200px) {
-    .dr-root { zoom: 0.88; }
-  }
-
-  @media (max-width:1024px) {
-    .dr-root { zoom: 0.85; }
-  }
-
-  @media (max-width:768px) {
-    .dr-root { zoom: 0.75; }
-  }
-
-  @media (max-width:480px) {
-    .dr-root { zoom: 0.65; }
+  @media (max-width: 480px) {
+    .dr-input, .dr-select, .dr-btn {
+      font-size:16px;
+      padding:clamp(14px,4vw,16px) clamp(16px,4vw,20px);
+    }
   }
 `
 
@@ -323,6 +332,8 @@ function DonorRegister() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [uploadingFront, setUploadingFront] = useState(false)
+  const [uploadingBack, setUploadingBack] = useState(false)
 
   const GOVERNORATES = [
     'Beirut',
@@ -336,6 +347,41 @@ function DonorRegister() {
     'Akkar'
   ]
 
+  // Optimize image for mobile upload
+  const optimizeImageForMobile = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Resize if too large
+          const maxWidth = 1200;
+          const maxHeight = 1600;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = width * ratio;
+            height = height * ratio;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.85);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   useEffect(() => {
     setTimeout(() => setVisible(true), 60)
   }, [])
@@ -344,6 +390,41 @@ function DonorRegister() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  const handleFrontFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadingFront(true);
+      try {
+        const optimized = await optimizeImageForMobile(file);
+        setFrontFile(optimized);
+        setFrontStatus(null);
+        setError('');
+      } catch (err) {
+        console.error('File optimization error:', err);
+        setFrontFile(file);
+      } finally {
+        setUploadingFront(false);
+      }
+    }
+  };
+
+  const handleBackFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadingBack(true);
+      try {
+        const optimized = await optimizeImageForMobile(file);
+        setBackFile(optimized);
+        setBackStatus(null);
+        setError('');
+      } catch (err) {
+        console.error('File optimization error:', err);
+        setBackFile(file);
+      } finally {
+        setUploadingBack(false);
+      }
+    }
+  };
 
   const scanIdFront = async () => {
     if (!frontFile) { 
@@ -504,7 +585,7 @@ function DonorRegister() {
                 </svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#6e2016', margin:0, lineHeight:1.1 }}>
               Join as a Hero
             </h1>
             <p style={{ fontSize:'clamp(12px,1.2vw,14px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(8px,1vw,12px)', letterSpacing:'.06em', textTransform:'uppercase' }}>
@@ -664,10 +745,21 @@ function DonorRegister() {
                         <input
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           style={{ display:'none' }}
-                          onChange={e => { setFrontFile(e.target.files?.[0] || null); setFrontStatus(null); setError('') }}
+                          onChange={handleFrontFileChange}
+                          disabled={uploadingFront}
                         />
-                        {frontFile ? (
+                        {uploadingFront ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', border:'3px solid rgba(220,38,38,.2)', borderTopColor:'#dc2626', borderRadius:'50%', marginBottom:'clamp(8px,1vw,12px)' }}
+                            />
+                            <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0 }}>Processing photo...</p>
+                          </>
+                        ) : frontFile ? (
                           <>
                             <svg viewBox="0 0 24 24" style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', fill:'#dc2626', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
@@ -681,7 +773,7 @@ function DonorRegister() {
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
                             <p style={{ fontSize:'clamp(13px,1.2vw,14px)', fontWeight:700, color:'#dc2626', margin:0 }}>Upload ID Front</p>
-                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Show your face and age</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Take a photo or upload</p>
                           </>
                         )}
                       </label>
@@ -689,11 +781,11 @@ function DonorRegister() {
                       <motion.button
                         type="button"
                         onClick={scanIdFront}
-                        disabled={frontStatus === 'scanning' || !frontFile}
+                        disabled={frontStatus === 'scanning' || !frontFile || uploadingFront}
                         className="dr-btn dr-btn-primary"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
-                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: frontStatus === 'scanning' || !frontFile ? 0.6 : 1, pointerEvents: frontStatus === 'scanning' || !frontFile ? 'none' : 'auto' }}
+                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: frontStatus === 'scanning' || !frontFile || uploadingFront ? 0.6 : 1, pointerEvents: frontStatus === 'scanning' || !frontFile || uploadingFront ? 'none' : 'auto' }}
                       >
                         {frontStatus === 'scanning' ? (
                           <>
@@ -765,10 +857,21 @@ function DonorRegister() {
                         <input
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           style={{ display:'none' }}
-                          onChange={e => { setBackFile(e.target.files?.[0] || null); setBackStatus(null); setError('') }}
+                          onChange={handleBackFileChange}
+                          disabled={uploadingBack}
                         />
-                        {backFile ? (
+                        {uploadingBack ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', border:'3px solid rgba(220,38,38,.2)', borderTopColor:'#dc2626', borderRadius:'50%', marginBottom:'clamp(8px,1vw,12px)' }}
+                            />
+                            <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0 }}>Processing photo...</p>
+                          </>
+                        ) : backFile ? (
                           <>
                             <svg viewBox="0 0 24 24" style={{ width:'clamp(32px,4vw,40px)', height:'clamp(32px,4vw,40px)', fill:'#dc2626', marginBottom:'clamp(8px,1vw,12px)' }}>
                               <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
@@ -782,7 +885,7 @@ function DonorRegister() {
                               <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
                             </svg>
                             <p style={{ fontSize:'clamp(13px,1.2vw,14px)', fontWeight:700, color:'#dc2626', margin:0 }}>Upload ID Back</p>
-                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Show blood type and info</p>
+                            <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', marginTop:'clamp(4px,0.5vw,6px)' }}>Take a photo or upload</p>
                           </>
                         )}
                       </label>
@@ -790,11 +893,11 @@ function DonorRegister() {
                       <motion.button
                         type="button"
                         onClick={scanIdBack}
-                        disabled={backStatus === 'scanning' || !backFile}
+                        disabled={backStatus === 'scanning' || !backFile || uploadingBack}
                         className="dr-btn dr-btn-primary"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
-                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: backStatus === 'scanning' || !backFile ? 0.6 : 1, pointerEvents: backStatus === 'scanning' || !backFile ? 'none' : 'auto' }}
+                        style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: backStatus === 'scanning' || !backFile || uploadingBack ? 0.6 : 1, pointerEvents: backStatus === 'scanning' || !backFile || uploadingBack ? 'none' : 'auto' }}
                       >
                         {backStatus === 'scanning' ? (
                           <>

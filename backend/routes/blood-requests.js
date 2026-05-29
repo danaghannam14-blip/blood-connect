@@ -323,10 +323,10 @@ router.post('/create-emergency', async (req, res) => {
                 <div style="background: white; border-radius: 8px; padding: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                   <div style="text-align: center; margin-bottom: 30px;">
                     <div style="font-size: 40px; margin-bottom: 10px;">🩸</div>
-                    <h2 style="color: #dc2626; margin: 0; font-size: 24px;">EMERGENCY Blood Request</h2>
+                    <h2 style="color: #6e2016; margin: 0; font-size: 24px;">EMERGENCY Blood Request</h2>
                   </div>
                   
-                  <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 20px; margin: 20px 0; border-radius: 4px;">
+                  <div style="background: #fef2f2; border-left: 4px solid #6e2016; padding: 20px; margin: 20px 0; border-radius: 4px;">
                     <p style="margin: 0; color: #991b1b; font-weight: bold; font-size: 16px;">
                       ⚠️ Your blood type matches!
                     </p>
@@ -341,7 +341,7 @@ router.post('/create-emergency', async (req, res) => {
                     </p>
                     <p style="margin: 0 0 10px 0; color: #4b5563; line-height: 1.6;">
                       A patient in <strong>${governorate || 'Lebanon'}</strong> urgently needs blood type 
-                      <span style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; color: #dc2626;">
+                      <span style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; color: #6e2016;">
                         ${blood_type}
                       </span>
                     </p>
@@ -356,7 +356,7 @@ router.post('/create-emergency', async (req, res) => {
                   
                   <div style="background: #ecfdf5; border: 1px solid #d1fae5; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
                     <p style="margin: 0; color: #065f46; font-weight: bold;">
-                      Thank you for being a lifesaver! 💚
+                      Thank you for being a lifesaver! 
                     </p>
                   </div>
                   
@@ -475,18 +475,18 @@ router.post('/create-hospital', async (req, res) => {
               
               const emailHtml = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                  <h2 style="color: #dc2626; margin: 0 0 20px 0;">🩸 Blood Request from Hospital</h2>
+                  <h2 style="color: #6e2016; margin: 0 0 20px 0;">🩸 Blood Request from Hospital</h2>
                   
                   <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 0 0 10px 0;">Hi <strong>${donor.full_name}</strong>,</p>
                     <p style="margin: 0 0 10px 0;">
-                      <strong style="color: #dc2626;">${hospital.name}</strong> needs 
-                      <strong style="color: #dc2626;">${blood_type}</strong> blood 
+                      <strong style="color: #6e2016;">${hospital.name}</strong> needs 
+                      <strong style="color: #6e2016;">${blood_type}</strong> blood 
                       (<strong>${quantity_needed} units</strong>).
                     </p>
                   </div>
                   
-                  <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                  <div style="background: #fef2f2; border-left: 4px solid #6e2016; padding: 15px; margin: 20px 0; border-radius: 4px;">
                     <p style="margin: 0; font-weight: bold; color: #991b1b;">
                       ⚠️ Your blood type matches! Please respond as soon as possible.
                     </p>
@@ -499,7 +499,7 @@ router.post('/create-hospital', async (req, res) => {
                   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
                   <p style="font-size: 12px; color: #6b7280; margin: 0;">
                     This is an automated message from BloodConnect Lebanon<br>
-                    For more information, visit <a href="https://bloodconnect.lb" style="color: #dc2626;">bloodconnect.lb</a>
+                    For more information, visit <a href="https://bloodconnect.lb" style="color: #6e2016;">bloodconnect.lb</a>
                   </p>
                 </div>
               `;

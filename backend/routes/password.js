@@ -86,7 +86,7 @@ router.post('/forgot', (req, res) => {
     }
     
     .header { 
-      background: linear-gradient(135deg, #dc2626 0%, #ff6b6b 50%, #ff8a80 100%);
+      background: linear-gradient(135deg, #6e2016 0%, #ff6b6b 50%, #ff8a80 100%);
       background-size: 300% 300%;
       animation: bgGradient 8s ease infinite;
       padding: 56px 40px;
@@ -145,8 +145,8 @@ router.post('/forgot', (req, res) => {
     .section:nth-child(5) { animation-delay: 0.6s; }
     .section:nth-child(6) { animation-delay: 0.7s; }
     
-    .badge { display: inline-block; background: rgba(211,47,47,0.15); color: #dc2626; padding: 7px 16px; border-radius: 24px; font-size: 11px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 20px; border: 1.5px solid rgba(211,47,47,0.25); backdrop-filter: blur(10px); }
-    h2 { color: #dc2626; font-size: 26px; font-weight: 900; margin: 0 0 10px; font-family: 'Fraunces', serif; letter-spacing: -0.02em; }
+    .badge { display: inline-block; background: rgba(211,47,47,0.15); color: #6e2016; padding: 7px 16px; border-radius: 24px; font-size: 11px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 20px; border: 1.5px solid rgba(211,47,47,0.25); backdrop-filter: blur(10px); }
+    h2 { color: #6e2016; font-size: 26px; font-weight: 900; margin: 0 0 10px; font-family: 'Fraunces', serif; letter-spacing: -0.02em; }
     .subtitle { color: #888; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; margin: 0; }
     .text { color: #555; font-size: 15px; line-height: 1.8; margin: 22px 0 0; font-weight: 500; }
     
@@ -154,16 +154,16 @@ router.post('/forgot', (req, res) => {
     .alert::before { content: ''; position: absolute; top: -50%; right: -20%; width: 150px; height: 150px; background: rgba(211,47,47,0.1); border-radius: 50%; filter: blur(40px); pointer-events: none; }
     .alert-icon { font-size: 22px; flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; position: relative; z-index: 1; }
     .alert-text { position: relative; z-index: 1; }
-    .alert-text h3 { color: #dc2626; font-size: 13px; font-weight: 900; margin: 0 0 6px; letter-spacing: -0.01em; }
+    .alert-text h3 { color: #6e2016; font-size: 13px; font-weight: 900; margin: 0 0 6px; letter-spacing: -0.01em; }
     .alert-text p { color: #888; font-size: 13px; line-height: 1.6; margin: 0; font-weight: 500; }
     
-    .cta-button { display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #ff6b6b 100%); color: #faf7f7; text-decoration: none; padding: 16px 52px; border-radius: 18px; font-weight: 900; font-size: 15px; text-align: center; box-shadow: 0 12px 32px rgba(211,47,47,0.32); position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); animation: fadeInUp 0.8s ease-out 0.5s both; display: block; width: fit-content; margin: 36px auto; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #6e2016 0%, #ff6b6b 100%); color: #faf7f7; text-decoration: none; padding: 16px 52px; border-radius: 18px; font-weight: 900; font-size: 15px; text-align: center; box-shadow: 0 12px 32px rgba(211,47,47,0.32); position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); animation: fadeInUp 0.8s ease-out 0.5s both; display: block; width: fit-content; margin: 36px auto; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
     .cta-button::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s infinite; }
     .cta-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 18px 48px rgba(211,47,47,0.44); }
     
     .link-box { background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(211,47,47,0.12); border-radius: 14px; padding: 18px 20px; margin: 24px 0; }
     .link-label { font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 10px; display: block; }
-    .link-text { font-size: 12px; color: #dc2626; font-family: 'Courier New', monospace; word-break: break-all; line-height: 1.6; font-weight: 600; }
+    .link-text { font-size: 12px; color: #6e2016; font-family: 'Courier New', monospace; word-break: break-all; line-height: 1.6; font-weight: 600; }
     
     .footer { background: linear-gradient(160deg, #1a1a1a 0%, #2d1111 100%); padding: 40px 44px; text-align: center; border-top: 1px solid rgba(211,47,47,0.1); position: relative; }
     .footer::before { content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 300px; height: 200px; background: linear-gradient(180deg, transparent, rgba(211,47,47,0.1)); filter: blur(60px); pointer-events: none; }
@@ -226,7 +226,7 @@ router.post('/forgot', (req, res) => {
         </div>
 
         <div class="section">
-          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 24px auto; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Reset Your Password</a>
+          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #6e2016 0%, #991b1b 100%); color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 24px auto; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Reset Your Password</a>
         </div>
 
         <div class="section">

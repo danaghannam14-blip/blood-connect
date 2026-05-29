@@ -1236,7 +1236,7 @@ export default function Home() {
           )}
         </section>
 
-       {/* Analytics Section - CHART VERSION */}
+      {/* Analytics Section - CHART VERSION */}
 <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
   <motion.div
     className="bc-network-grid"
@@ -1516,14 +1516,13 @@ export default function Home() {
     </motion.div>
   </motion.div>
 </section>
-
         {/* Compatibility Matrix */}
         <section style={{ marginTop: '180px' }}>
           <CompatibilityMatrix />
         </section>
 
         {/* Video Section */}
-        <section style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <section style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <motion.div
             className="bc-glass-deep bc-card-hover"
             style={{
