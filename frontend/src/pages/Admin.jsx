@@ -485,7 +485,13 @@ function Admin() {
 
   const handleChangePassword = async () => {
     setPasswordMessage('')
-    
+
+     console.log('=== DEBUG ===')
+  console.log('admin object:', admin)
+  console.log('admin.id:', admin?.id)
+  console.log('passwordForm:', passwordForm)
+  console.log('=============')
+  
     if (!passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
       setPasswordMessage('All fields required')
       return
@@ -497,10 +503,12 @@ function Admin() {
     }
     
     try {
-      await axios.put(`${API}/api/admin/change-password`, {
-        old_password: passwordForm.old_password,
-        new_password: passwordForm.new_password
-      })
+     await axios.put(`${API}/api/admin/change-password`, {
+  userId: admin.id,                          // ← ADD THIS
+  userType: 'admin',                         // ← ADD THIS
+  currentPassword: passwordForm.old_password, // ← Change name
+  newPassword: passwordForm.new_password      // ← Change name
+})
       setPasswordMessage('Password changed!')
       setPasswordForm({ old_password: '', new_password: '', confirm_password: '' })
     } catch (err) {

@@ -58,23 +58,83 @@ router.delete('/admins/:id', (req, res) => {
   });
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// ✅ CHANGE PASSWORD - For logged-in users (Admin, Hospital, Donors)
+// ════════════════════════════════════════════════════════════════════════════
 router.put('/change-password', async (req, res) => {
-  const { email, old_password, new_password } = req.body;
+  const { userId, userType, currentPassword, newPassword } = req.body;
 
-  db.query('SELECT * FROM admins WHERE email = ?', [email], async (err, results) => {
-    if (err) return res.status(500).json({ message: err.message });
-    if (results.length === 0) return res.status(404).json({ message: 'Admin not found' });
+  // ✅ VALIDATE ALL REQUIRED FIELDS
+  if (!userId || !userType || !currentPassword || !newPassword) {
+    console.log('[change-password] ❌ Missing required fields:', { userId, userType, currentPassword: !!currentPassword, newPassword: !!newPassword });
+    return res.status(400).json({ message: 'User ID, type, current password, and new password are required' });
+  }
 
-    const admin = results[0];
-    const match = await bcrypt.compare(old_password, admin.password);
-    if (!match) return res.status(401).json({ message: 'Old password is incorrect' });
+  // ✅ VALIDATE PASSWORD LENGTH
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+  }
 
-    const hashed = await bcrypt.hash(new_password, 10);
-    db.query('UPDATE admins SET password = ? WHERE email = ?', [hashed, email], (err) => {
-      if (err) return res.status(500).json({ message: err.message });
-      res.json({ message: 'Password changed successfully' });
+  try {
+    // ✅ DETERMINE WHICH TABLE BASED ON USER TYPE
+    let table = 'donors'; // default
+    if (userType === 'admin') table = 'admins';
+    if (userType === 'hospital') table = 'hospitals';
+
+    console.log(`[change-password] Changing password for ${userType} ID: ${userId}`);
+
+    // ✅ GET USER FROM DATABASE
+    db.query(`SELECT password FROM ${table} WHERE id = ?`, [userId], async (err, results) => {
+      if (err) {
+        console.error('[change-password] ❌ Database error:', err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!results || results.length === 0) {
+        console.log(`[change-password] ⚠️ ${userType} not found with ID: ${userId}`);
+        return res.status(404).json({ message: `${userType} not found` });
+      }
+
+      const user = results[0];
+
+      // ✅ VERIFY CURRENT PASSWORD
+      try {
+        const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatch) {
+          console.log(`[change-password] ❌ Incorrect current password for ${userType} ${userId}`);
+          return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+      } catch (compareErr) {
+        console.error('[change-password] ❌ Password comparison error:', compareErr);
+        return res.status(500).json({ message: 'Failed to verify password' });
+      }
+
+      // ✅ HASH NEW PASSWORD
+      try {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // ✅ UPDATE PASSWORD IN DATABASE
+        db.query(`UPDATE ${table} SET password = ? WHERE id = ?`, [hashedPassword, userId], (updateErr) => {
+          if (updateErr) {
+            console.error('[change-password] ❌ Update error:', updateErr);
+            return res.status(500).json({ message: updateErr.message });
+          }
+
+          console.log(`[change-password] ✅ Password changed successfully for ${userType} ${userId}`);
+          res.json({ 
+            success: true, 
+            message: 'Password changed successfully!' 
+          });
+        });
+      } catch (hashErr) {
+        console.error('[change-password] ❌ Hash error:', hashErr);
+        return res.status(500).json({ message: 'Failed to hash password' });
+      }
     });
-  });
+  } catch (error) {
+    console.error('[change-password] ❌ Server error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
 router.get('/donors', (req, res) => {
@@ -113,6 +173,7 @@ router.delete('/requests/:id', (req, res) => {
     res.json({ message: 'Request deleted' });
   });
 });
+
 router.post('/add-hospital', async (req, res) => {
   const { name, email, password, address, latitude, longitude } = req.body;
 
@@ -135,6 +196,7 @@ router.post('/add-hospital', async (req, res) => {
     }
   );
 });
+
 router.delete('/hospitals/:id', (req, res) => {
   const id = req.params.id;
   db.query('DELETE FROM notifications WHERE hospital_id = ?', [id], () => {
@@ -148,6 +210,7 @@ router.delete('/hospitals/:id', (req, res) => {
     });
   });
 });
+
 router.put('/hospitals/:id', (req, res) => {
   const { name, email, address } = req.body;
   db.query(

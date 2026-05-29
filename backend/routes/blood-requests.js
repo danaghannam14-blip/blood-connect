@@ -356,13 +356,14 @@ router.post('/create-emergency', async (req, res) => {
                   
                   <div style="background: #ecfdf5; border: 1px solid #d1fae5; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
                     <p style="margin: 0; color: #065f46; font-weight: bold;">
-                      Thank you for being a lifesaver!
+                      Thank you for being a lifesaver! 💚
                     </p>
                   </div>
                   
                   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
                   <p style="font-size: 12px; color: #9ca3af; margin: 0; text-align: center;">
                     This is an automated message from BloodConnect Lebanon<br>
+                    Patient Email: <strong>${patient_email}</strong>
                   </p>
                 </div>
               </div>
@@ -774,6 +775,45 @@ router.post('/hospital-confirm', async (req, res) => {
         } catch (emailErr) {
           console.error(`[hospital-confirm] ❌ Error sending email:`, emailErr.message);
         }
+
+        // ✅ NEW: Optional thank you email to donor
+        if (donorEmail) {
+          try {
+            const donorEmailHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #22c55e;">✅ Thank You! Your Donation Was Confirmed</h2>
+                
+                <div style="background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
+                  <p style="margin: 0; font-weight: bold; color: #065f46;">🙏 Your donation has been confirmed and accepted!</p>
+                </div>
+                
+                <p>Thank you for saving a life! Your generosity means the world to patients in need.</p>
+                
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                <p style="font-size: 12px; color: #666; margin: 0;">
+                  BloodConnect - Together we save lives
+                </p>
+              </div>
+            `;
+
+            await axios.post('https://api.brevo.com/v3/smtp/email', {
+              to: [{ email: donorEmail }],
+              sender: { email: 'blood.connect.donate@gmail.com', name: 'BloodConnect' },
+              subject: `✅ Your Blood Donation Confirmed - Thank You!`,
+              htmlContent: donorEmailHtml
+            }, {
+              headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json'
+              },
+              timeout: 10000
+            });
+
+            console.log(`[hospital-confirm] ✅ Thank you email sent to donor`);
+          } catch (emailErr) {
+            console.error(`[hospital-confirm] ⚠️ Error sending donor email:`, emailErr.message);
+          }
+        }
         
         res.json({ success: true, message: '✅ Donation confirmed and patient notified!' });
       });
@@ -822,7 +862,7 @@ router.post('/admin-confirm', async (req, res) => {
             </div>
             
             <div style="background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
-              <p style="margin: 0; font-weight: bold; color: #1f2937;">Donation Location: BCC Hamra Center</p>
+              <p style="margin: 0; font-weight: bold; color: #1f2937;">🏛️ Donation Location: BCC Hamra Center</p>
               <p style="margin: 8px 0 0; color: #666;">The blood is now available for your treatment.</p>
             </div>
             

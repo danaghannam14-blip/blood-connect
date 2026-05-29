@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const API = 'https://blood-bank-eqyr.onrender.com'
-
+const API = 'https://blood-connect-8g8q.onrender.com'
 /* ─── Premium Reset Password Styles ───────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');

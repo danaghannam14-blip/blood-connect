@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home'
 import Login from './pages/Login'
 import DonorRegister from './pages/DonorRegister'
-import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import HospitalDashboard from './pages/HospitalDashboard'
@@ -16,8 +15,6 @@ import HospitalPartners from './pages/HospitalPartners'
 import HowItWorks from './pages/HowItWorks'
 import Impact from './pages/Impact'
 import Chatbot from './pages/Chatbot'
-
-
 
 function App() {
   return (
@@ -32,9 +29,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/donor/register" element={<DonorRegister />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
-        
         
         {/* Protected Dashboard Routes */}
         <Route path="/donor/dashboard" element={<Dashboard />} />

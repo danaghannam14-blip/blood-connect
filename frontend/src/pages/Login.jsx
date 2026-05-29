@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { API_BASE_URL as API } from '../config/apiConfig'
 
 const UNIFIED_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
@@ -296,10 +297,13 @@ function AnimatedBloodDrop() {
 function Login() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [forgotEmail, setForgotEmail] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [visible, setVisible] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isForgotMode, setIsForgotMode] = useState(false)
+  const [forgotSubmitted, setForgotSubmitted] = useState(false)
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 100)
@@ -316,7 +320,7 @@ function Login() {
 
     if (form.email.endsWith('@bloodconnect.com')) {
       try {
-        const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/admin/login', {
+        const res = await axios.post(`${API}/api/admin/login`, {
           email: form.email,
           password: form.password
         })
@@ -332,7 +336,7 @@ function Login() {
 
     if (form.email.endsWith('@hospital.com')) {
       try {
-        const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/hospitals/login', {
+        const res = await axios.post(`${API}/api/hospitals/login`, {
           email: form.email,
           password: form.password
         })
@@ -362,7 +366,7 @@ function Login() {
     }
 
     try {
-      const res = await axios.post('https://blood-bank-eqyr.onrender.com/api/donors/login', {
+      const res = await axios.post(`${API}/api/donors/login`, {
         email: form.email,
         password: form.password
       })
@@ -371,7 +375,7 @@ function Login() {
       localStorage.setItem('donorData', JSON.stringify(donorData))
 
       try {
-        await axios.post('https://blood-bank-eqyr.onrender.com/api/analytics/event', {
+        await axios.post(`${API}/api/analytics/event`, {
           eventType: 'donor_login'
         })
       } catch (analyticsErr) {
@@ -383,6 +387,29 @@ function Login() {
       return
     } catch {
       setError('Invalid credentials.')
+      setIsLoading(false)
+    }
+  }
+
+  // ✅ NEW: Handle Forgot Password
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setIsLoading(true)
+
+    try {
+      await axios.post(`${API}/api/password/forgot`, {
+        email: forgotEmail
+      })
+      setForgotSubmitted(true)
+      setTimeout(() => {
+        setIsForgotMode(false)
+        setForgotSubmitted(false)
+        setForgotEmail('')
+      }, 3000)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.')
+    } finally {
       setIsLoading(false)
     }
   }
@@ -578,7 +605,7 @@ function Login() {
             </motion.div>
           </motion.div>
 
-          {/* RIGHT SIDE - LOGIN FORM */}
+          {/* RIGHT SIDE - LOGIN/FORGOT PASSWORD FORM */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 50 }}
@@ -617,10 +644,10 @@ function Login() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.25 }}
                 >
-                  Welcome Back
+                  {isForgotMode ? 'Reset Password' : 'Welcome Back'}
                 </motion.h2>
                 <p style={{ fontSize: 'clamp(11px, 0.95vw, 13px)', color: 'rgba(61,61,61,.6)', fontWeight: 600, margin: 0, letterSpacing: '0.4px' }}>
-                  Sign in to continue
+                  {isForgotMode ? 'Enter your email to receive a reset link' : 'Sign in to continue'}
                 </p>
               </div>
 
@@ -648,188 +675,314 @@ function Login() {
                 )}
               </AnimatePresence>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.3vw, 16px)', flex: 1, justifyContent: 'center' }}>
-                {/* Email Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.45 }}
-                  style={{ position: 'relative' }}
-                >
-                  <label style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: 'rgba(61,61,61,.6)',
-                    display: 'block',
-                    marginBottom: 6,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.4px',
-                  }}>
-                    Email Address
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    className="login-input"
-                  />
-                </motion.div>
+              {/* Forms */}
+              <AnimatePresence mode="wait">
+                {!isForgotMode ? (
+                  // LOGIN FORM
+                  <motion.form
+                    key="login"
+                    onSubmit={handleSubmit}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.3vw, 16px)', flex: 1, justifyContent: 'center' }}
+                  >
+                    {/* Email Input */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.45 }}
+                      style={{ position: 'relative' }}
+                    >
+                      <label style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: 'rgba(61,61,61,.6)',
+                        display: 'block',
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                      }}>
+                        Email Address
+                      </label>
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                        className="login-input"
+                      />
+                    </motion.div>
 
-                {/* Password Input */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35, duration: 0.45 }}
-                  style={{ position: 'relative' }}
-                >
-                  <label style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: 'rgba(61,61,61,.6)',
-                    display: 'block',
-                    marginBottom: 6,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.4px',
-                  }}>
-                    Password
-                  </label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={handleChange}
-                      required
-                      className="login-input"
-                      style={{ paddingRight: 44 }}
-                    />
+                    {/* Password Input */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.45 }}
+                      style={{ position: 'relative' }}
+                    >
+                      <label style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: 'rgba(61,61,61,.6)',
+                        display: 'block',
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                      }}>
+                        Password
+                      </label>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          value={form.password}
+                          onChange={handleChange}
+                          required
+                          className="login-input"
+                          style={{ paddingRight: 44 }}
+                        />
+                        <motion.button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          whileHover={{ scale: 1.1 }}
+                          style={{
+                            position: 'absolute',
+                            right: 14,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 4,
+                            color: 'rgba(61,61,61,.5)',
+                            transition: 'all .2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {showPassword ? (
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
+                              <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
+                              <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
+                            </svg>
+                          )}
+                        </motion.button>
+                      </div>
+                    </motion.div>
+
+                    {/* Forgot Password Link */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                      style={{ textAlign: 'right', marginTop: -4 }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsForgotMode(true)
+                          setError('')
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#c92a2a',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          transition: 'all .2s',
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                        onMouseLeave={(e) => e.target.style.opacity = '1'}
+                      >
+                        Forgot password?
+                      </button>
+                    </motion.div>
+
+                    {/* Sign In Button */}
                     <motion.button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      whileHover={{ scale: 1.1 }}
+                      type="submit"
+                      disabled={isLoading}
+                      className="login-btn login-btn-primary"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.96 }}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.45, duration: 0.45 }}
                       style={{
-                        position: 'absolute',
-                        right: 14,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: 4,
-                        color: 'rgba(61,61,61,.5)',
-                        transition: 'all .2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        padding: 'clamp(11px, 1.4vw, 15px)',
+                        borderRadius: 'clamp(8px, 1vw, 10px)',
+                        fontSize: 'clamp(12px, 1vw, 14px)',
+                        fontWeight: 700,
+                        marginTop: 6,
+                        position: 'relative',
                       }}
                     >
-                      {showPassword ? (
-                        <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
-                          <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" style={{ width:'clamp(18px,2vw,20px)', height:'clamp(18px,2vw,20px)', fill:'rgba(56,1,1,.5)' }}>
-                          <path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/>
-                        </svg>
-                      )}
+                      <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        {isLoading ? (
+                          <>
+                            <motion.svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                              <circle cx="12" cy="12" r="10" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="50" strokeLinecap="round" />
+                            </motion.svg>
+                            <span style={{ fontSize: 'clamp(12px, 0.95vw, 13px)' }}>Signing In</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Sign In</span>
+                            <motion.span animate={{ x: [0, 3, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                              →
+                            </motion.span>
+                          </>
+                        )}
+                      </span>
                     </motion.button>
-                  </div>
-                </motion.div>
 
-                {/* Forgot Password Link */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  style={{ textAlign: 'right', marginTop: -4 }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => navigate('/forgot-password')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#c92a2a',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      transition: 'all .2s',
-                    }}
-                    onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                    onMouseLeave={(e) => e.target.style.opacity = '1'}
+                    {/* Divider */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: 'clamp(6px, 1vw, 12px) 0' }}>
+                      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,180,160,.2), transparent)' }} />
+                      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(61,61,61,.4)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>or</span>
+                      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,180,160,.2), transparent)' }} />
+                    </div>
+
+                    {/* Register Link */}
+                    <p style={{ textAlign: 'center', fontSize: 'clamp(11px, 0.95vw, 13px)', color: 'rgba(61,61,61,.6)', fontWeight: 600, margin: 0 }}>
+                      Don't have an account?{' '}
+                      <span
+                        onClick={() => navigate('/donor/register')}
+                        style={{
+                          color: '#c92a2a',
+                          cursor: 'pointer',
+                          fontWeight: 900,
+                          textDecoration: 'none',
+                          transition: 'all .2s',
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                        onMouseLeave={(e) => e.target.style.opacity = '1'}
+                      >
+                        Register Now
+                      </span>
+                    </p>
+                  </motion.form>
+                ) : (
+                  // FORGOT PASSWORD FORM
+                  <motion.form
+                    key="forgot"
+                    onSubmit={handleForgotSubmit}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.3vw, 16px)', flex: 1, justifyContent: 'center' }}
                   >
-                    Forgot password?
-                  </button>
-                </motion.div>
-
-                {/* Sign In Button */}
-                <motion.button
-                  type="submit"
-                  disabled={isLoading}
-                  className="login-btn login-btn-primary"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.96 }}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.45, duration: 0.45 }}
-                  style={{
-                    padding: 'clamp(11px, 1.4vw, 15px)',
-                    borderRadius: 'clamp(8px, 1vw, 10px)',
-                    fontSize: 'clamp(12px, 1vw, 14px)',
-                    fontWeight: 700,
-                    marginTop: 6,
-                    position: 'relative',
-                  }}
-                >
-                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    {isLoading ? (
+                    {!forgotSubmitted ? (
                       <>
-                        <motion.svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                          <circle cx="12" cy="12" r="10" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="50" strokeLinecap="round" />
-                        </motion.svg>
-                        <span style={{ fontSize: 'clamp(12px, 0.95vw, 13px)' }}>Signing In</span>
+                        <motion.div
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.45 }}
+                        >
+                          <label style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: 'rgba(61,61,61,.6)',
+                            display: 'block',
+                            marginBottom: 6,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.4px',
+                          }}>
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            required
+                            className="login-input"
+                          />
+                        </motion.div>
+
+                        <motion.button
+                          type="submit"
+                          disabled={isLoading}
+                          className="login-btn login-btn-primary"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4, duration: 0.45 }}
+                          style={{
+                            padding: 'clamp(11px, 1.4vw, 15px)',
+                            borderRadius: 'clamp(8px, 1vw, 10px)',
+                            fontSize: 'clamp(12px, 1vw, 14px)',
+                            fontWeight: 700,
+                            marginTop: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          {isLoading ? (
+                            <>
+                              <motion.svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="50" strokeLinecap="round" />
+                              </motion.svg>
+                              Sending...
+                            </>
+                          ) : (
+                            'Send Reset Link'
+                          )}
+                        </motion.button>
+
+                        <motion.button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotMode(false)
+                            setForgotEmail('')
+                            setError('')
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#c92a2a',
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            transition: 'all .2s',
+                            marginTop: 8,
+                          }}
+                          onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                          onMouseLeave={(e) => e.target.style.opacity = '1'}
+                        >
+                          ← Back to Login
+                        </motion.button>
                       </>
                     ) : (
-                      <>
-                        <span>Sign In</span>
-                        <motion.span animate={{ x: [0, 3, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                          →
-                        </motion.span>
-                      </>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        style={{ textAlign: 'center', padding: '20px 0' }}
+                      >
+                        <div style={{ fontSize: 40, marginBottom: 16 }}>✓</div>
+                        <h3 style={{ color: '#22c55e', fontWeight: 900, margin: '0 0 8px', fontSize: 18 }}>Check Your Email!</h3>
+                        <p style={{ fontSize: 13, color: 'rgba(45,45,45,.7)', margin: 0, lineHeight: 1.6 }}>
+                          We've sent a password reset link to <strong>{forgotEmail}</strong>. Check your inbox and click the link to create a new password.
+                        </p>
+                      </motion.div>
                     )}
-                  </span>
-                </motion.button>
-
-                {/* Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: 'clamp(6px, 1vw, 12px) 0' }}>
-                  <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,180,160,.2), transparent)' }} />
-                  <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(61,61,61,.4)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>or</span>
-                  <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,180,160,.2), transparent)' }} />
-                </div>
-
-                {/* Register Link */}
-                <p style={{ textAlign: 'center', fontSize: 'clamp(11px, 0.95vw, 13px)', color: 'rgba(61,61,61,.6)', fontWeight: 600, margin: 0 }}>
-                  Don't have an account?{' '}
-                  <span
-                    onClick={() => navigate('/donor/register')}
-                    style={{
-                      color: '#c92a2a',
-                      cursor: 'pointer',
-                      fontWeight: 900,
-                      textDecoration: 'none',
-                      transition: 'all .2s',
-                    }}
-                    onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                    onMouseLeave={(e) => e.target.style.opacity = '1'}
-                  >
-                    Register Now
-                  </span>
-                </p>
-              </form>
+                  </motion.form>
+                )}
+              </AnimatePresence>
 
               {/* Decorative bottom gradient */}
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, background: 'linear-gradient(180deg, transparent, rgba(255,235,238,.05))', pointerEvents: 'none', borderRadius: '0 0 clamp(20px, 2.5vw, 28px) clamp(20px, 2.5vw, 28px)' }} />

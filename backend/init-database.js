@@ -46,7 +46,6 @@ function initializeDatabase() {
       full_name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      phone VARCHAR(50),
       blood_type VARCHAR(10),
       date_of_birth DATE,
       gender VARCHAR(10),

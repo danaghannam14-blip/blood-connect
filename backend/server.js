@@ -92,10 +92,10 @@ try {
 }
 
 try {
-  passwordResetRoutes = require('./routes/passwordreset');
-  console.log('✅ Loaded: passwordreset');
+  passwordResetRoutes = require('./routes/password');
+  console.log('✅ Loaded: password');
 } catch (e) {
-  console.warn('⚠️  Missing: routes/passwordreset.js');
+  console.warn('⚠️  Missing: routes/password.js');
 }
 
 try {
