@@ -226,7 +226,7 @@ router.post('/forgot', (req, res) => {
         </div>
 
         <div class="section">
-          <a href="${resetLink}" class="cta-button">Reset Your Password</a>
+          <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #ffffff; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; margin: 24px 0;">Reset Your Password</a>
         </div>
 
         <div class="section">
