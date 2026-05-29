@@ -4,7 +4,7 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-const API = process.env.FRONTEND_URL || 'https://bloodconnect-lb.vercel.app';
+const API = process.env.FRONTEND_URL || 'https://blood-connect-lb.vercel.app';
 
 router.post('/forgot', (req, res) => {
   const { email } = req.body;
