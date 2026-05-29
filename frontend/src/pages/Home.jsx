@@ -204,23 +204,25 @@ const MODERN_STYLES = `
   .bc-network-grid > div { min-height: auto !important; height: auto !important; aspect-ratio: auto !important; }
 }
 
-  @media (max-width:480px) {
-    .bc-root { font-size: 1em; overflow-x: hidden; }
-    main { padding: 12px 10px !important; gap: 18px !important; max-width: 100vw !important; }
-    .bc-nav-inner { padding: 9px 10px; gap: 4px; justify-content: flex-start; }
-    .bc-nav-inner > div:nth-child(2) { display: none !important; }
-    
-    h1 { font-size: clamp(20px, 5vw, 28px) !important; line-height: 1.15 !important; margin-bottom: 10px !important; }
-    h2 { font-size: clamp(16px, 4vw, 22px) !important; }
-    p { font-size: clamp(11.5px, 1.1vw, 12.5px) !important; line-height: 1.5 !important; }
-    
-    .bc-btn { 
-      font-size: clamp(10px, 0.9vw, 11px) !important; 
-      padding: 8px clamp(10px, 1.5vw, 14px) !important; 
-      min-height: 40px;
-      justify-content: center;
-      white-space: nowrap;
-    }
+@media (max-width:480px) {
+  .bc-network-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    height: auto !important;
+  }
+
+  /* map */
+  .bc-network-grid > div:first-child {
+    height: 240px !important;
+  }
+
+  /* chart */
+  .bc-network-grid > div:nth-child(2) {
+    min-height: 420px !important;
+    height: 420px !important;
+    aspect-ratio: auto !important;
+  }
+}
     
     .bc-btn-primary, .bc-btn-secondary { 
       width: auto;
