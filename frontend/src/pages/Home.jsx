@@ -227,14 +227,7 @@ const MODERN_STYLES = `
     gap: 14px !important;
     height: auto !important;
   }
-@media (max-width:480px) {
-  .bc-center-btn {
-    padding: 10px 12px !important;
-    min-height: 48px !important;
-    font-size: 10px !important;
-    margin-top: 8px !important;
-  }
-}
+
   /* map */
   .bc-network-grid > div:first-child {
     height: 240px !important;
@@ -242,9 +235,10 @@ const MODERN_STYLES = `
 
   /* chart */
   .bc-network-grid > div:nth-child(2) {
-  min-height: 340px !important;
-  height: auto !important;
-}
+    min-height: 420px !important;
+    height: 420px !important;
+    aspect-ratio: auto !important;
+  }
 }
     .bc-btn-primary, .bc-btn-secondary { 
       width: auto;
