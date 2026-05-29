@@ -2,116 +2,79 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
+import { API_BASE_URL as API } from '../config/apiConfig'
 
-const API = 'https://blood-connect-8g8q.onrender.com'
-/* ─── Premium Reset Password Styles ───────────────────────── */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&display=swap');
 
-  @keyframes rp-gradient  { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-  @keyframes rp-particle  { 0%,100% { transform:translateY(0) translateX(0) scale(1); opacity:.25; } 50% { transform:translateY(-22px) translateX(var(--px,6px)) scale(1.15); opacity:.65; } }
-  @keyframes rp-orb       { 0%,100% { transform:translateY(0) translateX(0) scale(1); } 33% { transform:translateY(-25px) translateX(18px) scale(1.06); } 66% { transform:translateY(10px) translateX(-12px) scale(.94); } }
-  @keyframes rp-pulse     { 0%,100%  { opacity:1; } 50% { opacity:.4; } }
-  @keyframes rp-float     { 0%,100%  { transform:translateY(0); } 50% { transform:translateY(-8px); } }
-  
-  @keyframes rp-blood-spiral {
-    0% { transform: translateY(-100%) translateX(0) rotate(0deg); opacity: 0; }
-    15% { opacity: 0.7; }
-    85% { opacity: 0.7; }
-    100% { transform: translateY(100vh) translateX(60px) rotate(360deg); opacity: 0; }
-  }
-  
-  @keyframes rp-blood-helix {
-    0% { transform: translateY(-100%) scaleX(0.8); opacity: 0; }
-    20% { opacity: 0.6; }
-    80% { opacity: 0.6; }
-    100% { transform: translateY(100vh) scaleX(1.2); opacity: 0; }
-  }
-  
-  @keyframes rp-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { overflow-x: hidden; }
+
+  @keyframes float { 0%,100% { transform:translateY(0px) scale(1); } 50% { transform:translateY(-15px) scale(1.02); } }
+  @keyframes pulse-ring { 0% { transform:scale(.8); opacity:1; } 100% { transform:scale(2.2); opacity:0; } }
+  @keyframes gradient-shift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+  @keyframes float-orb { 0%,100% { transform:translateY(0) scale(1); opacity:.2; } 50% { transform:translateY(-20px) scale(1.05); opacity:.35; } }
+  @keyframes shimmer { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
   .rp-root {
     min-height:100vh;
-    background:linear-gradient(-45deg,#f8f8f8,#efefef,#f8f8f8,rgba(14,165,233,.25));
+    background:linear-gradient(135deg,#f8f8f8 0%,#efefef 25%,#e8e8e8 50%,#f2f2f2 75%,#f8f8f8 100%);
     background-size:400% 400%;
-    animation:rp-gradient 14s ease infinite;
+    animation:gradient-shift 15s ease infinite;
     font-family:'Plus Jakarta Sans',sans-serif;
     overflow-x:hidden;
     position:relative;
+    color:#380101;
+    zoom: 0.82;
   }
 
   .rp-glass {
-    background:rgba(255,255,255,.42);
-    backdrop-filter:blur(28px) saturate(180%);
-    -webkit-backdrop-filter:blur(28px) saturate(180%);
-    border:1px solid rgba(255,255,255,.72);
-    box-shadow:0 8px 32px rgba(211,47,47,.07),inset 0 0 20px rgba(255,255,255,.6);
+    background:rgba(255,255,255,.6);
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(180,180,180,.2);
+    box-shadow:0 8px 32px rgba(0,0,0,.08);
   }
 
   .rp-glass-deep {
-    background:rgba(255,255,255,.35);
-    backdrop-filter:blur(40px) contrast(1.1);
-    -webkit-backdrop-filter:blur(40px) contrast(1.1);
-    border:1px solid rgba(255,255,255,.8);
-    box-shadow:0 24px 56px -12px rgba(211,47,47,.08),inset 0 0 36px rgba(255,255,255,.6);
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(30px) saturate(200%);
+    -webkit-backdrop-filter:blur(30px) saturate(200%);
+    border:1px solid rgba(180,180,180,.25);
+    box-shadow:0 16px 48px rgba(0,0,0,.1),inset 0 1px 1px rgba(255,255,255,.3);
   }
 
-  .rp-orb { 
-    position:fixed;
+  .rp-float-orb {
+    position:absolute;
     border-radius:50%;
-    filter:blur(100px);
+    filter:blur(80px);
     pointer-events:none;
-    animation:rp-orb var(--dur,8s) ease-in-out infinite; 
-  }
-
-  .rp-particle { 
-    position:fixed;
-    border-radius:50%;
-    pointer-events:none;
-    animation:rp-particle var(--dur,5s) ease-in-out infinite; 
-  }
-
-  .rp-blood-drop {
-    position:fixed;
-    width:10px;
-    height:14px;
-    border-radius:50% 50% 50% 0;
-    pointer-events:none;
-    animation:rp-blood-spiral var(--dur,10s) linear infinite;
-    transform-origin:center;
+    animation:float-orb 6s ease-in-out infinite;
   }
 
   .rp-input {
     width:100%;
-    padding:14px 18px;
-    border-radius:14px;
-    border:2px solid rgba(211,47,47,.15);
+    padding:clamp(13px,1.5vw,16px) clamp(16px,2vw,20px);
+    border-radius:clamp(12px,1.5vw,16px);
+    border:1.5px solid rgba(180,180,180,.2);
     background:rgba(255,255,255,.5);
     backdrop-filter:blur(20px);
     font-family:'Plus Jakarta Sans',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    color:#dc2626;
+    font-weight:600;
+    font-size:clamp(12px,1.1vw,14px);
+    color:#380101;
     outline:none;
     transition:all .28s cubic-bezier(.22,1,.36,1);
-    box-sizing:border-box;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.3);
   }
 
-  .rp-input::placeholder { color:rgba(211,47,47,.35); }
+  .rp-input::placeholder { color:rgba(56,1,1,.4); }
 
   .rp-input:focus {
-    border-color:rgba(211,47,47,.5);
-    background:rgba(255,255,255,.72);
-    box-shadow:0 8px 24px rgba(211,47,47,.12);
+    border-color:rgba(220,38,38,.4);
+    background:rgba(255,255,255,.7);
+    box-shadow:0 8px 24px rgba(220,38,38,.15),inset 0 1px 1px rgba(255,255,255,.3);
     transform:translateY(-2px);
-  }
-
-  .rp-input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
   }
 
   .rp-btn {
@@ -120,171 +83,139 @@ const STYLES = `
     cursor:pointer;
     border:none;
     outline:none;
-    transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);
     font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:700;
+    border-radius:clamp(12px,1.5vw,16px);
   }
 
-  .rp-btn::after {
+  .rp-btn::before {
     content:'';
     position:absolute;
-    top:50%;
-    left:50%;
-    width:0;
-    height:0;
-    background:rgba(255,255,255,.28);
-    border-radius:50%;
-    transform:translate(-50%,-50%);
-    transition:width .4s,height .4s;
+    top:0;
+    left:-100%;
+    width:100%;
+    height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+    transition:left .5s;
   }
 
-  .rp-btn:hover:not(:disabled)::after { width:300px;height:300px; }
-  .rp-btn:hover:not(:disabled) { transform:translateY(-3px) scale(1.05); }
-  .rp-btn:active:not(:disabled) { transform:scale(.97); }
+  .rp-btn:hover::before { left:100%; }
 
   .rp-btn-primary {
-    background:linear-gradient(135deg,#dc2626,#ff6b6b);
+    background:linear-gradient(135deg,#dc2626 0%,#991b1b 50%,#7f1d1d 100%);
     color:#faf7f7;
-    box-shadow:0 12px 32px rgba(211,47,47,.32);
+    box-shadow:0 10px 30px rgba(220,38,38,.35);
+    border:1px solid rgba(255,255,255,.15);
   }
 
-  .rp-btn-primary:hover:not(:disabled) { box-shadow:0 18px 48px rgba(211,47,47,.44); }
-  .rp-btn-primary:disabled { opacity:.6; cursor:not-allowed; }
-
-  .rp-error-badge {
-    animation: slideDown 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  .rp-btn-primary:hover {
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:0 20px 60px rgba(220,38,38,.5);
   }
 
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+  .rp-btn-secondary {
+    background:rgba(255,255,255,.7);
+    backdrop-filter:blur(10px);
+    border:1.5px solid rgba(180,180,180,.3);
+    color:#380101;
+  }
+
+  .rp-btn-secondary:hover {
+    background:rgba(255,255,255,.85);
+    border-color:rgba(180,180,180,.5);
+    transform:translateY(-2px);
+  }
+
+  @media (max-width:1200px) {
+    .rp-root { zoom: 0.88; }
+  }
+
+  @media (max-width:1024px) {
+    .rp-root { zoom: 0.85; }
+  }
+
+  @media (max-width:768px) {
+    .rp-root { zoom: 0.75; }
+  }
+
+  @media (max-width:480px) {
+    .rp-root { zoom: 0.65; }
   }
 `
 
-/* ─── Style Injection (Safe) ───────────────────────── */
-function useStyleInjection() {
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    
-    if (!document.getElementById('rp-styles-premium')) {
-      const styleElement = document.createElement('style')
-      styleElement.id = 'rp-styles-premium'
-      styleElement.textContent = STYLES
-      document.head.appendChild(styleElement)
-      
-      return () => {
-        styleElement.remove()
-      }
-    }
-  }, [])
+if (typeof document !== 'undefined' && !document.getElementById('rp-styles-unified')) {
+  const s = document.createElement('style')
+  s.id = 'rp-styles-unified'
+  s.textContent = STYLES
+  document.head.appendChild(s)
 }
 
-/* ─── Advanced Background with Unique Animations ───────────────────────── */
-function AdvancedBackground() {
-  const particles = Array.from({ length: 25 }, (_, i) => ({
-    id: i,
-    w: Math.random() * 5 + 2,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    dur: (Math.random() * 4 + 3).toFixed(1),
-    delay: -(Math.random() * 4).toFixed(1),
-    px: ((Math.random() * 20 - 10).toFixed(0)) + 'px',
-    color: i % 3 === 0 ? 'rgba(211,47,47,.35)' : i % 3 === 1 ? 'rgba(14,165,233,.45)' : 'rgba(255,235,238,.7)',
-  }))
+/* ─── Animated Background Orbs ───────────────────────── */
+function AnimatedBackgroundOrbs() {
+  const orbs = [
+    { size: 'min(350px,32vw)', color: 'rgba(220,38,38,.1)', top: '-8%', left: '-5%', duration: 8 },
+    { size: 'min(300px,28vw)', color: 'rgba(180,180,180,.08)', top: '20%', right: '-8%', duration: 11 },
+    { size: 'min(320px,30vw)', color: 'rgba(220,38,38,.08)', bottom: '-12%', left: '8%', duration: 13 },
+    { size: 'min(280px,26vw)', color: 'rgba(180,180,180,.06)', bottom: '15%', right: '-5%', duration: 9 },
+  ]
 
-  const bloodDrops = Array.from({ length: 6 }, (_, i) => ({
+  const dots = Array.from({ length: 12 }, (_, i) => ({
     id: i,
-    left: `${15 + i * 13}%`,
-    dur: (Math.random() * 6 + 9).toFixed(1),
-    delay: -(Math.random() * 10).toFixed(1),
-    opacity: 0.3 + Math.random() * 0.4,
+    size: Math.random() * 8 + 3,
+    startX: Math.random() * 100,
+    startY: Math.random() * 100,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 2,
   }))
 
   return (
-    <div style={{ position:'fixed', top:0, left:0, width:'100%', height:'100%', overflow:'hidden', pointerEvents:'none', zIndex:0 }}>
-      {/* Particles */}
-      {particles.map(p => (
-        <div
-          key={`p-${p.id}`}
-          className="rp-particle"
-          style={{
-            '--dur': `${p.dur}s`,
-            '--px': p.px,
-            width: p.w, height: p.w,
-            left: `${p.left}%`, top: `${p.top}%`,
-            background: p.color,
-            animationDelay: `${p.delay}s`,
-          }}
-        />
-      ))}
-
-      {/* Spiral Blood Drops - Unique Animation */}
-      {bloodDrops.map((drop) => (
-        <div
-          key={`blood-${drop.id}`}
-          className="rp-blood-drop"
-          style={{
-            '--dur': `${drop.dur}s`,
-            left: drop.left,
-            top: '-20px',
-            background: `linear-gradient(180deg, rgba(211,47,47,${drop.opacity}), rgba(255,107,107,${drop.opacity * 0.5}))`,
-            filter: 'drop-shadow(0 4px 8px rgba(211,47,47,.3))',
-            animationDelay: `${drop.delay}s`,
-          }}
-        />
-      ))}
-
-      {/* Floating Orbs */}
-      {[
-        { t:'8%', l:'8%', w:'min(420px,36vw)', c:'rgba(211,47,47,.17)', d:'0s' },
-        { b:'18%', r:'8%', w:'min(480px,40vw)', c:'rgba(14,165,233,.22)', d:'-2s' },
-        { t:'50%', r:'10%', w:'min(320px,28vw)', c:'rgba(255,235,238,.35)', d:'-5s' },
-      ].map((o, i) => (
-        <div
+    <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {orbs.map((orb, i) => (
+        <motion.div
           key={`orb-${i}`}
-          className="rp-orb"
+          className="rp-float-orb"
           style={{
-            '--dur': '12s',
-            width: o.w,
-            height: o.w,
-            background: o.c,
-            top: o.t,
-            bottom: o.b,
-            left: o.l,
-            right: o.r,
-            animationDelay: o.d,
-            zIndex: -1,
+            width: orb.size,
+            height: orb.size,
+            background: orb.color,
+            top: orb.top,
+            right: orb.right,
+            left: orb.left,
+            bottom: orb.bottom,
           }}
+          animate={{ y: [0, -50, 0], x: [0, 40, 0], scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: orb.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
 
-      {/* Gradient Wave Layer */}
-      <svg
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          height: 250,
-          opacity: 0.3,
-          zIndex: -1,
-          pointerEvents: 'none',
-        }}
-        viewBox="0 0 1200 250"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="rpWaveGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#ff6b6b" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M0,80 Q300,40 600,80 T1200,80 L1200,250 L0,250 Z"
-          fill="url(#rpWaveGrad1)"
-          style={{ animation: 'rp-shimmer 12s linear infinite', transformOrigin: 'center' }}
+      {dots.map((dot) => (
+        <motion.div
+          key={`dot-${dot.id}`}
+          style={{
+            position: 'fixed',
+            width: dot.size,
+            height: dot.size,
+            borderRadius: '50%',
+            background: `rgba(220, 38, 38, ${0.4 + Math.random() * 0.3})`,
+            left: `${dot.startX}%`,
+            top: `${dot.startY}%`,
+            boxShadow: `0 0 ${dot.size * 2}px rgba(220, 38, 38, ${0.5 + Math.random() * 0.3})`,
+          }}
+          animate={{
+            y: [0, -200 - Math.random() * 100],
+            x: [-50 + Math.random() * 100, -50 + Math.random() * 100],
+            opacity: [0, 0.7, 0],
+          }}
+          transition={{
+            duration: dot.duration,
+            delay: dot.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
-      </svg>
-    </div>
+      ))}
+    </motion.div>
   )
 }
 
@@ -299,10 +230,6 @@ function ResetPassword() {
   const [tokenValid, setTokenValid] = useState(null)
   const errorTimeoutRef = useRef(null)
 
-  // Inject styles safely
-  useStyleInjection()
-
-  // Validate token on mount
   useEffect(() => {
     if (!token) {
       setError('Invalid reset link. No token found.')
@@ -319,7 +246,6 @@ function ResetPassword() {
     }
   }, [token])
 
-  // Auto-clear error after 5 seconds
   useEffect(() => {
     if (error) {
       errorTimeoutRef.current = setTimeout(() => {
@@ -332,10 +258,6 @@ function ResetPassword() {
   const validatePasswords = () => {
     if (!form.new_password || !form.confirm_password) {
       setError('Please fill in all fields')
-      return false
-    }
-    if (form.new_password.length < 8) {
-      setError('Password must be at least 8 characters long')
       return false
     }
     if (form.new_password !== form.confirm_password) {
@@ -354,13 +276,16 @@ function ResetPassword() {
     setError('')
     
     try {
+      console.log('[ResetPassword] 🔑 Resetting password with token:', token)
       const res = await axios.post(`${API}/api/password/reset`, {
         token,
         new_password: form.new_password
       })
+      console.log('[ResetPassword] ✅ Password reset successful:', res.data)
       setSubmitted(true)
-      setTimeout(() => navigate('/login'), 3000)
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
+      console.error('[ResetPassword] ❌ Error:', err.response?.data)
       const errorMsg = err.response?.data?.message || 'Failed to reset password. Please try again.'
       setError(errorMsg)
     } finally {
@@ -368,31 +293,53 @@ function ResetPassword() {
     }
   }
 
-  // Don't render if token is invalid
   if (tokenValid === false) {
     return (
       <div className="rp-root">
-        <AdvancedBackground />
-        <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(20px,4vw,60px)' }}>
+        <AnimatedBackgroundOrbs />
+
+        <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(16px,2.5vw,32px)' }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="rp-glass-deep"
-            style={{ maxWidth: 500, padding: 'clamp(28px,4vw,48px)', borderRadius: 'clamp(28px,4vw,44px)', textAlign: 'center' }}
+            style={{ width:'100%', maxWidth: 'clamp(320px,90vw,500px)' }}
           >
-            <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: '#dc2626', margin: '0 0 12px' }}>Invalid Reset Link</h2>
-            <p style={{ fontSize: 14, color: 'rgba(211,47,47,.65)', margin: '0 0 20px', lineHeight: 1.6 }}>
-              The password reset link is missing or invalid. Please request a new one.
-            </p>
-            <button
-              onClick={() => navigate('/forgot-password')}
-              className="rp-btn rp-btn-primary"
-              style={{ padding: '12px 24px', borderRadius: 14, fontSize: 14, fontWeight: 900, width: '100%' }}
-            >
-              Request New Link
-            </button>
+            <div className="rp-glass-deep" style={{ borderRadius:'clamp(20px,3vw,28px)', padding:'clamp(24px,3.5vw,36px)', textAlign:'center', border:'1px solid rgba(180,180,180,.15)', position:'relative', overflow:'hidden' }}>
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>
+
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, type: 'spring' }}
+                style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width: 'clamp(60px,8vw,80px)', height: 'clamp(60px,8vw,80px)', marginBottom:'clamp(12px,1.5vw,16px)', position:'relative' }}
+              >
+                <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(220,38,38,.15)', animation:'pulse-ring 2s infinite' }}/>
+                <div style={{ width:'85%', height:'85%', borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg viewBox="0 0 100 130" style={{ width:'55%', height:'55%', fill:'#faf7f7' }}>
+                    <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
+                  </svg>
+                </div>
+              </motion.div>
+
+              <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(20px,3.5vw,32px)', fontWeight:900, color:'#dc2626', margin:'0 0 clamp(8px,1.2vw,12px)', lineHeight:1.1 }}>
+                Invalid Reset Link
+              </h2>
+              
+              <p style={{ fontSize:'clamp(11px,1vw,13px)', color:'rgba(56,1,1,.6)', fontWeight:600, margin:'0 0 clamp(16px,2.5vw,24px)' }}>
+                The password reset link is missing or invalid. Please request a new one.
+              </p>
+
+              <motion.button
+                onClick={() => navigate('/login')}
+                className="rp-btn rp-btn-primary"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700 }}
+              >
+                Back to Login
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -401,223 +348,170 @@ function ResetPassword() {
 
   return (
     <div className="rp-root">
-      <AdvancedBackground />
+      <AnimatedBackgroundOrbs />
 
-      <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(20px,4vw,60px) clamp(16px,3vw,40px)' }}>
+      <div style={{ position:'relative', zIndex:10, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(16px,2.5vw,32px)' }}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 30 }}
           transition={{ duration: 0.6 }}
-          style={{ width:'100%', maxWidth:600 }}
+          style={{ width:'100%', maxWidth: 'clamp(320px,90vw,700px)' }}
         >
 
           {/* Header */}
-          <div style={{ textAlign:'center', marginBottom:'clamp(28px,4vw,48px)' }}>
+          <div style={{ textAlign:'center', marginBottom:'clamp(24px,3.5vw,40px)' }}>
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
-              style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:80, height:80, marginBottom:16, position:'relative' }}
+              style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width: 'clamp(60px,8vw,80px)', height: 'clamp(60px,8vw,80px)', marginBottom:'clamp(12px,1.5vw,16px)', position:'relative' }}
             >
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(211,47,47,.2)' }}
+                style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(220,38,38,.15)' }}
               />
-              <div style={{ width:60, height:60, borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 8px 24px rgba(211,47,47,.4)' }}>
-                <svg viewBox="0 0 100 130" style={{ width:32, height:32, fill:'#faf7f7' }}>
+              <div style={{ width:'85%', height:'85%', borderRadius:'50%', background:'linear-gradient(135deg,#dc2626,#ff6b6b)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <motion.svg
+                  viewBox="0 0 100 130"
+                  style={{ width:'55%', height:'55%', fill:'#faf7f7' }}
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
                   <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z"/>
-                </svg>
+                </motion.svg>
               </div>
             </motion.div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(32px,5vw,52px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
-              Create New Password
+            <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(28px,4vw,48px)', fontWeight:900, color:'#dc2626', margin:0, lineHeight:1.1 }}>
+              Reset Password
             </h1>
-            <p style={{ fontSize:'clamp(13px,1.3vw,15px)', color:'rgba(211,47,47,.65)', fontWeight:700, marginTop:12, letterSpacing:'.04em' }}>
-              Enter a strong password to secure your account
+            <p style={{ fontSize:'clamp(12px,1.2vw,14px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(8px,1vw,12px)', letterSpacing:'.06em', textTransform:'uppercase' }}>
+              Create a strong new password
             </p>
           </div>
 
-          {/* Main Card */}
-          <div className="rp-glass-deep" style={{ borderRadius:'clamp(28px,4vw,44px)', padding:'clamp(28px,4vw,48px)', border:'2px solid rgba#991b1b', position:'relative', overflow:'hidden' }}>
+          {/* Form Card */}
+          <div className="rp-glass-deep" style={{ borderRadius:'clamp(20px,3vw,28px)', padding:'clamp(24px,3.5vw,36px)', border:'1px solid rgba(180,180,180,.15)', position:'relative', overflow:'hidden' }}>
             
-            <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,transparent,#dc2626,#88bdf2,transparent)' }}/>
-            <div style={{ position:'absolute', top:-40, right:-40, width:140, height:140, background:'rgba(255,235,238,.6)', borderRadius:'50%', filter:'blur(60px)', pointerEvents:'none' }}/>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#dc2626,transparent)' }}/>
 
-            <AnimatePresence mode="wait">
-              {!submitted ? (
+            <AnimatePresence>
+              {error && (
                 <motion.div
-                  key="form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="rp-glass"
+                  style={{ background:'rgba(220,38,38,.08)', border:'1.5px solid rgba(220,38,38,.3)', padding:'clamp(12px,1.5vw,16px)', borderRadius:'clamp(12px,1.5vw,16px)', marginBottom:'clamp(16px,2vw,20px)', textAlign:'center' }}
                 >
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="rp-glass rp-error-badge"
-                      style={{ background:'rgba(255,235,238,.8)', border:'2px solid rgba(211,47,47,.4)', padding:14, borderRadius:16, marginBottom:20, textAlign:'center' }}
-                      role="alert"
-                      aria-live="polite"
-                    >
-                      <p style={{ fontSize:13, fontWeight:700, color:'#dc2626', margin:0 }}>⚠️ {error}</p>
-                    </motion.div>
-                  )}
+                  <p style={{ fontSize:'clamp(12px,1.1vw,13px)', fontWeight:700, color:'#dc2626', margin:0 }}>{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                  <form
-                    onSubmit={handleSubmit}
-                    style={{ display:'flex', flexDirection:'column', gap:18, position:'relative', zIndex:1 }}
-                    noValidate
+            <form onSubmit={handleSubmit}>
+              <AnimatePresence mode="wait">
+                {!submitted ? (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(14px,2vw,18px)' }}
                   >
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <label 
-                        htmlFor="new-password"
-                        style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>
-                        New Password *
-                      </label>
+                    <div>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>New Password</label>
                       <input
-                        id="new-password"
                         type="password"
-                        placeholder="Enter strong password (min. 8 chars)"
+                        placeholder="Enter your new password"
                         value={form.new_password}
                         onChange={e => setForm({...form, new_password: e.target.value})}
                         className="rp-input"
-                        disabled={loading}
                         required
-                        minLength="8"
-                        aria-label="New password"
-                        aria-required="true"
                       />
-                    </motion.div>
+                    </div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <label 
-                        htmlFor="confirm-password"
-                        style={{ fontSize:10, fontWeight:900, color:'rgba(211,47,47,.5)', textTransform:'uppercase', letterSpacing:'.2em', marginBottom:8, display:'block' }}>
-                        Confirm Password *
-                      </label>
+                    <div>
+                      <label style={{ fontSize:'clamp(9px,0.9vw,10px)', fontWeight:700, color:'rgba(56,1,1,.5)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:'clamp(6px,1vw,8px)', display:'block' }}>Confirm Password</label>
                       <input
-                        id="confirm-password"
                         type="password"
                         placeholder="Confirm your password"
                         value={form.confirm_password}
                         onChange={e => setForm({...form, confirm_password: e.target.value})}
                         className="rp-input"
-                        disabled={loading}
                         required
-                        minLength="8"
-                        aria-label="Confirm password"
-                        aria-required="true"
                       />
-                    </motion.div>
+                    </div>
 
                     <motion.button
                       type="submit"
                       disabled={loading}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
                       className="rp-btn rp-btn-primary"
-                      style={{
-                        padding:'14px 24px',
-                        borderRadius:14,
-                        fontSize:14,
-                        fontWeight:900,
-                        display:'flex',
-                        alignItems:'center',
-                        justifyContent:'center',
-                        gap:10,
-                        opacity: loading ? 0.7 : 1,
-                        marginTop: 8,
-                      }}
-                      aria-busy={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
+                      style={{ width:'100%', padding:'clamp(12px,1.5vw,16px)', fontSize:'clamp(12px,1.1vw,14px)', fontWeight:700, marginTop:'clamp(8px,1.5vw,12px)', display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(8px,1vw,10px)', opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto' }}
                     >
                       {loading ? (
                         <>
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            style={{ width:18, height:18, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
-                            aria-hidden="true"
+                            style={{ width:'clamp(14px,1.5vw,16px)', height:'clamp(14px,1.5vw,16px)', border:'2.5px solid rgba(255,255,255,.3)', borderTopColor:'#faf7f7', borderRadius:'50%' }}
                           />
                           Resetting...
                         </>
                       ) : (
-                        '🔐 Reset Password'
+                        'Reset Password'
                       )}
                     </motion.button>
-                  </form>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4 }}
-                  style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, position:'relative', zIndex:1, textAlign:'center' }}
-                  role="status"
-                  aria-live="polite"
-                >
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    style={{
-                      width:80,
-                      height:80,
-                      borderRadius:'50%',
-                      background:'linear-gradient(135deg, #22c55e, #22c55e40)',
-                      display:'flex',
-                      alignItems:'center',
-                      justifyContent:'center',
-                      fontSize:40,
-                      boxShadow:'0 12px 32px rgba(34,197,94,.3)',
-                    }}
-                    aria-hidden="true"
-                  >
-                    ✓
                   </motion.div>
-
-                  <div>
-                    <h3 style={{ fontSize:20, fontWeight:900, color:'#dc2626', margin:'0 0 8px', fontFamily:"'Fraunces',serif" }}>Password Reset!</h3>
-                    <p style={{ fontSize:13, color:'rgba(211,47,47,.65)', fontWeight:600, margin:0, lineHeight:1.6 }}>
-                      Your password has been successfully reset. Redirecting to login...
-                    </p>
-                  </div>
-
-                  <div className="rp-glass" style={{ background:'rgba(34,197,94,.15)', border:'2px solid #22c55e', borderRadius:16, padding:14, width:'100%' }}>
-                    <p style={{ fontSize:11, color:'#22c55e', margin:0, fontWeight:700 }}>You can now log in with your new password</p>
-                  </div>
-
+                ) : (
                   <motion.div
-                    animate={{ width: ['0%', '100%'] }}
-                    transition={{ duration: 3, ease: 'linear' }}
-                    style={{
-                      height: 2,
-                      background: 'linear-gradient(90deg, #dc2626, #ff6b6b)',
-                      borderRadius: 1,
-                      width: '100%',
-                    }}
-                    aria-hidden="true"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    key="success"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display:'flex', flexDirection:'column', gap:'clamp(12px,2vw,16px)', textAlign:'center' }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width: 'clamp(56px,7vw,72px)', height: 'clamp(56px,7vw,72px)', borderRadius:'50%', background:'linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1))', border:'2px solid rgba(34,197,94,.3)', margin:'0 auto', position:'relative' }}
+                    >
+                      <div style={{ fontSize:'clamp(28px,4vw,36px)', fontWeight:900, color:'#22c55e' }}>
+                        <svg viewBox="0 0 24 24" style={{ width:'65%', height:'65%', fill:'#22c55e' }}>
+                          <path d="M9,20.42L4.6,16.02C4.2,15.62 3.56,15.62 3.16,16.02C2.76,16.42 2.76,17.06 3.16,17.46L8.5,22.8C8.9,23.2 9.54,23.2 9.94,22.8L20.84,11.9C21.24,11.5 21.24,10.86 20.84,10.46C20.44,10.06 19.8,10.06 19.4,10.46L9,20.42Z"/>
+                        </svg>
+                      </div>
+                    </motion.div>
 
-            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:60, background:'linear-gradient(180deg,transparent,rgba(255,235,238,.2))', pointerEvents:'none', borderRadius:'0 0 clamp(28px,4vw,44px) clamp(28px,4vw,44px)' }}/>
+                    <div>
+                      <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:'clamp(20px,3.5vw,32px)', fontWeight:900, color:'#dc2626', margin:'0 0 clamp(6px,1vw,8px)' }}>Password Reset</h2>
+                      <p style={{ fontSize:'clamp(11px,1vw,13px)', color:'rgba(56,1,1,.6)', fontWeight:600, margin:0 }}>Your password has been successfully reset</p>
+                    </div>
+
+                    <div className="rp-glass" style={{ background:'rgba(34,197,94,.15)', border:'1.5px solid rgba(34,197,94,.3)', padding:'clamp(12px,1.5vw,16px)', borderRadius:'clamp(12px,1.5vw,16px)' }}>
+                      <p style={{ fontSize:'clamp(11px,1vw,12px)', color:'#22c55e', fontWeight:700, margin:0 }}>You can now sign in with your new password</p>
+                    </div>
+
+                    <p style={{ fontSize:'clamp(10px,0.9vw,11px)', color:'rgba(56,1,1,.5)', fontWeight:600, margin:'0' }}>Redirecting to login...</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+
+            {!submitted && (
+              <p style={{ textAlign:'center', fontSize:'clamp(11px,1vw,12px)', color:'rgba(56,1,1,.6)', fontWeight:700, marginTop:'clamp(20px,2.5vw,28px)', marginBottom:0 }}>
+                Remember your password?{' '}
+                <span onClick={() => navigate('/login')} style={{ color:'#dc2626', cursor:'pointer', fontWeight:900, textDecoration:'none', transition:'all .2s' }} onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}>
+                  Sign In
+                </span>
+              </p>
+            )}
+
           </div>
 
         </motion.div>

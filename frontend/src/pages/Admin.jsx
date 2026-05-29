@@ -465,11 +465,6 @@ function Admin() {
       return
     }
     
-    if (newAdminForm.password.length < 6) {
-      setAdminMessage('Password must be at least 6 characters')
-      return
-    }
-    
     try {
       await axios.post(`${API}/api/admin/add-admin`, {
         email: newAdminForm.email,
@@ -929,7 +924,7 @@ function Admin() {
                   <label className="admin-label">Password</label>
                   <input
                     type="password"
-                    placeholder="Min 6 characters"
+                    placeholder="Enter password"
                     value={newAdminForm.password}
                     onChange={(e) => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
                     className="admin-input"
