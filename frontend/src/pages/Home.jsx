@@ -1429,25 +1429,12 @@ export default function Home() {
             />
 
             <YAxis
-              stroke="rgba(71,85,105,.5)"
-              style={{ fontSize: 10 }}
-              width={28}
+              hide={true}
             />
 
             <Tooltip
-              contentStyle={{
-                background: 'rgba(255,255,255,.95)',
-                border:
-                  '1px solid rgba(220,38,38,.3)',
-                borderRadius: 8,
-                boxShadow:
-                  '0 4px 20px rgba(0,0,0,.1)',
-              }}
-              labelStyle={{
-                color: '#380101',
-                fontWeight: 700,
-                fontSize: 11,
-              }}
+              cursor={false}
+              content={<></>}
             />
 
             <Area
@@ -1469,60 +1456,6 @@ export default function Home() {
             />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 12,
-        }}
-      >
-        {[
-          {
-            label: 'Active Donors',
-            value: analytics.donors,
-          },
-          {
-            label: 'Emergencies',
-            value: analytics.emergencies,
-          },
-        ].map((stat, i) => (
-          <motion.div
-            key={i}
-            className="bc-glass"
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              textAlign: 'center',
-              border:
-                '1px solid rgba(220,38,38,.2)',
-            }}
-          >
-            <motion.div
-              style={{
-                fontSize: 20,
-                fontWeight: 900,
-                color: '#dc2626',
-              }}
-            >
-              {stat.value}
-            </motion.div>
-
-            <div
-              style={{
-                fontSize: 8,
-                fontWeight: 700,
-                color: 'rgba(71,85,105,.6)',
-                textTransform: 'uppercase',
-                letterSpacing: '.08em',
-                marginTop: 4,
-              }}
-            >
-              {stat.label}
-            </div>
-          </motion.div>
-        ))}
       </div>
 
 <motion.a
