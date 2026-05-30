@@ -685,9 +685,9 @@ export default function Home() {
   // Chart data that updates based on analytics
   const [chartData, setChartData] = useState([
     { time: '00:00', donors: 0, emergencies: 0 },
-    { time: '06:00', donors: 5, emergencies: 2 },
-    { time: '12:00', donors: 12, emergencies: 8 },
-    { time: '18:00', donors: 18, emergencies: 15 },
+    { time: '06:00', donors: 0, emergencies: 2 },
+    { time: '12:00', donors: 0, emergencies: 8 },
+    { time: '18:00', donors: 0, emergencies: 15 },
   ])
 
   useEffect(() => {
