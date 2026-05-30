@@ -194,101 +194,41 @@ const MODERN_STYLES = `
     section { overflow-x: hidden; }
   }
 
- @media (max-width:640px) {
-  .bc-root { font-size: 1em; }
-  main { padding: 14px 12px !important; gap: 20px !important; }
-  h1 { font-size: clamp(22px, 5vw, 34px) !important; line-height: 1.1 !important; }
-  p { font-size: clamp(12px, 1.15vw, 14px) !important; line-height: 1.5 !important; }
-  .bc-btn { font-size: clamp(10px, 0.8vw, 11px) !important; padding: 8px clamp(12px, 2vw, 16px) !important; }
-  .bc-network-grid { gap: 16px !important; height: auto !important; grid-template-columns: 1fr !important; }
-  .bc-network-grid > div { min-height: auto !important; height: auto !important; aspect-ratio: auto !important; }
-}
+  @media (max-width:640px) {
+    .bc-root { font-size: 1em; }
+    main { padding: 14px 12px !important; gap: 20px !important; }
+    h1 { font-size: clamp(22px, 5vw, 34px) !important; line-height: 1.1 !important; }
+    p { font-size: clamp(12px, 1.15vw, 14px) !important; line-height: 1.5 !important; }
+    .bc-btn { font-size: clamp(10px, 0.8vw, 11px) !important; padding: 8px clamp(12px, 2vw, 16px) !important; }
+    .bc-network-grid { gap: 16px !important; height: auto !important; grid-template-columns: 1fr !important; }
+    .bc-network-grid > div { min-height: auto !important; height: auto !important; aspect-ratio: auto !important; }
+  }
 
   @media (max-width:480px) {
     .bc-root { font-size: 1em; overflow-x: hidden; }
     main { padding: 12px 10px !important; gap: 18px !important; max-width: 100vw !important; }
     .bc-nav-inner { padding: 9px 10px; gap: 4px; justify-content: flex-start; }
     .bc-nav-inner > div:nth-child(2) { display: none !important; }
-    
     h1 { font-size: clamp(20px, 5vw, 28px) !important; line-height: 1.15 !important; margin-bottom: 10px !important; }
     h2 { font-size: clamp(16px, 4vw, 22px) !important; }
     p { font-size: clamp(11.5px, 1.1vw, 12.5px) !important; line-height: 1.5 !important; }
-    
-    .bc-btn { 
-      font-size: clamp(10px, 0.9vw, 11px) !important; 
-      padding: 8px clamp(10px, 1.5vw, 14px) !important; 
-      min-height: 40px;
-      justify-content: center;
-      white-space: nowrap;
-    }
-    @media (max-width:480px) {
-  .bc-network-grid {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-    height: auto !important;
-  }
-
-  /* map */
-  .bc-network-grid > div:first-child {
-    height: 240px !important;
-  }
-
-  /* chart */
-  .bc-network-grid > div:nth-child(2) {
-    min-height: 420px !important;
-    height: 420px !important;
-    aspect-ratio: auto !important;
-  }
-}
-    .bc-btn-primary, .bc-btn-secondary { 
-      width: auto;
-      flex: 1;
-      min-width: auto;
-    }
-    
+    .bc-btn { font-size: clamp(10px, 0.9vw, 11px) !important; padding: 8px clamp(10px, 1.5vw, 14px) !important; min-height: 40px; justify-content: center; white-space: nowrap; }
+    .bc-btn-primary, .bc-btn-secondary { width: auto; flex: 1; min-width: auto; }
     section { margin-top: 16px !important; overflow-x: hidden; }
-    
-    .bc-nav-inner > div:last-child {
-      width: 100% !important;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      display: flex !important;
-      gap: 6px;
-    }
-    
-    .bc-network-grid { 
-      grid-template-columns: 1fr !important; 
-      gap: 14px !important; 
-      height: auto !important; 
-    }
-    
-    .bc-network-grid > div { 
-      min-height: auto !important;
-      aspect-ratio: auto !important;
-    }
-    
-    .bc-network-grid > div:first-child {
-      height: 240px;
-    }
-    
-    .bc-network-grid > div:last-child {
-      min-height: 280px;
-    }
-    
+    .bc-nav-inner > div:last-child { width: 100% !important; overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex !important; gap: 6px; }
+    .bc-network-grid { grid-template-columns: 1fr !important; gap: 14px !important; height: auto !important; }
+    .bc-network-grid > div { min-height: auto !important; aspect-ratio: auto !important; }
+    .bc-network-grid > div:first-child { height: 240px; }
+    .bc-network-grid > div:last-child { min-height: 280px; }
     .glow-pulse { display: none !important; }
     .glow-pulse-lg { display: none !important; }
-    
     .float-orb { animation: none !important; opacity: 0.03 !important; }
     .bc-float-orb { animation-play-state: paused !important; opacity: 0.05 !important; }
-    
     iframe { border-radius: 12px !important; }
-    
     footer { margin-top: 30px !important; }
     footer > div { padding: 24px clamp(10px, 2.5vw, 24px) !important; }
-    
     * { max-width: 100vw; }
     body { overflow-x: hidden; }
-    
     a, button { min-height: 40px; min-width: 40px; }
   }
 
@@ -682,7 +622,6 @@ export default function Home() {
   const [analytics, setAnalytics] = useState({ donors: 0, emergencies: 0 })
   const [isMobile, setIsMobile] = useState(window.innerWidth < 480)
 
-  // Chart data that updates based on analytics
   const [chartData, setChartData] = useState([
     { time: '00:00', donors: 0, emergencies: 0 },
     { time: '06:00', donors: 0, emergencies: 2 },
@@ -709,7 +648,6 @@ export default function Home() {
           const emergencies = data.emergencies || 0
           setAnalytics({ donors, emergencies })
           
-          // Update chart data with latest values
           setChartData(prev => [
             ...prev.slice(0, -1),
             { 
@@ -764,142 +702,136 @@ export default function Home() {
   return (
     <div className="bc-root">
       <AnimatedBackgroundOrbs />
-<header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
-  <div className="bc-nav-inner">
-    <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6 }}
-      style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-      onClick={() => go('/')}
-      whileHover={{ x: 3 }}
-    >
-      <motion.div
-        style={{
-          width: 42,
-          height: 42,
-          background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-          borderRadius: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 12px 32px rgba(220,38,38,.3)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-        whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-      >
-        <svg viewBox="0 0 100 130" style={{ width: 24, height: 32 }}>
-          <defs>
-            <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ff6b6b" />
-              <stop offset="50%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#991b1b" />
-            </linearGradient>
-          </defs>
-          <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
-          <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
-        </svg>
-      </motion.div>
-      <div>
-        <motion.div 
-          style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }} 
-          animate={{ letterSpacing: [0, 1, 0] }} 
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          BloodConnect
-        </motion.div>
-        <motion.div
-          style={{ 
-            fontSize: 'clamp(7px, 0.8vw, 10px)', 
-            fontWeight: 500, 
-            color: 'rgba(71, 85, 105, 0.7)',
-            margin: '1px 0 0 0',
-            letterSpacing: '0.3px'
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-        >
-          Smart Donor Matching System
-        </motion.div>
-      </div>
-    </motion.div>
+      <header className="bc-nav" style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .6s cubic-bezier(.22,1,.36,1)' }}>
+        <div className="bc-nav-inner">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            onClick={() => go('/')}
+            whileHover={{ x: 3 }}
+          >
+            <motion.div
+              style={{
+                width: 42,
+                height: 42,
+                background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 12px 32px rgba(220,38,38,.3)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+              whileHover={{ scale: 1.12, boxShadow: '0 16px 40px rgba(220,38,38,.4)' }}
+              animate={{ rotateY: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg viewBox="0 0 100 130" style={{ width: 24, height: 32 }}>
+                <defs>
+                  <linearGradient id="navBlood" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="50%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M50 0 C50 0 95 60 95 85 C95 110 75 130 50 130 C25 130 5 110 5 85 C5 60 50 0 50 0 Z" fill="url(#navBlood)" opacity="0.95" />
+                <ellipse cx="32" cy="65" rx="16" ry="22" fill="#faf7f7" opacity="0.2" />
+              </svg>
+            </motion.div>
+            <div>
+              <motion.div 
+                style={{ fontSize: 18, fontWeight: 900, color: '#dc2626', margin: 0 }} 
+                animate={{ letterSpacing: [0, 1, 0] }} 
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                BloodConnect
+              </motion.div>
+              <motion.div
+                style={{ 
+                  fontSize: 'clamp(7px, 0.8vw, 10px)', 
+                  fontWeight: 500, 
+                  color: 'rgba(71, 85, 105, 0.7)',
+                  margin: '1px 0 0 0',
+                  letterSpacing: '0.3px'
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              >
+                Smart Donor Matching System
+              </motion.div>
+            </div>
+          </motion.div>
 
-    <div style={{ flex: 1 }} />
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        onClick={() => go('/emergency')}
-        className="bc-btn bc-btn-primary"
-        whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
-        whileTap={{ scale: 0.92 }}
-        style={{
-          padding: '10px 18px',
-          borderRadius: 20,
-          fontSize: 11,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <motion.span
-          animate={{ scale: [1, 1.4, 1] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-        >
-          ●
-        </motion.span>
-        Emergency
-      </motion.button>
+          <div style={{ flex: 1 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              onClick={() => go('/emergency')}
+              className="bc-btn bc-btn-primary"
+              whileHover={{ scale: 1.08, boxShadow: '0 20px 60px rgba(220,38,38,.6)' }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '10px 18px',
+                borderRadius: 20,
+                fontSize: 11,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <motion.span
+                animate={{ scale: [1, 1.4, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
+                ●
+              </motion.span>
+              Emergency
+            </motion.button>
 
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        onClick={() => go('/how-it-works')}
-        className="bc-btn bc-btn-secondary"
-        whileHover={{ scale: 1.06, y: -2 }}
-        whileTap={{ scale: 0.92 }}
-        style={{
-          padding: '10px 18px',
-          borderRadius: 20,
-          fontSize: 11,
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-         How It Works
-      </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              onClick={() => go('/how-it-works')}
+              className="bc-btn bc-btn-secondary"
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '10px 18px',
+                borderRadius: 20,
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+               How It Works
+            </motion.button>
 
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        onClick={() => go('/impact')}
-        className="bc-btn bc-btn-secondary"
-        whileHover={{ scale: 1.06, y: -2 }}
-        whileTap={{ scale: 0.92 }}
-        style={{
-          padding: '10px 18px',
-          borderRadius: 20,
-          fontSize: 11,
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-        Donor Guide
-      </motion.button>
-    </div>
-  </div>
-</header>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              onClick={() => go('/impact')}
+              className="bc-btn bc-btn-secondary"
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.92 }}
+              style={{
+                padding: '10px 18px',
+                borderRadius: 20,
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              Donor Guide
+            </motion.button>
+          </div>
+        </div>
+      </header>
 
       <main style={{
         position: 'relative',
@@ -912,7 +844,6 @@ export default function Home() {
         gap: '36px',
       }}>
 
-        {/* Hero Section */}
         <section style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 24, alignItems: 'center', minHeight: 'auto' }} className="bc-hero-grid">
           <motion.div style={{ display: 'flex', flexDirection: 'column', gap: 14 }} variants={container} initial="hidden" whileInView="show" viewport={{ once: true }}>
 
@@ -1037,7 +968,6 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          {/* Hero Visual - HIDDEN ON MOBILE */}
           {!isMobile && (
             <motion.div
               className="bc-hero-visual"
@@ -1056,439 +986,301 @@ export default function Home() {
                   position: 'absolute',
                   inset: 0,
                   borderRadius: 24,
-                 overflow: 'visible',
+                  overflow: 'visible',
                   border: '1px solid rgba(91,115,151,.12)',
                 }}
                 whileHover={{ boxShadow: '0 40px 100px rgba(220,38,38,.25)', y: -8 }}
               >
                 <ModernBloodDrop />
               </motion.div>
-
-              {/* Biometric sync card - HIDDEN ON MOBILE */}
-            <motion.div
-  className="bc-glass-deep bc-card-hover glow-pulse"
-  style={{
-    position: 'absolute',
-
-    // FIX: keep it fully inside the hero card
-    top: -15,
-    right: -19,
-
-    zIndex: 20,
-    borderRadius: 20,
-    padding: 18,
-    minWidth: 'min(220px,26vw)',
-
-    // FIX: make border visible all around
-    border: '1px solid rgba(180,180,180,.22)',
-
-    // FIX: prevents clipping on edges
-    boxSizing: 'border-box',
-    overflow: 'visible',
-
-    // optional: cleaner shadow
-    boxShadow:
-      '0 16px 48px rgba(0,0,0,.10), inset 0 1px 1px rgba(255,255,255,.25)',
-  }}
-  initial={{ opacity: 0, y: -30 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.7, delay: 0.2 }}
-  viewport={{ once: true }}
-  whileHover={{ y: -10, scale: 1.03 }}
->
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <motion.div
-                      style={{
-                        width: 42,
-                        height: 42,
-                        background: 'linear-gradient(135deg,#dc2626,#991b1b)',
-                        borderRadius: 10,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <motion.div
-                        style={{
-                          width: 8,
-                          height: 8,
-                          background: '#fff',
-                          borderRadius: '50%',
-                          position: 'relative',
-                          zIndex: 3,
-                        }}
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ 
-                          duration: 1.2, 
-                          repeat: Infinity,
-                          ease: 'easeInOut'
-                        }}
-                      />
-                      
-                      <motion.div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '50%',
-                          border: '2px solid rgba(255,255,255,.7)',
-                        }}
-                        animate={{ 
-                          scale: [1, 1.6],
-                          opacity: [1, 0]
-                        }}
-                        transition={{ 
-                          duration: 1.2, 
-                          repeat: Infinity,
-                          ease: 'easeOut'
-                        }}
-                      />
-                      
-                      <motion.div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '50%',
-                          border: '1.5px solid rgba(255,255,255,.4)',
-                        }}
-                        animate={{ 
-                          scale: [1, 2],
-                          opacity: [0.8, 0]
-                        }}
-                        transition={{ 
-                          duration: 1.2, 
-                          repeat: Infinity,
-                          ease: 'easeOut',
-                          delay: 0.2
-                        }}
-                      />
-                    </motion.div>
-                    
-                    <div>
-                      <p style={{ fontSize: 5, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 2 }}>STATUS</p>
-                      <motion.p 
-                        style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', margin: 0 }}
-                        animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                      >
-                        Ready
-                      </motion.p>
-                    </div>
-                  </div>
-
-                  <div style={{ height: 32, display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <svg
-                      style={{ width: '100%', height: '100%', position: 'absolute' }}
-                      viewBox="0 0 300 40"
-                      preserveAspectRatio="none"
-                    >
-                      <defs>
-                        <linearGradient id="heartbeatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
-                          <stop offset="50%" stopColor="#dc2626" stopOpacity="1" />
-                          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
-                        </linearGradient>
-                      </defs>
-                      <motion.polyline
-                        points="0,20 10,20 15,10 20,30 25,15 35,20 45,20 50,20 55,18 58,22 62,20 70,20 80,20 90,20 100,20 110,20 115,18 118,22 122,20 130,20 140,20 150,20 160,20 165,18 168,22 172,20 180,20 190,20 200,20 210,20 215,18 218,22 222,20 230,20 240,20 250,20 260,20 270,20 280,20 290,20 300,20"
-                        fill="none"
-                        stroke="url(#heartbeatGrad)"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        animate={{ 
-                          strokeDashoffset: [0, 300],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: 'linear'
-                        }}
-                        style={{
-                          strokeDasharray: 300,
-                        }}
-                      />
-                    </svg>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <motion.div
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        background: '#4ade80',
-                        boxShadow: '0 0 8px rgba(74,222,128,.6)'
-                      }}
-                      animate={{ scale: [1, 1.4, 1] }}
-                      transition={{ duration: 1.2, repeat: Infinity }}
-                    />
-                    <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
-                     · Requests Live
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="bc-glass-deep glow-pulse-lg"
-                style={{
-                  position: 'absolute',
-                  bottom: '-8%',
-                  left: '-10%',
-                  width: 'clamp(100px,12vw,150px)',
-                  height: 'clamp(100px,12vw,150px)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 20,
-                }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.15 }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <motion.div
-                    style={{ fontSize: 28, fontWeight: 900, color: '#ff6b6b' }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    24/7
-                  </motion.div>
-                  <div style={{ fontSize: 8, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 3 }}>RESPONSE</div>
-                </div>
-              </motion.div>
             </motion.div>
           )}
         </section>
 
-      {/* Analytics Section - CHART VERSION */}
-<section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-  <motion.div
-    className="bc-network-grid"
-    style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 20,
-      alignItems: 'stretch',
-      height: 'clamp(420px,34vw,520px)',
-    }}
-    initial={{ opacity: 0 }}
-    whileInView={{ opacity: 1 }}
-    transition={{ duration: 0.8 }}
-    viewport={{ once: true }}
-  >
-    {/* Lebanon Map */}
-    <motion.div
-      className="bc-glass-deep bc-card-hover"
-      style={{
-        borderRadius: 20,
-        overflow: 'hidden',
-        border: '1px solid rgba(91,115,151,.12)',
-        aspectRatio: '1 / 1',
-        height: '100%',
-      }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      viewport={{ once: true }}
-      whileHover={{
-        boxShadow: '0 32px 80px rgba(220,38,38,.2)',
-      }}
-    >
-      <img
-        src={lebanonMap}
-        alt="Lebanon Blood Network Map"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          display: 'block',
-          filter: 'brightness(0.95) contrast(1.08)',
-        }}
-      />
-    </motion.div>
-
-    {/* Chart */}
-    <motion.div
-      className="bc-glass-deep bc-card-hover"
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: 14,
-        padding: 'clamp(18px,2.5vw,28px)',
-        borderRadius: 20,
-        border: '1px solid rgba(91,115,151,.12)',
-        aspectRatio: '1 / 1',
-        height: '100%',
-      }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      viewport={{ once: true }}
-      whileHover={{
-        boxShadow: '0 32px 80px rgba(220,38,38,.2)',
-      }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <motion.span
-          style={{
-            fontSize: 10,
-            fontWeight: 900,
-            color: '#dc2626',
-            textTransform: 'uppercase',
-            letterSpacing: '.15em',
-          }}
-          animate={{
-            letterSpacing: ['.15em', '.2em', '.15em'],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-          }}
-        >
-          Real-Time Analytics
-        </motion.span>
-      </div>
-
-      <div
-        style={{
-          flex: 1,
-          width: '100%',
-          minHeight: 0,
-        }}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={chartData}
-            margin={{
-              top: 8,
-              right: 0,
-              left: -18,
-              bottom: 0,
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <motion.div
+            className="bc-network-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 20,
+              alignItems: 'stretch',
+              height: 'clamp(420px,34vw,520px)',
             }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
           >
-            <defs>
-              <linearGradient
-                id="colorDonors"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
+            <motion.div
+              className="bc-glass-deep bc-card-hover"
+              style={{
+                borderRadius: 20,
+                overflow: 'hidden',
+                border: '1px solid rgba(91,115,151,.12)',
+                aspectRatio: '1 / 1',
+                height: '100%',
+              }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+              whileHover={{
+                boxShadow: '0 32px 80px rgba(220,38,38,.2)',
+              }}
+            >
+              <img
+                src={lebanonMap}
+                alt="Lebanon Blood Network Map"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                  filter: 'brightness(0.95) contrast(1.08)',
+                }}
+              />
+            </motion.div>
+
+            <motion.div
+              className="bc-glass-deep bc-card-hover"
+              style={{
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 14,
+                padding: 'clamp(18px,2.5vw,28px)',
+                borderRadius: 20,
+                border: '1px solid rgba(91,115,151,.12)',
+                aspectRatio: '1 / 1',
+                height: '100%',
+              }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+              whileHover={{
+                boxShadow: '0 32px 80px rgba(220,38,38,.2)',
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <motion.span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    color: '#dc2626',
+                    textTransform: 'uppercase',
+                    letterSpacing: '.15em',
+                  }}
+                  animate={{
+                    letterSpacing: ['.15em', '.2em', '.15em'],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                  }}
+                >
+                  Real-Time Analytics
+                </motion.span>
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  minHeight: 0,
+                }}
               >
-                <stop
-                  offset="5%"
-                  stopColor="#dc2626"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="#dc2626"
-                  stopOpacity={0.08}
-                />
-              </linearGradient>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{
+                      top: 8,
+                      right: 0,
+                      left: -18,
+                      bottom: 0,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorDonors"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#dc2626"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#dc2626"
+                          stopOpacity={0.08}
+                        />
+                      </linearGradient>
 
-              <linearGradient
-                id="colorEmergencies"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
+                      <linearGradient
+                        id="colorEmergencies"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#991b1b"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#991b1b"
+                          stopOpacity={0.08}
+                        />
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(220,38,38,.1)"
+                      vertical={false}
+                    />
+
+                    <XAxis
+                      dataKey="time"
+                      stroke="rgba(71,85,105,.5)"
+                      style={{ fontSize: 10 }}
+                    />
+
+                    <YAxis
+                      hide={true}
+                    />
+
+                    <Tooltip
+                      cursor={false}
+                      content={<></>}
+                    />
+
+                    <Area
+                      type="monotone"
+                      dataKey="donors"
+                      stroke="#dc2626"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorDonors)"
+                    />
+
+                    <Area
+                      type="monotone"
+                      dataKey="emergencies"
+                      stroke="#991b1b"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorEmergencies)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 12,
+                }}
               >
-                <stop
-                  offset="5%"
-                  stopColor="#991b1b"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="#991b1b"
-                  stopOpacity={0.08}
-                />
-              </linearGradient>
-            </defs>
+                {[
+                  {
+                    label: 'Active Donors',
+                    value: analytics.donors,
+                    color: '#dc2626',
+                  },
+                  {
+                    label: 'Emergencies',
+                    value: analytics.emergencies,
+                    color: '#991b1b',
+                  },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    className="bc-glass"
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      textAlign: 'center',
+                      border: '1px solid rgba(220,38,38,.2)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'center' }}>
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '2px',
+                          background: stat.color,
+                          boxShadow: `0 0 12px ${stat.color}`,
+                        }}
+                      />
+                      <motion.div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 900,
+                          color: '#dc2626',
+                        }}
+                      >
+                        {stat.value}
+                      </motion.div>
+                    </div>
 
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(220,38,38,.1)"
-              vertical={false}
-            />
+                    <div
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 700,
+                        color: 'rgba(71,85,105,.6)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '.08em',
+                      }}
+                    >
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
-            <XAxis
-              dataKey="time"
-              stroke="rgba(71,85,105,.5)"
-              style={{ fontSize: 10 }}
-            />
+              <motion.a
+                href="https://www.google.com/maps/place/BloodConnect/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bc-btn bc-btn-primary"
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  textDecoration: 'none',
+                }}
+              >
+                Visit Our Center in Hamra →
+              </motion.a>
+            </motion.div>
+          </motion.div>
+        </section>
 
-            <YAxis
-              hide={true}
-            />
-
-            <Tooltip
-              cursor={false}
-              content={<></>}
-            />
-
-            <Area
-              type="monotone"
-              dataKey="donors"
-              stroke="#dc2626"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#colorDonors)"
-            />
-
-            <Area
-              type="monotone"
-              dataKey="emergencies"
-              stroke="#991b1b"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#colorEmergencies)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-<motion.a
-  href="https://www.google.com/maps/place/BloodConnect/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bc-btn bc-btn-primary bc-center-btn"
-  style={{
-    width: '100%',
-    padding: isMobile ? '10px 12px' : 12,
-    borderRadius: 12,
-    fontSize: isMobile ? 10 : 11,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    textDecoration: 'none',
-    minHeight: isMobile ? '48px' : '56px',
-    flexShrink: 0,
-  }}
->
-  Visit Our Center in Hamra →
-</motion.a>
-    </motion.div>
-  </motion.div>
-</section>
-        {/* Compatibility Matrix */}
         <section style={{ marginTop: '180px' }}>
           <CompatibilityMatrix />
         </section>
 
-        {/* Video Section */}
         <section style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <motion.div
             className="bc-glass-deep bc-card-hover"
@@ -1527,7 +1319,6 @@ export default function Home() {
 
       </main>
 
-      {/* Footer */}
       <motion.footer
         className="bc-glass"
         style={{
@@ -1585,7 +1376,6 @@ export default function Home() {
         </div>
       </motion.footer>
 
-      {/* FAB */}
       <motion.div className="bc-fab-wrap" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 1 }}>
         <div className="bc-fab-ring" style={{ opacity: 0.5 }} />
         <motion.button
