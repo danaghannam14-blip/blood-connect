@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard'
 import HospitalDashboard from './pages/HospitalDashboard'
 import Admin from './pages/Admin'
 import Emergency from './pages/Emergency'
-import Inventory from './pages/Inventory'
 import NotFound from './pages/NotFound'
 import HospitalPartners from './pages/HospitalPartners'
 import HowItWorks from './pages/HowItWorks'
@@ -38,7 +37,6 @@ function App() {
         
         {/* Feature Routes */}
         <Route path="/emergency" element={<Emergency />} />
-        <Route path="/inventory" element={<Inventory />} />
         
         {/* Fallback Routes */}
         <Route path="/404" element={<NotFound />} />
