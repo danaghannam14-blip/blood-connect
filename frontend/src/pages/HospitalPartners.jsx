@@ -760,7 +760,6 @@ function HospitalPartners() {
                         <p style={{ fontWeight: 'bold', color: '#dc2626', margin: 0, marginBottom: 6 }}>{h.name}</p>
                         <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0' }}>{h.fullAddress}</p>
                         {h.phone && <p style={{ fontSize: 12, fontWeight: 'bold', color: '#991b1b', margin: '6px 0' }}>Phone: {h.phone}</p>}
-                        <a href={`https://www.google.com/maps/search/${encodeURIComponent(h.name)}/@${h.latitude},${h.longitude},15z`} target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', fontSize: 12, fontWeight: 'bold', textDecoration: 'none' }}>Get Directions</a>
                       </div>
                     </Popup>
                   </Marker>
