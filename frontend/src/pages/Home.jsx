@@ -1314,7 +1314,7 @@ export default function Home() {
               </div>
 
               <motion.a
-                href="https://www.google.com/maps/place/BloodConnect/"
+  href="https://www.google.com/maps/dir//BloodConnect,+Hamra,+Beirut/@33.6833468,35.5110506,15z/data=!4m8!4m7!1m0!1m5!1m1!1s0x151f1700556b765f:0x7b13b4102e84e328!2m2!1d35.4830185!2d33.896303?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bc-btn bc-btn-primary"
