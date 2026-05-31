@@ -506,8 +506,7 @@ function Login() {
                 lineHeight: 1.6,
                 margin: 0,
               }}>
-                Sign in to access your donor dashboard, track donations, and see your impact.
-              </p>
+Sign in to access your BloodConnect account and manage blood donation services, requests, and system activities.              </p>
             </motion.div>
 
             {/* Compact Journey Steps */}
@@ -518,9 +517,9 @@ function Login() {
               style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
             >
               {[
-                { number: '01', title: 'Register', description: 'Create your profile' },
-                { number: '02', title: 'Verify', description: 'Health screening' },
-                { number: '03', title: 'Donate', description: 'Save lives' },
+                { number: '01', title: 'Access', description: 'Securely sign in' },
+                { number: '02', title: 'Connect', description: 'Coordinate blood donation services' },
+                { number: '03', title: 'Impact', description: 'Contribute to saving lives' },
               ].map((step, i) => (
                 <motion.div
                   key={i}
