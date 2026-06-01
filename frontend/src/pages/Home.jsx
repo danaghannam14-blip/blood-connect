@@ -1027,7 +1027,7 @@ export default function Home() {
               </motion.button>
             </motion.div>
           </motion.div>
-
+{/* Hero Visual - HIDDEN ON MOBILE */}
           {!isMobile && (
             <motion.div
               className="bc-hero-visual"
@@ -1046,16 +1046,204 @@ export default function Home() {
                   position: 'absolute',
                   inset: 0,
                   borderRadius: 24,
-                  overflow: 'visible',
+                  overflow: 'hidden',
                   border: '1px solid rgba(91,115,151,.12)',
                 }}
                 whileHover={{ boxShadow: '0 40px 100px rgba(220,38,38,.25)', y: -8 }}
               >
                 <ModernBloodDrop />
               </motion.div>
+
+              {/* Biometric sync card - HIDDEN ON MOBILE */}
+              <motion.div
+                className="bc-glass-deep bc-card-hover glow-pulse"
+                style={{
+                  position: 'absolute',
+                  top: '-8%',
+                  right: '-8%',
+                  zIndex: 20,
+                  borderRadius: 20,
+                  padding: 18,
+                  minWidth: 'min(220px,26vw)',
+                }}
+                initial={{ opacity: 0, y: -30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -16, scale: 1.05 }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <motion.div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        background: 'linear-gradient(135deg,#dc2626,#991b1b)',
+                        borderRadius: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <motion.div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          background: '#fff',
+                          borderRadius: '50%',
+                          position: 'relative',
+                          zIndex: 3,
+                        }}
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeInOut'
+                        }}
+                      />
+                      
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          border: '2px solid rgba(255,255,255,.7)',
+                        }}
+                        animate={{ 
+                          scale: [1, 1.6],
+                          opacity: [1, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeOut'
+                        }}
+                      />
+                      
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          border: '1.5px solid rgba(255,255,255,.4)',
+                        }}
+                        animate={{ 
+                          scale: [1, 2],
+                          opacity: [0.8, 0]
+                        }}
+                        transition={{ 
+                          duration: 1.2, 
+                          repeat: Infinity,
+                          ease: 'easeOut',
+                          delay: 0.2
+                        }}
+                      />
+                    </motion.div>
+                    
+                    <div>
+                      <p style={{ fontSize: 5, fontWeight: 900, color: 'rgba(42,42,42,.5)', letterSpacing: '.15em', textTransform: 'uppercase', margin: 0, marginBottom: 2 }}>STATUS</p>
+                      <motion.p 
+                        style={{ fontSize: 20, fontWeight: 900, color: '#dc2626', margin: 0 }}
+                        animate={{ color: ['#dc2626', '#ff5555', '#dc2626'] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        Ready
+                      </motion.p>
+                    </div>
+                  </div>
+
+                  <div style={{ height: 32, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <svg
+                      style={{ width: '100%', height: '100%', position: 'absolute' }}
+                      viewBox="0 0 300 40"
+                      preserveAspectRatio="none"
+                    >
+                      <defs>
+                        <linearGradient id="heartbeatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
+                          <stop offset="50%" stopColor="#dc2626" stopOpacity="1" />
+                          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
+                        </linearGradient>
+                      </defs>
+                      <motion.polyline
+                        points="0,20 10,20 15,10 20,30 25,15 35,20 45,20 50,20 55,18 58,22 62,20 70,20 80,20 90,20 100,20 110,20 115,18 118,22 122,20 130,20 140,20 150,20 160,20 165,18 168,22 172,20 180,20 190,20 200,20 210,20 215,18 218,22 222,20 230,20 240,20 250,20 260,20 270,20 280,20 290,20 300,20"
+                        fill="none"
+                        stroke="url(#heartbeatGrad)"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        animate={{ 
+                          strokeDashoffset: [0, 300],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: 'linear'
+                        }}
+                        style={{
+                          strokeDasharray: 300,
+                        }}
+                      />
+                    </svg>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <motion.div
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: '#4ade80',
+                        boxShadow: '0 0 8px rgba(74,222,128,.6)'
+                      }}
+                      animate={{ scale: [1, 1.4, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                    />
+                    <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(42,42,42,.7)', margin: 0 }}>
+                     · Requests Live
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="bc-glass-deep glow-pulse-lg"
+                style={{
+                  position: 'absolute',
+                  bottom: '-8%',
+                  left: '-10%',
+                  width: 'clamp(100px,12vw,150px)',
+                  height: 'clamp(100px,12vw,150px)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 20,
+                }}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.15 }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    style={{ fontSize: 28, fontWeight: 900, color: '#ff6b6b' }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    24/7
+                  </motion.div>
+                  <div style={{ fontSize: 8, color: 'rgba(42,42,42,.55)', fontWeight: 700, marginTop: 3 }}>RESPONSE</div>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </section>
+
 
         <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <motion.div
