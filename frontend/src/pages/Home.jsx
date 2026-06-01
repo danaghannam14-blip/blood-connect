@@ -1059,8 +1059,8 @@ export default function Home() {
                 className="bc-glass-deep bc-card-hover glow-pulse"
                 style={{
                   position: 'absolute',
-                  top: '-8%',
-                  right: '-8%',
+                  top: '-4%',
+                  right: '-3%',
                   zIndex: 20,
                   borderRadius: 20,
                   padding: 18,
