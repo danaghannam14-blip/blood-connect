@@ -480,13 +480,8 @@ function Emergency() {
       })
       .catch(() => setLoadingHospitals(false))
     navigator.geolocation.getCurrentPosition(
-      (p) => setUserLocation([p.coords.latitude, p.coords.longitude]),
-      () => {
-        const la = import.meta.env.VITE_MY_LAT,
-          ln = import.meta.env.VITE_MY_LNG
-        setUserLocation(la && ln ? [parseFloat(la), parseFloat(ln)] : null)
-      }
-    )
+  (p) => setUserLocation([p.coords.latitude, p.coords.longitude])
+)
   }
 
   useEffect(() => {

@@ -83,15 +83,7 @@ function initializeDatabase() {
       FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
     )`,
 
-    // Blood inventory table
-    `CREATE TABLE IF NOT EXISTS blood_inventory (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      blood_type VARCHAR(10) NOT NULL,
-      status ENUM('critical','low','available') DEFAULT 'available',
-      units_available INT DEFAULT 0,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_blood_type (blood_type)
-    )`,
+    
 
     // Health screenings table
     `CREATE TABLE IF NOT EXISTS health_screenings (
